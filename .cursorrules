@@ -1,0 +1,111 @@
+# AI Backend Hub - Cursor Rules
+
+Copy this content to `.cursorrules` in your new project root.
+
+---
+
+```
+# AI Backend Hub
+
+A multi-tenant AI orchestration platform for iOS apps.
+
+## Project Context
+
+This is a backend-only platform (no consumer frontend) that:
+- Manages multiple iOS apps as tenants, each with isolated user bases
+- Orchestrates AI generation requests across multiple providers (DefAPI, Replicate, OpenAI)
+- Handles token-based billing with atomic debit/refund operations
+- Provides admin panel for managing apps, models, providers, and monitoring
+- Uses BullMQ + Redis for scalable job queues with background workers
+
+## Architecture Reference
+
+This project is based on PhotoMania.ai architecture patterns:
+- Provider Orchestrator with automatic failover between AI providers
+- Atomic token operations with idempotency keys
+- BullMQ job queue with Redis backend
+- Prisma ORM with PostgreSQL
+- Next.js 14 App Router
+- Cloudflare R2 for storage
+
+## Key Entities
+
+- **App**: Tenant (iOS app) with API key, webhook URL, rate limits
+- **AppUser**: User scoped to an app, identified by externalId from the iOS app
+- **AIProvider**: DefAPI, Replicate, OpenAI, etc.
+- **AIModel**: AI model with provider configurations and priority-based failover
+- **GenerationJob**: Generation request with status tracking and token management
+- **TokenLedgerEntry**: Immutable audit log of all token transactions
+
+## API Design
+
+Public API (for iOS apps):
+- POST /api/v1/generate - Submit generation request
+- GET /api/v1/jobs/:id - Get job status
+- GET /api/v1/users/:externalId - Get user info
+- POST /api/v1/users/:externalId/tokens - Grant tokens
+
+All requests require:
+- X-API-Key header (app's API key)
+- X-User-ID header (external user ID from iOS app)
+
+## Code Patterns
+
+### Token Operations
+Always use atomic transactions with idempotency keys:
+```typescript
+const idempotencyKey = `reserve_${jobId}`;
+await prisma.$transaction(async (tx) => {
+  // ... atomic operation
+});
+```
+
+### Provider Failover
+Use the ProviderOrchestrator which tries providers in priority order:
+```typescript
+const result = await orchestrator.runGeneration({
+  aiModelId,
+  prompt,
+  imageUrls,
+  ...
+});
+```
+
+### API Authentication
+Use validateApiRequest for all public endpoints:
+```typescript
+const auth = await validateApiRequest(req, { requireUser: true });
+if (!auth.success) {
+  return NextResponse.json({ error: auth.error }, { status: 401 });
+}
+```
+
+## File Structure
+
+- /src/app/admin/* - Admin panel pages
+- /src/app/api/v1/* - Public API for iOS apps
+- /src/app/api/admin/* - Admin API endpoints
+- /src/lib/providers/* - AI provider adapters and orchestrator
+- /src/lib/tokens.ts - Token operations
+- /src/lib/queue.ts - BullMQ queue
+- /src/lib/api-auth.ts - API key validation
+- /src/worker/index.ts - Background job processor
+
+## Tech Stack
+
+- Next.js 14 (App Router)
+- Prisma + PostgreSQL
+- BullMQ + Redis (Upstash)
+- Cloudflare R2
+- Tailwind + shadcn/ui
+- Zod for validation
+
+## Important Notes
+
+1. Never expose API keys or provider credentials to clients
+2. All token operations must be idempotent
+3. Always refund tokens on failed generations
+4. Use webhooks for async job completion notifications
+5. Rate limit by both user and app
+```
+

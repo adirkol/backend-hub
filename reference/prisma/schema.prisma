@@ -1,0 +1,460 @@
+// PhotoMania.ai Prisma Schema
+// Database: PostgreSQL (Railway)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// Authentication Models (NextAuth)
+// ============================================
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  emailVerified DateTime?
+  name          String?
+  image         String?
+  role          UserRole  @default(USER)
+
+  // Relations
+  accounts      Account[]
+  sessions      Session[]
+  subscription  Subscription?
+  tokenBalance  TokenBalance?
+  tokenLedger   TokenLedgerEntry[]
+  jobs          GenerationJob[]
+  likes         Like[]
+  favorites     Favorite[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([email])
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ============================================
+// Subscription & Billing Models
+// ============================================
+
+model Subscription {
+  id                   String             @id @default(cuid())
+  userId               String             @unique
+  stripeCustomerId     String?            @unique
+  stripeSubscriptionId String?            @unique
+  stripePriceId        String?
+  status               SubscriptionStatus @default(INACTIVE)
+  plan                 String             @default("Free")
+  currentPeriodStart   DateTime?
+  currentPeriodEnd     DateTime?
+  cancelAtPeriodEnd    Boolean            @default(false)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([stripeCustomerId])
+  @@index([stripeSubscriptionId])
+}
+
+enum SubscriptionStatus {
+  INACTIVE
+  INCOMPLETE
+  ACTIVE
+  PAST_DUE
+  CANCELED
+  TRIALING
+}
+
+// ============================================
+// Token System Models
+// ============================================
+
+model TokenBalance {
+  id        String @id @default(cuid())
+  userId    String @unique
+  balance   Int    @default(0)
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model TokenLedgerEntry {
+  id           String          @id @default(cuid())
+  userId       String
+  amount       Int             // Positive for credits, negative for debits
+  balanceAfter Int             // Balance after this transaction
+  type         TokenEntryType
+  description  String?
+  jobId        String?         // Reference to job if applicable
+  idempotencyKey String?       @unique // Prevent double processing
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([jobId])
+  @@index([idempotencyKey])
+}
+
+enum TokenEntryType {
+  SUBSCRIPTION_GRANT   // Tokens granted on subscription start/renewal
+  GENERATION_DEBIT     // Tokens spent on generation
+  GENERATION_REFUND    // Tokens refunded on failed generation
+  ADMIN_ADJUSTMENT     // Manual adjustment by admin
+  ADMIN_GRANT          // Admin added tokens
+  ADMIN_DEDUCT         // Admin deducted tokens
+  BONUS                // Promotional bonus tokens
+}
+
+// ============================================
+// AI Provider & Model System
+// ============================================
+
+model AIProvider {
+  id          String   @id @default(cuid())
+  name        String   @unique  // "defapi", "replicate"
+  displayName String              // "DefAPI", "Replicate"
+  baseUrl     String?             // "https://api.defapi.org"
+  apiKeyEnvVar String             // "DEFAPI_API_KEY" - env var name
+  isEnabled   Boolean  @default(true)
+  
+  modelConfigs ModelProviderConfig[]
+  usageLogs    ProviderUsageLog[]
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model AIModel {
+  id          String   @id @default(cuid())
+  name        String   @unique  // "nano-banana", "gpt-image-1.5"
+  displayName String              // "Nano Banana", "GPT Image 1.5"
+  modelFamily String?             // "google", "openai"
+  description String?
+  isEnabled   Boolean  @default(true)
+  
+  providerConfigs ModelProviderConfig[]
+  effects         Effect[]
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ModelProviderConfig {
+  id              String   @id @default(cuid())
+  modelId         String
+  providerId      String
+  providerModelId String             // "google/nano-banana" for DefAPI, "google/nano-banana" for Replicate
+  priority        Int      @default(1) // Lower = higher priority (1 = first to try)
+  costPerRequest  Decimal  @default(0) @db.Decimal(10, 6)
+  isEnabled       Boolean  @default(true)
+  
+  // Provider-specific config (aspect ratio mappings, additional params, etc.)
+  config          Json?
+  
+  model    AIModel    @relation(fields: [modelId], references: [id], onDelete: Cascade)
+  provider AIProvider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@unique([modelId, providerId])
+  @@index([modelId, priority])
+}
+
+model ProviderUsageLog {
+  id            String   @id @default(cuid())
+  jobId         String
+  providerId    String
+  providerModelId String           // The actual model ID used with this provider
+  providerTaskId  String?          // The task/prediction ID returned by the provider (DefAPI: task_id, Replicate: id)
+  attemptNumber Int      @default(1) // Which attempt this was (1, 2, 3...)
+  success       Boolean
+  costCharged   Decimal? @db.Decimal(10, 6)
+  latencyMs     Int?
+  errorMessage  String?  @db.Text
+  
+  provider AIProvider @relation(fields: [providerId], references: [id])
+  
+  createdAt DateTime @default(now())
+  
+  @@index([providerId])
+  @@index([jobId])
+  @@index([createdAt])
+}
+
+// ============================================
+// Category & Effect Models
+// ============================================
+
+model Category {
+  id             String   @id @default(cuid())
+  name           String
+  slug           String   @unique
+  description    String?
+  icon           String?  // Lucide icon name
+  sortOrder      Int      @default(0)
+  isActive       Boolean  @default(true)
+  gradientFrom   String?  // Gradient start color (hex)
+  gradientTo     String?  // Gradient end color (hex)
+
+  effects EffectCategory[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([slug])
+  @@index([sortOrder])
+}
+
+// Join table for many-to-many Effect <-> Category relationship
+model EffectCategory {
+  id         String   @id @default(cuid())
+  effectId   String
+  categoryId String
+  sortOrder  Int      @default(0) // Order of this category for the effect
+
+  effect   Effect   @relation(fields: [effectId], references: [id], onDelete: Cascade)
+  category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([effectId, categoryId])
+  @@index([effectId])
+  @@index([categoryId])
+}
+
+model Effect {
+  id                String   @id @default(cuid())
+  slug              String   @unique
+  title             String
+  tagline           String?  // Short description for cards
+  description       String?  @db.Text // Full description
+  sortOrder         Int      @default(0)
+  isEnabled         Boolean  @default(true)
+  isFeatured        Boolean  @default(false)
+
+  // Token pricing
+  defaultTokenCost  Int      @default(1)
+
+  // AI Model configuration (PRIVATE - never exposed to client)
+  // New: Reference to AIModel for multi-provider support
+  aiModelId         String?
+  aiModel           AIModel? @relation(fields: [aiModelId], references: [id])
+  
+  // Legacy fields - kept for backwards compatibility during migration
+  modelProvider     String   @default("replicate")
+  modelId           String   // e.g., "openai/gpt-image-1.5"
+  
+  promptTemplate    String?  @db.Text // Private prompt template
+  providerParams    Json?    // Private provider-specific params
+
+  // Input configuration (PUBLIC - used to render UI)
+  inputSchema       Json?    // JSON schema for dynamic input UI
+  allowedAspectRatios String[] @default(["1:1", "16:9", "9:16", "4:3", "3:4"])
+  maxOutputs        Int      @default(4)
+  supportsMask      Boolean  @default(false)
+  supportsPrompt    Boolean  @default(false)
+  
+  // Multi-image input support (for models like nano-banana and gpt-image-1.5)
+  minInputImages    Int      @default(1) // Minimum required input images
+  maxInputImages    Int      @default(1) // Maximum input images allowed (1 = single image default)
+  inputImageLabels  String[] @default([]) // Optional labels for each image slot (e.g., ["Person 1", "Person 2"])
+
+  // Stats
+  likesCount        Int      @default(0)
+  usageCount        Int      @default(0)
+
+  // Relations
+  categories EffectCategory[]
+  examples   EffectExample[]
+  jobs       GenerationJob[]
+  likes      Like[]
+  favorites  Favorite[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([slug])
+  @@index([isEnabled, isFeatured])
+  @@index([likesCount])
+  @@index([aiModelId])
+}
+
+model EffectExample {
+  id           String   @id @default(cuid())
+  effectId     String
+  beforeImages String[] // URLs to before/input images (supports multi-image effects)
+  afterImage   String   // URL to after/result image
+  caption      String?
+  sortOrder    Int      @default(0)
+  
+  // Generation settings used to create this example
+  inputValues Json?   // Stores the input field values (e.g., {wetness: 7, style: "corporate"})
+  prompt      String? // Optional: User prompt used (only shown if admin wants to expose it)
+  aspectRatio String? // Aspect ratio used
+
+  effect Effect @relation(fields: [effectId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([effectId, sortOrder])
+  @@index([effectId])
+}
+
+// ============================================
+// Generation Job Models
+// ============================================
+
+model GenerationJob {
+  id          String    @id @default(cuid())
+  userId      String
+  effectId    String
+  status      JobStatus @default(QUEUED)
+  
+  // Input data
+  inputImageUrl   String    // Primary input image (for backward compatibility)
+  inputImageUrls  String[]  @default([]) // All input images (for multi-image effects)
+  maskImageUrl    String?
+  userPrompt      String?
+  aspectRatio     String    @default("1:1")
+  numberOfOutputs Int       @default(1)
+  inputParams     Json?     // Additional user-selected params
+
+  // Token tracking
+  tokenCost     Int
+  tokensCharged Boolean   @default(false)
+  tokensRefunded Boolean  @default(false)
+
+  // Provider tracking
+  providerJobId String?   // External job ID from Replicate
+  
+  // Error handling
+  errorMessage  String?
+  errorCode     String?
+
+  // Timing
+  startedAt   DateTime?
+  completedAt DateTime?
+
+  // Relations
+  user    User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  effect  Effect            @relation(fields: [effectId], references: [id])
+  outputs GenerationOutput[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([effectId])
+  @@index([status])
+  @@index([providerJobId])
+}
+
+enum JobStatus {
+  QUEUED
+  RUNNING
+  SUCCEEDED
+  FAILED
+}
+
+model GenerationOutput {
+  id        String @id @default(cuid())
+  jobId     String
+  imageUrl  String
+  index     Int    @default(0)
+
+  job GenerationJob @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([jobId])
+}
+
+// ============================================
+// Social Features Models
+// ============================================
+
+model Like {
+  id       String @id @default(cuid())
+  userId   String
+  effectId String
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  effect Effect @relation(fields: [effectId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, effectId])
+  @@index([effectId])
+}
+
+model Favorite {
+  id       String @id @default(cuid())
+  userId   String
+  effectId String
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  effect Effect @relation(fields: [effectId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, effectId])
+  @@index([userId])
+  @@index([effectId])
+}
+
