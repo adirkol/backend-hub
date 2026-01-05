@@ -1,0 +1,361 @@
+// prisma/schema.prisma
+// AI Backend Hub - Multi-tenant AI Orchestration Platform
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// Admin Authentication (NextAuth)
+// ============================================
+
+model AdminUser {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  emailVerified DateTime?
+  name          String?
+  image         String?
+  role          AdminRole @default(ADMIN)
+
+  accounts      Account[]
+  sessions      Session[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([email])
+}
+
+enum AdminRole {
+  ADMIN
+  SUPER_ADMIN
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user AdminUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user AdminUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ============================================
+// Multi-App Tenant System
+// ============================================
+
+model App {
+  id               String   @id @default(cuid())
+  name             String   // "PhotoMania", "VideoAI", "ArtStudio"
+  slug             String   @unique
+  description      String?
+  
+  // API Authentication
+  apiKey           String   @unique @default(cuid())
+  apiKeyPrefix     String?  // First 8 chars for display (e.g., "pm_live_")
+  
+  // Configuration
+  isEnabled        Boolean  @default(true)
+  defaultTokenGrant Int     @default(0)  // Tokens for new users
+  
+  // Webhook for job completion
+  webhookUrl       String?
+  webhookSecret    String?  // For signing webhook payloads
+  
+  // Rate limits (per minute)
+  rateLimitPerUser Int      @default(30)
+  rateLimitPerApp  Int      @default(1000)
+  
+  // Relations
+  users            AppUser[]
+  jobs             GenerationJob[]
+  usageLogs        ProviderUsageLog[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([apiKey])
+  @@index([slug])
+}
+
+// Users are scoped per-app (no cross-app identity)
+model AppUser {
+  id            String   @id @default(cuid())
+  appId         String
+  externalId    String   // iOS app's user ID (Firebase UID, etc.)
+  
+  // Optional metadata from the app
+  metadata      Json?    // { "name": "John", "email": "john@example.com", ... }
+  
+  // Token balance for this user in this app
+  tokenBalance  Int      @default(0)
+  
+  // Status
+  isActive      Boolean  @default(true)
+
+  app           App      @relation(fields: [appId], references: [id], onDelete: Cascade)
+  tokenLedger   TokenLedgerEntry[]
+  jobs          GenerationJob[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([appId, externalId])  // User is unique per app
+  @@index([appId])
+  @@index([externalId])
+}
+
+// ============================================
+// Token System
+// ============================================
+
+model TokenLedgerEntry {
+  id             String          @id @default(cuid())
+  appUserId      String
+  amount         Int             // Positive = credit, negative = debit
+  balanceAfter   Int             // Balance after this transaction
+  type           TokenEntryType
+  description    String?
+  jobId          String?         // Reference to job if applicable
+  idempotencyKey String?         @unique // Prevent double processing
+
+  appUser AppUser @relation(fields: [appUserId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([appUserId])
+  @@index([jobId])
+  @@index([idempotencyKey])
+  @@index([createdAt])
+}
+
+enum TokenEntryType {
+  GRANT              // Tokens granted by app
+  GENERATION_DEBIT   // Tokens spent on generation
+  GENERATION_REFUND  // Tokens refunded on failed generation
+  ADMIN_ADJUSTMENT   // Manual adjustment by admin
+  BONUS              // Promotional bonus tokens
+  EXPIRY             // Tokens expired
+}
+
+// ============================================
+// AI Provider & Model System
+// ============================================
+
+model AIProvider {
+  id          String   @id @default(cuid())
+  name        String   @unique  // "defapi", "replicate", "openai"
+  displayName String              // "DefAPI", "Replicate", "OpenAI"
+  baseUrl     String?             // "https://api.defapi.org"
+  apiKeyEnvVar String             // "DEFAPI_API_KEY"
+  isEnabled   Boolean  @default(true)
+  
+  // Health tracking
+  lastHealthCheck DateTime?
+  healthStatus    ProviderHealth @default(UNKNOWN)
+  
+  modelConfigs ModelProviderConfig[]
+  usageLogs    ProviderUsageLog[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum ProviderHealth {
+  HEALTHY
+  DEGRADED
+  DOWN
+  UNKNOWN
+}
+
+model AIModel {
+  id          String   @id @default(cuid())
+  name        String   @unique  // "gpt-image-1.5", "nano-banana"
+  displayName String              // "GPT Image 1.5", "Nano Banana"
+  modelFamily String?             // "openai", "google"
+  description String?  @db.Text
+  
+  // Pricing
+  tokenCost   Int      @default(1)  // Base cost per generation
+  
+  // Capabilities
+  supportsImages    Boolean @default(true)
+  supportsPrompt    Boolean @default(true)
+  maxInputImages    Int     @default(1)
+  supportedAspectRatios String[] @default(["1:1", "16:9", "9:16", "4:3", "3:4"])
+  
+  isEnabled   Boolean  @default(true)
+
+  providerConfigs ModelProviderConfig[]
+  jobs            GenerationJob[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ModelProviderConfig {
+  id              String   @id @default(cuid())
+  modelId         String
+  providerId      String
+  providerModelId String             // "google/gemini-2.0-flash-exp" for DefAPI
+  priority        Int      @default(1) // Lower = higher priority (1 = first)
+  costPerRequest  Decimal  @default(0) @db.Decimal(10, 6)
+  isEnabled       Boolean  @default(true)
+  
+  // Provider-specific config
+  config          Json?    // { "aspect_ratio_map": {...}, ... }
+
+  model    AIModel    @relation(fields: [modelId], references: [id], onDelete: Cascade)
+  provider AIProvider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([modelId, providerId])
+  @@index([modelId, priority])
+}
+
+model ProviderUsageLog {
+  id              String   @id @default(cuid())
+  jobId           String
+  appId           String?
+  providerId      String
+  providerModelId String
+  providerTaskId  String?  // External task ID from provider
+  attemptNumber   Int      @default(1)
+  success         Boolean
+  costCharged     Decimal? @db.Decimal(10, 6)
+  latencyMs       Int?
+  errorMessage    String?  @db.Text
+
+  provider AIProvider @relation(fields: [providerId], references: [id])
+  app      App?       @relation(fields: [appId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@index([providerId])
+  @@index([appId])
+  @@index([jobId])
+  @@index([createdAt])
+}
+
+// ============================================
+// Generation Jobs
+// ============================================
+
+model GenerationJob {
+  id          String    @id @default(cuid())
+  appId       String
+  appUserId   String
+  aiModelId   String
+  status      JobStatus @default(QUEUED)
+  
+  // Input data (flexible JSON structure)
+  inputPayload Json     // { prompt, images: [...], aspect_ratio, ... }
+  
+  // Token tracking
+  tokenCost      Int
+  tokensCharged  Boolean  @default(false)
+  tokensRefunded Boolean  @default(false)
+  
+  // Provider tracking
+  providerTaskId String?
+  usedProvider   String?
+  attemptsCount  Int      @default(0)
+  
+  // Output
+  outputs        Json?    // [{ url, index }, ...]
+  
+  // Error handling
+  errorMessage   String?  @db.Text
+  errorCode      String?
+  
+  // Webhook delivery
+  webhookDelivered Boolean   @default(false)
+  webhookAttempts  Int       @default(0)
+  
+  // Priority (lower = higher priority)
+  priority       Int       @default(10)
+  
+  // Timing
+  startedAt      DateTime?
+  completedAt    DateTime?
+
+  app      App      @relation(fields: [appId], references: [id])
+  appUser  AppUser  @relation(fields: [appUserId], references: [id])
+  aiModel  AIModel  @relation(fields: [aiModelId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([appId, status])
+  @@index([appUserId])
+  @@index([aiModelId])
+  @@index([status, priority])
+  @@index([providerTaskId])
+  @@index([createdAt])
+}
+
+enum JobStatus {
+  QUEUED
+  RUNNING
+  SUCCEEDED
+  FAILED
+  CANCELLED
+}
+
+// ============================================
+// Audit Log (Optional but recommended)
+// ============================================
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  action      String   // "app.created", "model.updated", "tokens.granted"
+  entityType  String   // "App", "AIModel", "AppUser"
+  entityId    String
+  actorType   String   // "admin", "api", "system"
+  actorId     String?  // AdminUser ID or App ID
+  metadata    Json?    // Additional context
+  ipAddress   String?
+
+  createdAt DateTime @default(now())
+
+  @@index([entityType, entityId])
+  @@index([actorId])
+  @@index([createdAt])
+}

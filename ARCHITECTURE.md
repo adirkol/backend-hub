@@ -3,7 +3,7 @@
 > **Multi-tenant AI orchestration platform for iOS apps**
 > 
 > This document contains everything needed to bootstrap the AI Backend Hub project.
-> It was generated from the PhotoMania.ai codebase architecture.
+> It was generated from the PhotoMania.ai codebase architecture (https://github.com/photomania/photomania.ai).
 
 ---
 
