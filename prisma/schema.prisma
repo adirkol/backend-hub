@@ -109,17 +109,22 @@ model App {
   iconUrl          String?
   bundleId         String?
   
+  // RevenueCat integration
+  revenueCatAppId  String?  @unique // RevenueCat app_id (e.g., "appe83c86b6a7")
+  
   // Relations
   users            AppUser[]
   jobs             GenerationJob[]
   usageLogs        ProviderUsageLog[]
   modelTokenConfigs AppModelTokenConfig[]
+  revenueCatEvents RevenueCatEvent[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([apiKey])
   @@index([slug])
+  @@index([revenueCatAppId])
 }
 
 // Per-app token cost overrides for AI models
@@ -155,9 +160,10 @@ model AppUser {
   // Status
   isActive      Boolean  @default(true)
 
-  app           App      @relation(fields: [appId], references: [id], onDelete: Cascade)
-  tokenLedger   TokenLedgerEntry[]
-  jobs          GenerationJob[]
+  app              App               @relation(fields: [appId], references: [id], onDelete: Cascade)
+  tokenLedger      TokenLedgerEntry[]
+  jobs             GenerationJob[]
+  revenueCatEvents RevenueCatEvent[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -198,6 +204,8 @@ enum TokenEntryType {
   ADMIN_ADJUSTMENT   // Manual adjustment by admin
   BONUS              // Promotional bonus tokens
   EXPIRY             // Tokens expired
+  REVENUECAT_GRANT   // Tokens granted via RevenueCat (purchase/renewal)
+  REVENUECAT_REFUND  // Tokens deducted via RevenueCat (refund)
 }
 
 // ============================================
@@ -386,4 +394,96 @@ model AuditLog {
   @@index([entityType, entityId])
   @@index([actorId])
   @@index([createdAt])
+}
+
+// ============================================
+// RevenueCat Webhook Events
+// ============================================
+
+model RevenueCatEvent {
+  id                   String              @id @default(cuid())
+  appId                String
+  appUserId            String?             // Null if user not found/created
+  
+  // RevenueCat identifiers
+  revenueCatEventId    String              @unique // The "id" from webhook
+  revenueCatUserId     String              // app_user_id from webhook
+  transactionId        String?             // transaction_id or virtual_currency_transaction_id
+  originalTransactionId String?            // original_transaction_id for subscriptions
+  
+  // Event type and category
+  eventType            RevenueCatEventType
+  eventCategory        EventCategory       // TOKEN or REVENUE
+  
+  // Timestamps
+  eventTimestampMs     BigInt              // event_timestamp_ms from webhook
+  purchasedAtMs        BigInt?             // purchased_at_ms for purchases
+  expirationAtMs       BigInt?             // expiration_at_ms for subscriptions
+  
+  // Product info
+  productId            String?             // product_id
+  store                String?             // APP_STORE, PLAY_STORE, etc.
+  environment          String              // PRODUCTION or SANDBOX
+  
+  // Token adjustments (for VIRTUAL_CURRENCY_TRANSACTION)
+  tokenAmount          Int?                // Amount adjusted (positive=grant, negative=deduct)
+  tokenCurrencyCode    String?             // Currency code (e.g., "TOKENS")
+  source               String?             // in_app_purchase, admin_api, etc.
+  
+  // Revenue data (for purchase events)
+  priceUsd             Decimal?            @db.Decimal(10, 2) // price (normalized USD)
+  taxPercentage        Decimal?            @db.Decimal(5, 4)  // tax_percentage
+  commissionPercentage Decimal?            @db.Decimal(5, 4)  // commission_percentage
+  netRevenueUsd        Decimal?            @db.Decimal(10, 2) // Calculated net revenue
+  
+  // Cancellation data
+  cancelReason         String?             // CUSTOMER_SUPPORT, BILLING_ERROR, etc.
+  
+  // Subscription info
+  renewalNumber        Int?                // renewal_number
+  isTrialConversion    Boolean?            // is_trial_conversion
+  offerCode            String?             // offer_code if used
+  countryCode          String?             // country_code
+  
+  // Raw payload for debugging
+  rawPayload           Json                // Full webhook payload
+  
+  // Processing status
+  processed            Boolean             @default(true)
+  processingError      String?
+  
+  app     App      @relation(fields: [appId], references: [id], onDelete: Cascade)
+  appUser AppUser? @relation(fields: [appUserId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+
+  @@index([appId])
+  @@index([appUserId])
+  @@index([revenueCatUserId])
+  @@index([eventType])
+  @@index([eventCategory])
+  @@index([eventTimestampMs])
+  @@index([createdAt])
+}
+
+enum RevenueCatEventType {
+  VIRTUAL_CURRENCY_TRANSACTION
+  INITIAL_PURCHASE
+  RENEWAL
+  NON_RENEWING_PURCHASE
+  CANCELLATION
+  // Other types we track but don't process
+  EXPIRATION
+  BILLING_ISSUE
+  PRODUCT_CHANGE
+  UNCANCELLATION
+  SUBSCRIPTION_PAUSED
+  SUBSCRIPTION_EXTENDED
+  TRANSFER
+  TEST
+}
+
+enum EventCategory {
+  TOKEN    // Token adjustment events
+  REVENUE  // Purchase/subscription events
 }

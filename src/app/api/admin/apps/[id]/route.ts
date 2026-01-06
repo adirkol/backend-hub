@@ -16,6 +16,7 @@ const UpdateAppSchema = z.object({
   webhookSecret: z.string().optional().or(z.literal("")),
   rateLimitPerUser: z.number().int().min(1).optional(),
   rateLimitPerApp: z.number().int().min(1).optional(),
+  revenueCatAppId: z.string().optional().or(z.literal("")),
 });
 
 export async function GET(req: NextRequest, { params }: RouteParams) {
@@ -85,6 +86,11 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
     // Handle webhook secret
     if (data.webhookSecret !== undefined) {
       updateData.webhookSecret = data.webhookSecret || null;
+    }
+
+    // Handle RevenueCat App ID
+    if (data.revenueCatAppId !== undefined) {
+      updateData.revenueCatAppId = data.revenueCatAppId || null;
     }
 
     const app = await prisma.app.update({

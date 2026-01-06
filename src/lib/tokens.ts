@@ -300,4 +300,68 @@ export async function getTokenHistory(appUserId: string, limit = 50) {
   });
 }
 
+/**
+ * Adjust tokens from RevenueCat webhook.
+ * Uses an idempotency key based on the RevenueCat event ID.
+ */
+export async function revenueCatAdjustTokens(
+  appUserId: string,
+  amount: number,
+  revenueCatEventId: string,
+  description: string
+): Promise<TokenOperationResult> {
+  const idempotencyKey = `rc_token_${revenueCatEventId}`;
 
+  try {
+    // Check if already processed
+    const existing = await prisma.tokenLedgerEntry.findUnique({
+      where: { idempotencyKey },
+    });
+
+    if (existing) {
+      const appUser = await prisma.appUser.findUnique({
+        where: { id: appUserId },
+      });
+      return {
+        success: true,
+        balance: appUser?.tokenBalance ?? 0,
+        transactionId: existing.id,
+      };
+    }
+
+    const result = await prisma.$transaction(async (tx) => {
+      const appUser = await tx.appUser.findUnique({
+        where: { id: appUserId },
+      });
+
+      if (!appUser) {
+        throw new Error("User not found");
+      }
+
+      const newBalance = Math.max(0, appUser.tokenBalance + amount);
+
+      await tx.appUser.update({
+        where: { id: appUserId },
+        data: { tokenBalance: newBalance },
+      });
+
+      const entry = await tx.tokenLedgerEntry.create({
+        data: {
+          appUserId,
+          amount,
+          balanceAfter: newBalance,
+          type: amount > 0 ? TokenEntryType.REVENUECAT_GRANT : TokenEntryType.REVENUECAT_REFUND,
+          description,
+          idempotencyKey,
+        },
+      });
+
+      return { balance: newBalance, transactionId: entry.id };
+    });
+
+    return { success: true, ...result };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown error";
+    return { success: false, balance: 0, error: message };
+  }
+}

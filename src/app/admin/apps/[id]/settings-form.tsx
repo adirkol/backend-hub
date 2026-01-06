@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Save, Loader2, Trash2 } from "lucide-react";
+import { Save, Loader2, Trash2, Copy, Check, ExternalLink } from "lucide-react";
 
 interface App {
   id: string;
@@ -15,6 +15,7 @@ interface App {
   webhookSecret: string | null;
   rateLimitPerUser: number;
   rateLimitPerApp: number;
+  revenueCatAppId: string | null;
 }
 
 const inputStyle = {
@@ -41,6 +42,7 @@ export function AppSettingsForm({ app }: { app: App }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [webhookCopied, setWebhookCopied] = useState(false);
   const [form, setForm] = useState({
     name: app.name,
     description: app.description || "",
@@ -50,7 +52,13 @@ export function AppSettingsForm({ app }: { app: App }) {
     webhookSecret: app.webhookSecret || "",
     rateLimitPerUser: app.rateLimitPerUser,
     rateLimitPerApp: app.rateLimitPerApp,
+    revenueCatAppId: app.revenueCatAppId || "",
   });
+
+  // Generate the RevenueCat webhook URL
+  const revenueCatWebhookUrl = form.revenueCatAppId 
+    ? `${typeof window !== 'undefined' ? window.location.origin : ''}/api/webhooks/revenuecat/${form.revenueCatAppId}`
+    : null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -280,6 +288,128 @@ export function AppSettingsForm({ app }: { app: App }) {
               style={inputStyle}
             />
           </div>
+        </div>
+      </div>
+
+      <div className="glass" style={{ padding: "28px" }}>
+        <h2 style={{ 
+          fontWeight: "600", 
+          color: "#e4e4e7", 
+          paddingBottom: "20px", 
+          borderBottom: "1px solid rgba(63, 63, 70, 0.4)",
+          marginBottom: "24px",
+          fontSize: "16px",
+          display: "flex",
+          alignItems: "center",
+          gap: "12px",
+        }}>
+          RevenueCat Integration
+          <a 
+            href="https://www.revenuecat.com/docs/integrations/webhooks/overview"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ 
+              color: "#71717a", 
+              display: "inline-flex",
+              transition: "color 0.15s ease",
+            }}
+            title="RevenueCat Webhook Docs"
+          >
+            <ExternalLink style={{ width: "16px", height: "16px" }} />
+          </a>
+        </h2>
+
+        <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+          <div>
+            <label style={labelStyle}>RevenueCat App ID</label>
+            <input
+              type="text"
+              value={form.revenueCatAppId}
+              onChange={(e) => setForm({ ...form, revenueCatAppId: e.target.value })}
+              style={inputStyle}
+              placeholder="appe83c86b6a7"
+            />
+            <p style={{ 
+              fontSize: "13px", 
+              color: "#71717a", 
+              marginTop: "10px",
+              lineHeight: "1.5",
+            }}>
+              Find this in your RevenueCat dashboard under App Settings → App IDs. 
+              This enables automatic token management and revenue tracking.
+            </p>
+          </div>
+
+          {revenueCatWebhookUrl && (
+            <div style={{
+              padding: "20px",
+              borderRadius: "12px",
+              background: "rgba(16, 185, 129, 0.08)",
+              border: "1px solid rgba(16, 185, 129, 0.2)",
+            }}>
+              <label style={{ 
+                ...labelStyle, 
+                color: "#34d399", 
+                marginBottom: "12px",
+                fontSize: "13px",
+                textTransform: "uppercase",
+                letterSpacing: "0.05em",
+              }}>
+                Webhook URL for RevenueCat
+              </label>
+              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                <code style={{
+                  flex: 1,
+                  padding: "14px 16px",
+                  borderRadius: "10px",
+                  background: "rgba(39, 39, 42, 0.6)",
+                  border: "1px solid rgba(63, 63, 70, 0.4)",
+                  fontSize: "13px",
+                  color: "#e4e4e7",
+                  fontFamily: "monospace",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                }}>
+                  {revenueCatWebhookUrl}
+                </code>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    await navigator.clipboard.writeText(revenueCatWebhookUrl);
+                    setWebhookCopied(true);
+                    setTimeout(() => setWebhookCopied(false), 2000);
+                  }}
+                  style={{
+                    padding: "12px",
+                    borderRadius: "10px",
+                    background: webhookCopied ? "rgba(16, 185, 129, 0.2)" : "rgba(39, 39, 42, 0.6)",
+                    border: webhookCopied ? "1px solid rgba(16, 185, 129, 0.4)" : "1px solid rgba(63, 63, 70, 0.5)",
+                    color: webhookCopied ? "#34d399" : "#a1a1aa",
+                    cursor: "pointer",
+                    transition: "all 0.15s ease",
+                  }}
+                  title={webhookCopied ? "Copied!" : "Copy webhook URL"}
+                >
+                  {webhookCopied ? (
+                    <Check style={{ width: "18px", height: "18px" }} />
+                  ) : (
+                    <Copy style={{ width: "18px", height: "18px" }} />
+                  )}
+                </button>
+              </div>
+              <p style={{ 
+                fontSize: "13px", 
+                color: "#71717a", 
+                marginTop: "14px",
+                lineHeight: "1.5",
+              }}>
+                Add this URL to RevenueCat under Project Settings → Integrations → Webhooks. 
+                Enable <strong style={{ color: "#a1a1aa" }}>VIRTUAL_CURRENCY_TRANSACTION</strong> for token management 
+                and purchase events for revenue tracking.
+              </p>
+            </div>
+          )}
         </div>
       </div>
 
