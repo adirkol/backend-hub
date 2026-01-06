@@ -1,5 +1,6 @@
+import Link from "next/link";
 import { prisma } from "@/lib/db";
-import { Zap, CheckCircle, XCircle, AlertTriangle, HelpCircle, ExternalLink, Key } from "lucide-react";
+import { Zap, CheckCircle, XCircle, AlertTriangle, HelpCircle, ExternalLink, Key, ChevronRight } from "lucide-react";
 
 async function getProviders() {
   const providers = await prisma.aIProvider.findMany({
@@ -122,7 +123,17 @@ export default async function ProvidersPage() {
             : null;
 
           return (
-            <div key={provider.id} className="glass" style={{ padding: "28px" }}>
+            <Link 
+              key={provider.id} 
+              href={`/admin/providers/${provider.id}`}
+              className="glass" 
+              style={{ 
+                padding: "28px", 
+                textDecoration: "none",
+                display: "block",
+                transition: "border-color 0.15s ease",
+              }}
+            >
               <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: "20px" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
                   <div style={{
@@ -144,7 +155,10 @@ export default async function ProvidersPage() {
                     <p style={{ fontSize: "13px", color: "#71717a", fontFamily: "monospace" }}>{provider.name}</p>
                   </div>
                 </div>
-                <HealthBadge status={provider.healthStatus} />
+                <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                  <HealthBadge status={provider.healthStatus} />
+                  <ChevronRight style={{ width: "20px", height: "20px", color: "#71717a" }} />
+                </div>
               </div>
 
               {/* Info */}
@@ -227,7 +241,7 @@ export default async function ProvidersPage() {
                   </span>
                 )}
               </div>
-            </div>
+            </Link>
           );
         })}
 

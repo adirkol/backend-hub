@@ -35,6 +35,7 @@ interface ProviderConfig {
   providerModelId: string;
   priority: number;
   isEnabled: boolean;
+  costPerRequest: number;
   provider: {
     id: string;
     name: string;
@@ -85,13 +86,11 @@ interface Props {
 function SortableProviderItem({ 
   config, 
   index,
-  onToggle,
   onRemove,
   onModelIdChange,
 }: { 
   config: ProviderConfig; 
   index: number;
-  onToggle: () => void;
   onRemove: () => void;
   onModelIdChange: (value: string) => void;
 }) {
@@ -123,7 +122,6 @@ function SortableProviderItem({
         border: `1px solid ${isDragging ? "rgba(16, 185, 129, 0.5)" : "rgba(63, 63, 70, 0.4)"}`,
         borderRadius: "12px",
         marginBottom: "12px",
-        opacity: config.isEnabled ? 1 : 0.6,
       }}
     >
       {/* Drag Handle */}
@@ -190,22 +188,22 @@ function SortableProviderItem({
         />
       </div>
 
-      {/* Enable/Disable Toggle */}
-      <button
-        onClick={onToggle}
-        style={{
-          padding: "8px 16px",
-          background: config.isEnabled ? "rgba(16, 185, 129, 0.15)" : "rgba(239, 68, 68, 0.15)",
-          border: `1px solid ${config.isEnabled ? "rgba(16, 185, 129, 0.3)" : "rgba(239, 68, 68, 0.3)"}`,
-          borderRadius: "8px",
-          color: config.isEnabled ? "#34d399" : "#ef4444",
-          fontSize: "13px",
-          fontWeight: "500",
-          cursor: "pointer",
-        }}
-      >
-        {config.isEnabled ? "Enabled" : "Disabled"}
-      </button>
+      {/* Cost per Request */}
+      <div style={{
+        padding: "8px 14px",
+        background: "rgba(250, 204, 21, 0.1)",
+        border: "1px solid rgba(250, 204, 21, 0.2)",
+        borderRadius: "8px",
+        color: "#fbbf24",
+        fontSize: "13px",
+        fontWeight: "500",
+        display: "flex",
+        alignItems: "center",
+        gap: "4px",
+      }}>
+        <span style={{ color: "#a1a1aa", fontSize: "12px" }}>Cost:</span>
+        ${config.costPerRequest.toFixed(4)}
+      </div>
 
       {/* Remove Button */}
       <button
@@ -262,14 +260,6 @@ export function ModelEditForm({ model, allProviders, apps }: Props) {
     }
   };
 
-  const toggleProviderEnabled = (configId: string) => {
-    setProviderConfigs((items) =>
-      items.map((item) =>
-        item.id === configId ? { ...item, isEnabled: !item.isEnabled } : item
-      )
-    );
-  };
-
   const removeProvider = (configId: string) => {
     setProviderConfigs((items) => items.filter((item) => item.id !== configId));
   };
@@ -289,6 +279,7 @@ export function ModelEditForm({ model, allProviders, apps }: Props) {
       providerModelId: "",
       priority: providerConfigs.length + 1,
       isEnabled: true,
+      costPerRequest: 0,
       provider,
     };
     setProviderConfigs([...providerConfigs, newConfig]);
@@ -554,7 +545,6 @@ export function ModelEditForm({ model, allProviders, apps }: Props) {
                 key={config.id}
                 config={config}
                 index={index}
-                onToggle={() => toggleProviderEnabled(config.id)}
                 onRemove={() => removeProvider(config.id)}
                 onModelIdChange={(value) => updateProviderModelId(config.id, value)}
               />

@@ -42,7 +42,16 @@ async function getModel(id: string) {
     select: { id: true, name: true, slug: true },
   });
 
-  return { model, allProviders, apps };
+  // Serialize Decimal fields to numbers for client components
+  const serializedModel = {
+    ...model,
+    providerConfigs: model.providerConfigs.map((config) => ({
+      ...config,
+      costPerRequest: Number(config.costPerRequest),
+    })),
+  };
+
+  return { model: serializedModel, allProviders, apps };
 }
 
 export default async function ModelEditPage({ params }: Props) {

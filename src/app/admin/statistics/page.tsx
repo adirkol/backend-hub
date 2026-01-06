@@ -8,6 +8,7 @@ import {
   Clock,
   CheckCircle,
   XCircle,
+  Receipt,
 } from "lucide-react";
 
 async function getStatistics() {
@@ -21,24 +22,24 @@ async function getStatistics() {
   // Get daily job counts for the last 14 days
   const dailyStats = await prisma.$queryRaw<Array<{ date: Date; count: bigint; succeeded: bigint; failed: bigint }>>`
     SELECT 
-      DATE(created_at) as date,
+      DATE("createdAt") as date,
       COUNT(*) as count,
       SUM(CASE WHEN status = 'SUCCEEDED' THEN 1 ELSE 0 END) as succeeded,
       SUM(CASE WHEN status = 'FAILED' THEN 1 ELSE 0 END) as failed
-    FROM generation_jobs
-    WHERE created_at >= ${new Date(Date.now() - 14 * 24 * 60 * 60 * 1000)}
-    GROUP BY DATE(created_at)
+    FROM "GenerationJob"
+    WHERE "createdAt" >= ${new Date(Date.now() - 14 * 24 * 60 * 60 * 1000)}
+    GROUP BY DATE("createdAt")
     ORDER BY date ASC
   `.catch(() => []);
 
   // Get user growth
   const userGrowth = await prisma.$queryRaw<Array<{ date: Date; count: bigint }>>`
     SELECT 
-      DATE(created_at) as date,
+      DATE("createdAt") as date,
       COUNT(*) as count
-    FROM app_users
-    WHERE created_at >= ${new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)}
-    GROUP BY DATE(created_at)
+    FROM "AppUser"
+    WHERE "createdAt" >= ${new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)}
+    GROUP BY DATE("createdAt")
     ORDER BY date ASC
   `.catch(() => []);
 
@@ -90,6 +91,107 @@ async function getStatistics() {
     }),
   ]);
 
+  // ===== EXPENSE CALCULATIONS =====
+  
+  // Get all successful provider usage logs
+  const successfulLogs = await prisma.providerUsageLog.findMany({
+    where: {
+      success: true,
+      createdAt: { gte: monthStart },
+    },
+    include: {
+      provider: {
+        select: { id: true, displayName: true },
+      },
+    },
+  });
+
+  // Get job to model mapping for the logs we have
+  const jobIds = [...new Set(successfulLogs.map(log => log.jobId))];
+  const jobs = await prisma.generationJob.findMany({
+    where: { id: { in: jobIds } },
+    select: {
+      id: true,
+      aiModelId: true,
+      aiModel: {
+        select: { id: true, displayName: true },
+      },
+    },
+  });
+  const jobModelMap = new Map(jobs.map(j => [j.id, { modelId: j.aiModelId, modelName: j.aiModel.displayName }]));
+
+  // Get all model provider configs for cost lookup
+  const modelProviderConfigs = await prisma.modelProviderConfig.findMany({
+    select: {
+      modelId: true,
+      providerId: true,
+      costPerRequest: true,
+    },
+  });
+
+  // Create a lookup map for costs: modelId-providerId -> cost
+  const costLookup = new Map<string, number>();
+  for (const config of modelProviderConfigs) {
+    costLookup.set(`${config.modelId}-${config.providerId}`, Number(config.costPerRequest));
+  }
+
+  // Calculate total expenses
+  let totalExpenses = 0;
+  const expensesByProvider = new Map<string, { name: string; amount: number; count: number }>();
+  const expensesByModel = new Map<string, { name: string; amount: number; count: number }>();
+  const dailyExpenses = new Map<string, number>();
+
+  for (const log of successfulLogs) {
+    const jobInfo = jobModelMap.get(log.jobId);
+    const modelId = jobInfo?.modelId;
+    const providerId = log.providerId;
+    const cost = modelId ? (costLookup.get(`${modelId}-${providerId}`) || 0) : 0;
+
+    totalExpenses += cost;
+
+    // By provider
+    const providerName = log.provider.displayName;
+    const providerStats = expensesByProvider.get(providerId) || { name: providerName, amount: 0, count: 0 };
+    providerStats.amount += cost;
+    providerStats.count += 1;
+    expensesByProvider.set(providerId, providerStats);
+
+    // By model
+    if (modelId && jobInfo) {
+      const modelName = jobInfo.modelName;
+      const modelStats = expensesByModel.get(modelId) || { name: modelName, amount: 0, count: 0 };
+      modelStats.amount += cost;
+      modelStats.count += 1;
+      expensesByModel.set(modelId, modelStats);
+    }
+
+    // Daily expenses
+    const dateKey = log.createdAt.toISOString().split("T")[0];
+    dailyExpenses.set(dateKey, (dailyExpenses.get(dateKey) || 0) + cost);
+  }
+
+  // Get expenses for this week
+  const expensesThisWeek = successfulLogs
+    .filter(log => log.createdAt >= weekStart)
+    .reduce((sum, log) => {
+      const jobInfo = jobModelMap.get(log.jobId);
+      const modelId = jobInfo?.modelId;
+      const cost = modelId ? (costLookup.get(`${modelId}-${log.providerId}`) || 0) : 0;
+      return sum + cost;
+    }, 0);
+
+  // Format daily expenses for chart (last 14 days)
+  const dailyExpenseChart: Array<{ date: string; amount: number }> = [];
+  for (let i = 13; i >= 0; i--) {
+    const date = new Date();
+    date.setDate(date.getDate() - i);
+    const dateKey = date.toISOString().split("T")[0];
+    dailyExpenseChart.push({
+      date: date.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+      amount: dailyExpenses.get(dateKey) || 0,
+    });
+  }
+
   return {
     dailyStats: dailyStats.map((d) => ({
       date: new Date(d.date).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
@@ -119,6 +221,17 @@ async function getStatistics() {
     jobsThisMonth,
     jobsThisWeek,
     tokensUsedThisMonth: Math.abs(totalTokensUsed._sum.amount || 0),
+    // Expense data
+    expenses: {
+      total: totalExpenses,
+      thisMonth: totalExpenses,
+      thisWeek: expensesThisWeek,
+      byProvider: Array.from(expensesByProvider.values())
+        .sort((a, b) => b.amount - a.amount),
+      byModel: Array.from(expensesByModel.values())
+        .sort((a, b) => b.amount - a.amount),
+      daily: dailyExpenseChart,
+    },
   };
 }
 
@@ -236,6 +349,45 @@ function SimpleBarChart({ data }: { data: Array<{ label: string; value: number }
   );
 }
 
+function ExpenseChart({ data }: { data: Array<{ date: string; amount: number }> }) {
+  const maxAmount = Math.max(...data.map((d) => d.amount), 0.01);
+
+  return (
+    <div style={{ display: "flex", alignItems: "flex-end", gap: "4px", height: "120px" }}>
+      {data.map((item, i) => {
+        const heightPercent = maxAmount > 0 ? (item.amount / maxAmount) * 100 : 0;
+        return (
+          <div
+            key={i}
+            style={{
+              flex: 1,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "flex-end",
+              height: "100%",
+            }}
+          >
+            <div
+              style={{ 
+                width: "100%",
+                background: item.amount > 0 
+                  ? "linear-gradient(180deg, #f87171 0%, rgba(248, 113, 113, 0.4) 100%)"
+                  : "rgba(63, 63, 70, 0.3)",
+                borderRadius: "4px 4px 0 0",
+                height: `${Math.max(heightPercent, item.amount > 0 ? 8 : 4)}%`,
+                transition: "all 0.3s ease",
+                minHeight: item.amount > 0 ? "6px" : "2px",
+              }}
+              title={`${item.date}: $${item.amount.toFixed(4)}`}
+            />
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 export default async function StatisticsPage() {
   const stats = await getStatistics();
 
@@ -251,7 +403,140 @@ export default async function StatisticsPage() {
         </p>
       </div>
 
-      {/* Overview Stats */}
+      {/* Expense Overview */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "20px" }}>
+        <StatCard
+          title="Total Expenses (Month)"
+          value={`$${stats.expenses.thisMonth.toFixed(2)}`}
+          icon={Receipt}
+          iconBg="linear-gradient(135deg, rgba(239, 68, 68, 0.2) 0%, rgba(220, 38, 38, 0.3) 100%)"
+          iconColor="#f87171"
+        />
+        <StatCard
+          title="Expenses (Week)"
+          value={`$${stats.expenses.thisWeek.toFixed(2)}`}
+          icon={DollarSign}
+          iconBg="linear-gradient(135deg, rgba(251, 191, 36, 0.2) 0%, rgba(245, 158, 11, 0.3) 100%)"
+          iconColor="#fbbf24"
+        />
+        <StatCard
+          title="Jobs This Month"
+          value={stats.jobsThisMonth}
+          icon={Zap}
+          iconBg="linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(5, 150, 105, 0.3) 100%)"
+          iconColor="#34d399"
+        />
+        <StatCard
+          title="Avg Cost per Job"
+          value={stats.jobsThisMonth > 0 
+            ? `$${(stats.expenses.thisMonth / stats.jobsThisMonth).toFixed(4)}` 
+            : "$0.00"}
+          icon={BarChart3}
+          iconBg="linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(37, 99, 235, 0.3) 100%)"
+          iconColor="#60a5fa"
+        />
+      </div>
+
+      {/* Expense Charts */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(400px, 1fr))", gap: "24px" }}>
+        {/* Expenses Over Time */}
+        <div className="glass" style={{ padding: "28px" }}>
+          <h3 style={{ fontWeight: "600", color: "#e4e4e7", marginBottom: "24px", fontSize: "16px" }}>
+            Expenses (Last 14 Days)
+          </h3>
+          {stats.expenses.daily.some(d => d.amount > 0) ? (
+            <>
+              <ExpenseChart data={stats.expenses.daily} />
+              <div style={{ display: "flex", justifyContent: "space-between", marginTop: "12px" }}>
+                <span style={{ fontSize: "12px", color: "#71717a" }}>{stats.expenses.daily[0]?.date}</span>
+                <span style={{ fontSize: "12px", color: "#71717a" }}>{stats.expenses.daily[stats.expenses.daily.length - 1]?.date}</span>
+              </div>
+              <p style={{ marginTop: "20px", fontSize: "14px", color: "#a1a1aa" }}>
+                Total: <span style={{ color: "#f87171", fontWeight: "600" }}>${stats.expenses.thisMonth.toFixed(2)}</span>
+              </p>
+            </>
+          ) : (
+            <p style={{ color: "#71717a", textAlign: "center", padding: "40px 0" }}>No expense data available</p>
+          )}
+        </div>
+
+        {/* Expenses by Provider */}
+        <div className="glass" style={{ padding: "28px" }}>
+          <h3 style={{ fontWeight: "600", color: "#e4e4e7", marginBottom: "24px", fontSize: "16px" }}>
+            Expenses by Provider
+          </h3>
+          {stats.expenses.byProvider.length > 0 ? (
+            <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+              {stats.expenses.byProvider.map((p, i) => (
+                <div key={i} style={{ 
+                  display: "flex", 
+                  alignItems: "center", 
+                  justifyContent: "space-between", 
+                  padding: "16px", 
+                  borderRadius: "12px", 
+                  background: "rgba(39, 39, 42, 0.4)",
+                  border: "1px solid rgba(63, 63, 70, 0.3)",
+                }}>
+                  <div>
+                    <p style={{ fontSize: "14px", fontWeight: "500", color: "#e4e4e7" }}>{p.name}</p>
+                    <p style={{ fontSize: "13px", color: "#71717a", marginTop: "4px" }}>{p.count.toLocaleString()} requests</p>
+                  </div>
+                  <div style={{ textAlign: "right" }}>
+                    <p style={{ fontSize: "16px", fontWeight: "600", color: "#f87171" }}>${p.amount.toFixed(2)}</p>
+                    <p style={{ fontSize: "13px", color: "#71717a", marginTop: "4px" }}>
+                      ${p.count > 0 ? (p.amount / p.count).toFixed(4) : "0.0000"}/req
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p style={{ color: "#71717a", textAlign: "center", padding: "40px 0" }}>No data available</p>
+          )}
+        </div>
+      </div>
+
+      {/* Expenses by Model */}
+      <div className="glass" style={{ padding: "28px" }}>
+        <h3 style={{ fontWeight: "600", color: "#e4e4e7", marginBottom: "24px", fontSize: "16px" }}>
+          Expenses by Model
+        </h3>
+        {stats.expenses.byModel.length > 0 ? (
+          <div style={{ 
+            display: "grid", 
+            gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", 
+            gap: "16px" 
+          }}>
+            {stats.expenses.byModel.map((m, i) => (
+              <div key={i} style={{ 
+                padding: "20px", 
+                borderRadius: "12px", 
+                background: "rgba(39, 39, 42, 0.4)",
+                border: "1px solid rgba(63, 63, 70, 0.3)",
+              }}>
+                <p style={{ fontSize: "15px", fontWeight: "500", color: "#e4e4e7", marginBottom: "8px" }}>
+                  {m.name}
+                </p>
+                <div style={{ display: "flex", alignItems: "baseline", gap: "12px" }}>
+                  <span style={{ fontSize: "24px", fontWeight: "700", color: "#f87171" }}>
+                    ${m.amount.toFixed(2)}
+                  </span>
+                  <span style={{ fontSize: "13px", color: "#71717a" }}>
+                    {m.count.toLocaleString()} jobs
+                  </span>
+                </div>
+                <p style={{ fontSize: "13px", color: "#71717a", marginTop: "8px" }}>
+                  Avg: ${m.count > 0 ? (m.amount / m.count).toFixed(4) : "0.0000"}/request
+                </p>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p style={{ color: "#71717a", textAlign: "center", padding: "40px 0" }}>No expense data available</p>
+        )}
+      </div>
+
+      {/* Job Stats */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "20px" }}>
         <StatCard
           title="Total Jobs"
@@ -259,13 +544,6 @@ export default async function StatisticsPage() {
           icon={Zap}
           iconBg="linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(5, 150, 105, 0.3) 100%)"
           iconColor="#34d399"
-        />
-        <StatCard
-          title="Jobs This Month"
-          value={stats.jobsThisMonth}
-          icon={BarChart3}
-          iconBg="linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(37, 99, 235, 0.3) 100%)"
-          iconColor="#60a5fa"
         />
         <StatCard
           title="Jobs This Week"
