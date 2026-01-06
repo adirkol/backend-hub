@@ -11,6 +11,7 @@ export interface ApiAuthResult {
     webhookSecret: string | null;
     rateLimitPerUser: number;
     rateLimitPerApp: number;
+    defaultTokenGrant: number;
   };
   appUser?: {
     id: string;
@@ -113,6 +114,7 @@ export async function validateApiRequest(
         webhookSecret: app.webhookSecret,
         rateLimitPerUser: app.rateLimitPerUser,
         rateLimitPerApp: app.rateLimitPerApp,
+        defaultTokenGrant: app.defaultTokenGrant,
       },
       appUser: {
         id: appUser.id,
@@ -132,6 +134,7 @@ export async function validateApiRequest(
       webhookSecret: app.webhookSecret,
       rateLimitPerUser: app.rateLimitPerUser,
       rateLimitPerApp: app.rateLimitPerApp,
+      defaultTokenGrant: app.defaultTokenGrant,
     },
   };
 }

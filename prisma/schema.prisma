@@ -157,6 +157,11 @@ model AppUser {
   // Token balance for this user in this app
   tokenBalance  Int      @default(0)
   
+  // Token sync flag for users created via RevenueCat webhook
+  // When true, the user was created from a webhook and may have tokens
+  // from the old client-side system that need to be synced
+  needsTokenSync Boolean  @default(false)
+  
   // Status
   isActive      Boolean  @default(true)
 

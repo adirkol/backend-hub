@@ -168,29 +168,21 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
       },
     });
 
-    // Create user if not exists (for users who haven't opened the app yet)
+    // Create user if not exists
+    // Note: Users created from RevenueCat are OLD users who already had the app
+    // before AI Hub was implemented. They should NOT get welcome tokens, as they
+    // already received them client-side. Instead, we flag them for token sync.
     if (!appUser) {
       appUser = await prisma.appUser.create({
         data: {
           appId: app.id,
           externalId: revenueCatUserId,
-          tokenBalance: app.defaultTokenGrant,
+          tokenBalance: 0, // No welcome tokens - user already had them client-side
+          needsTokenSync: true, // Flag for token sync when app calls POST /api/v1/users
         },
       });
 
-      // Log initial token grant if any
-      if (app.defaultTokenGrant > 0) {
-        await prisma.tokenLedgerEntry.create({
-          data: {
-            appUserId: appUser.id,
-            amount: app.defaultTokenGrant,
-            balanceAfter: app.defaultTokenGrant,
-            type: TokenEntryType.GRANT,
-            description: "Welcome tokens (created via RevenueCat webhook)",
-            idempotencyKey: `welcome_${appUser.id}`,
-          },
-        });
-      }
+      console.log(`RevenueCat webhook: Created user ${revenueCatUserId} with needsTokenSync=true (old user)`);
     }
 
     // Process based on event type

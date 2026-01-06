@@ -2,10 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { validateApiRequest } from "@/lib/api-auth";
 import { prisma } from "@/lib/db";
 import { z } from "zod";
+import { TokenEntryType } from "@prisma/client";
 
 const CreateUserSchema = z.object({
   external_id: z.string().min(1).max(255),
   metadata: z.record(z.unknown()).optional(),
+  // Optional: Initial tokens from the client-side system
+  // Used when syncing tokens for users created via RevenueCat webhook
+  initial_tokens: z.number().int().min(0).optional(),
 });
 
 export async function POST(req: NextRequest) {
@@ -29,7 +33,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { external_id, metadata } = parsed.data;
+    const { external_id, metadata, initial_tokens } = parsed.data;
 
     // Check if user already exists
     const existingUser = await prisma.appUser.findUnique({
@@ -42,10 +46,59 @@ export async function POST(req: NextRequest) {
     });
 
     if (existingUser) {
+      // User exists - check if they need token sync
+      if (existingUser.needsTokenSync && initial_tokens !== undefined) {
+        // This user was created via RevenueCat webhook and needs token sync
+        // Combine their AI Hub balance with client-side tokens
+        const syncedBalance = existingUser.tokenBalance + initial_tokens;
+        
+        const updatedUser = await prisma.$transaction(async (tx) => {
+          // Update user with synced balance and clear the flag
+          const user = await tx.appUser.update({
+            where: { id: existingUser.id },
+            data: {
+              tokenBalance: syncedBalance,
+              needsTokenSync: false,
+              metadata: metadata || existingUser.metadata,
+            },
+          });
+
+          // Log the token sync
+          if (initial_tokens > 0) {
+            await tx.tokenLedgerEntry.create({
+              data: {
+                appUserId: existingUser.id,
+                amount: initial_tokens,
+                balanceAfter: syncedBalance,
+                type: TokenEntryType.GRANT,
+                description: "Token sync from client-side system",
+                idempotencyKey: `sync_${existingUser.id}_${Date.now()}`,
+              },
+            });
+          }
+
+          return user;
+        });
+
+        return NextResponse.json({
+          success: true,
+          created: false,
+          synced: true,
+          user: {
+            external_id: updatedUser.externalId,
+            token_balance: updatedUser.tokenBalance,
+            is_active: updatedUser.isActive,
+            metadata: updatedUser.metadata,
+            created_at: updatedUser.createdAt.toISOString(),
+          },
+        });
+      }
+
       // Return existing user (idempotent - no error)
       return NextResponse.json({
         success: true,
         created: false,
+        synced: false,
         user: {
           external_id: existingUser.externalId,
           token_balance: existingUser.tokenBalance,
@@ -57,25 +110,44 @@ export async function POST(req: NextRequest) {
     }
 
     // Create new user with default token grant from app settings
+    // Plus any initial_tokens passed in (for migrating users)
+    const welcomeTokens = auth.app.defaultTokenGrant;
+    const additionalTokens = initial_tokens ?? 0;
+    const totalTokens = welcomeTokens + additionalTokens;
+
     const newUser = await prisma.appUser.create({
       data: {
         appId: auth.app.id,
         externalId: external_id,
-        tokenBalance: auth.app.defaultTokenGrant,
+        tokenBalance: totalTokens,
         metadata: metadata || null,
+        needsTokenSync: false,
       },
     });
 
-    // If there's a default token grant, create a ledger entry
-    if (auth.app.defaultTokenGrant > 0) {
+    // Create ledger entries for both welcome tokens and initial tokens
+    if (welcomeTokens > 0) {
       await prisma.tokenLedgerEntry.create({
         data: {
           appUserId: newUser.id,
-          amount: auth.app.defaultTokenGrant,
-          balanceAfter: auth.app.defaultTokenGrant,
-          type: "GRANT",
+          amount: welcomeTokens,
+          balanceAfter: welcomeTokens,
+          type: TokenEntryType.GRANT,
           description: "Welcome bonus - new user registration",
           idempotencyKey: `welcome_${newUser.id}`,
+        },
+      });
+    }
+
+    if (additionalTokens > 0) {
+      await prisma.tokenLedgerEntry.create({
+        data: {
+          appUserId: newUser.id,
+          amount: additionalTokens,
+          balanceAfter: totalTokens,
+          type: TokenEntryType.GRANT,
+          description: "Initial tokens from client-side system",
+          idempotencyKey: `initial_${newUser.id}`,
         },
       });
     }
@@ -83,6 +155,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       success: true,
       created: true,
+      synced: false,
       user: {
         external_id: newUser.externalId,
         token_balance: newUser.tokenBalance,
