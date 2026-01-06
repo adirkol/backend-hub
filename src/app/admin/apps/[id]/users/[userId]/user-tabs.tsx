@@ -32,6 +32,7 @@ interface TokenLedgerEntry {
   description: string | null;
   jobId: string | null;
   createdAt: string;
+  expiresAt: string | null;
 }
 
 interface RevenueCatEvent {
@@ -71,6 +72,12 @@ interface Stats {
   totalExpenses: number;
 }
 
+interface EffectiveBalance {
+  rawBalance: number;
+  effectiveBalance: number;
+  expiredTokens: number;
+}
+
 interface UserTabsProps {
   user: UserData;
   appId: string;
@@ -84,6 +91,7 @@ interface UserTabsProps {
     tokenLedger: number;
     revenueCatEvents: number;
   };
+  effectiveBalance: EffectiveBalance;
 }
 
 type TabType = "overview" | "jobs" | "tokens" | "revenue";
@@ -144,6 +152,7 @@ export function UserTabs({
   revenueEvents,
   stats,
   counts,
+  effectiveBalance,
 }: UserTabsProps) {
   const [activeTab, setActiveTab] = useState<TabType>("overview");
 
@@ -178,9 +187,16 @@ export function UserTabs({
             </div>
             <div>
               <p style={{ fontSize: "24px", fontWeight: "700", color: "#fafafa" }}>
-                {user.tokenBalance.toLocaleString()}
+                {effectiveBalance.effectiveBalance.toLocaleString()}
               </p>
-              <p style={{ fontSize: "13px", color: "#71717a" }}>Token Balance</p>
+              <p style={{ fontSize: "13px", color: "#71717a" }}>
+                Token Balance
+                {effectiveBalance.expiredTokens > 0 && (
+                  <span style={{ color: "#f87171", marginLeft: "6px" }}>
+                    ({effectiveBalance.expiredTokens} expired)
+                  </span>
+                )}
+              </p>
             </div>
           </div>
         </div>
@@ -621,7 +637,7 @@ export function UserTabs({
           <table style={{ width: "100%", borderCollapse: "collapse" }}>
             <thead>
               <tr style={{ borderBottom: "1px solid rgba(63, 63, 70, 0.4)" }}>
-                {["Type", "Description", "Amount", "Balance After", "Date"].map((header) => (
+                {["Type", "Description", "Amount", "Balance After", "Date", "Expires"].map((header) => (
                   <th 
                     key={header}
                     style={{ 
@@ -640,51 +656,73 @@ export function UserTabs({
               </tr>
             </thead>
             <tbody>
-              {tokenLedger.map((entry) => (
-                <tr 
-                  key={entry.id} 
-                  className="table-row-hover"
-                  style={{ borderBottom: "1px solid rgba(63, 63, 70, 0.25)" }}
-                >
-                  <td style={{ padding: "18px 20px" }}>
-                    <span style={{
-                      fontSize: "12px",
-                      padding: "4px 10px",
-                      borderRadius: "6px",
-                      background: entry.type.includes("REFUND") || entry.type.includes("DEBIT") 
-                        ? "rgba(239, 68, 68, 0.15)" 
-                        : "rgba(16, 185, 129, 0.15)",
-                      color: entry.type.includes("REFUND") || entry.type.includes("DEBIT")
-                        ? "#f87171"
-                        : "#34d399",
-                      fontWeight: "500",
-                    }}>
-                      {entry.type.replace(/_/g, " ")}
-                    </span>
-                  </td>
-                  <td style={{ padding: "18px 20px", fontSize: "14px", color: "#e4e4e7" }}>
-                    {entry.description || "-"}
-                  </td>
-                  <td style={{ padding: "18px 20px" }}>
-                    <span style={{ 
-                      fontSize: "14px", 
-                      fontWeight: "600", 
-                      color: entry.amount > 0 ? "#34d399" : "#f87171",
-                    }}>
-                      {entry.amount > 0 ? "+" : ""}{entry.amount}
-                    </span>
-                  </td>
-                  <td style={{ padding: "18px 20px", fontSize: "14px", color: "#a1a1aa" }}>
-                    {entry.balanceAfter}
-                  </td>
-                  <td style={{ padding: "18px 20px", fontSize: "13px", color: "#71717a" }}>
-                    {formatDate(entry.createdAt)}
-                  </td>
-                </tr>
-              ))}
+              {tokenLedger.map((entry) => {
+                const isExpired = entry.expiresAt && new Date(entry.expiresAt) < new Date();
+                const isExpiringSoon = entry.expiresAt && !isExpired && 
+                  new Date(entry.expiresAt) < new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
+                
+                return (
+                  <tr 
+                    key={entry.id} 
+                    className="table-row-hover"
+                    style={{ 
+                      borderBottom: "1px solid rgba(63, 63, 70, 0.25)",
+                      opacity: isExpired ? 0.5 : 1,
+                    }}
+                  >
+                    <td style={{ padding: "18px 20px" }}>
+                      <span style={{
+                        fontSize: "12px",
+                        padding: "4px 10px",
+                        borderRadius: "6px",
+                        background: entry.type.includes("REFUND") || entry.type.includes("DEBIT") 
+                          ? "rgba(239, 68, 68, 0.15)" 
+                          : "rgba(16, 185, 129, 0.15)",
+                        color: entry.type.includes("REFUND") || entry.type.includes("DEBIT")
+                          ? "#f87171"
+                          : "#34d399",
+                        fontWeight: "500",
+                      }}>
+                        {entry.type.replace(/_/g, " ")}
+                      </span>
+                    </td>
+                    <td style={{ padding: "18px 20px", fontSize: "14px", color: "#e4e4e7" }}>
+                      {entry.description || "-"}
+                    </td>
+                    <td style={{ padding: "18px 20px" }}>
+                      <span style={{ 
+                        fontSize: "14px", 
+                        fontWeight: "600", 
+                        color: entry.amount > 0 ? "#34d399" : "#f87171",
+                        textDecoration: isExpired ? "line-through" : "none",
+                      }}>
+                        {entry.amount > 0 ? "+" : ""}{entry.amount}
+                      </span>
+                    </td>
+                    <td style={{ padding: "18px 20px", fontSize: "14px", color: "#a1a1aa" }}>
+                      {entry.balanceAfter}
+                    </td>
+                    <td style={{ padding: "18px 20px", fontSize: "13px", color: "#71717a" }}>
+                      {formatDate(entry.createdAt)}
+                    </td>
+                    <td style={{ padding: "18px 20px", fontSize: "13px" }}>
+                      {entry.expiresAt ? (
+                        <span style={{ 
+                          color: isExpired ? "#f87171" : isExpiringSoon ? "#fbbf24" : "#71717a",
+                          fontWeight: isExpired || isExpiringSoon ? "500" : "400",
+                        }}>
+                          {isExpired ? "Expired" : formatDate(entry.expiresAt)}
+                        </span>
+                      ) : (
+                        <span style={{ color: "#52525b" }}>Never</span>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
               {tokenLedger.length === 0 && (
                 <tr>
-                  <td colSpan={5} style={{ padding: "64px 20px", textAlign: "center", color: "#71717a" }}>
+                  <td colSpan={6} style={{ padding: "64px 20px", textAlign: "center", color: "#71717a" }}>
                     No token history
                   </td>
                 </tr>

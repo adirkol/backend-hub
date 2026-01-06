@@ -1,5 +1,6 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
+import { calculateExpirationDate } from "@/lib/tokens";
 
 export interface ApiAuthResult {
   success: boolean;
@@ -12,6 +13,7 @@ export interface ApiAuthResult {
     rateLimitPerUser: number;
     rateLimitPerApp: number;
     defaultTokenGrant: number;
+    tokenExpirationDays: number | null;
   };
   appUser?: {
     id: string;
@@ -48,6 +50,7 @@ export async function validateApiRequest(
       rateLimitPerUser: true,
       rateLimitPerApp: true,
       defaultTokenGrant: true,
+      tokenExpirationDays: true,
     },
   });
 
@@ -87,6 +90,7 @@ export async function validateApiRequest(
 
       // Log initial token grant if any
       if (app.defaultTokenGrant > 0) {
+        const expiresAt = calculateExpirationDate(app.tokenExpirationDays);
         await prisma.tokenLedgerEntry.create({
           data: {
             appUserId: appUser.id,
@@ -95,6 +99,7 @@ export async function validateApiRequest(
             type: "GRANT",
             description: "Welcome tokens",
             idempotencyKey: `welcome_${appUser.id}`,
+            expiresAt,
           },
         });
       }
@@ -115,6 +120,7 @@ export async function validateApiRequest(
         rateLimitPerUser: app.rateLimitPerUser,
         rateLimitPerApp: app.rateLimitPerApp,
         defaultTokenGrant: app.defaultTokenGrant,
+        tokenExpirationDays: app.tokenExpirationDays,
       },
       appUser: {
         id: appUser.id,
@@ -135,6 +141,7 @@ export async function validateApiRequest(
       rateLimitPerUser: app.rateLimitPerUser,
       rateLimitPerApp: app.rateLimitPerApp,
       defaultTokenGrant: app.defaultTokenGrant,
+      tokenExpirationDays: app.tokenExpirationDays,
     },
   };
 }

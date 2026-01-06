@@ -3,6 +3,7 @@ import { validateApiRequest } from "@/lib/api-auth";
 import { prisma } from "@/lib/db";
 import { z } from "zod";
 import { TokenEntryType } from "@prisma/client";
+import { calculateExpirationDate } from "@/lib/tokens";
 
 const CreateUserSchema = z.object({
   external_id: z.string().min(1).max(255),
@@ -65,6 +66,7 @@ export async function POST(req: NextRequest) {
 
           // Log the token sync
           if (initial_tokens > 0) {
+            const expiresAt = calculateExpirationDate(auth.app.tokenExpirationDays);
             await tx.tokenLedgerEntry.create({
               data: {
                 appUserId: existingUser.id,
@@ -73,6 +75,7 @@ export async function POST(req: NextRequest) {
                 type: TokenEntryType.GRANT,
                 description: "Token sync from client-side system",
                 idempotencyKey: `sync_${existingUser.id}_${Date.now()}`,
+                expiresAt,
               },
             });
           }
@@ -126,6 +129,8 @@ export async function POST(req: NextRequest) {
     });
 
     // Create ledger entries for both welcome tokens and initial tokens
+    const expiresAt = calculateExpirationDate(auth.app.tokenExpirationDays);
+    
     if (welcomeTokens > 0) {
       await prisma.tokenLedgerEntry.create({
         data: {
@@ -135,6 +140,7 @@ export async function POST(req: NextRequest) {
           type: TokenEntryType.GRANT,
           description: "Welcome bonus - new user registration",
           idempotencyKey: `welcome_${newUser.id}`,
+          expiresAt,
         },
       });
     }
@@ -148,6 +154,7 @@ export async function POST(req: NextRequest) {
           type: TokenEntryType.GRANT,
           description: "Initial tokens from client-side system",
           idempotencyKey: `initial_${newUser.id}`,
+          expiresAt,
         },
       });
     }

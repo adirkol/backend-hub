@@ -104,6 +104,9 @@ model App {
   rateLimitPerUser Int      @default(30)
   rateLimitPerApp  Int      @default(1000)
   
+  // Token expiration (null = never expires)
+  tokenExpirationDays Int?  // Number of days after which granted tokens expire
+  
   // App Store info (optional, for quick-add)
   appStoreUrl      String?
   iconUrl          String?
@@ -191,6 +194,7 @@ model TokenLedgerEntry {
   description    String?
   jobId          String?         // Reference to job if applicable
   idempotencyKey String?         @unique // Prevent double processing
+  expiresAt      DateTime?       // When this grant expires (null = never, only for positive amounts)
 
   appUser AppUser @relation(fields: [appUserId], references: [id], onDelete: Cascade)
 
@@ -200,6 +204,7 @@ model TokenLedgerEntry {
   @@index([jobId])
   @@index([idempotencyKey])
   @@index([createdAt])
+  @@index([expiresAt])
 }
 
 enum TokenEntryType {

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { ArrowLeft } from "lucide-react";
 import { UserTabs } from "./user-tabs";
+import { getEffectiveTokenBalance } from "@/lib/tokens";
 
 interface PageProps {
   params: Promise<{ id: string; userId: string }>;
@@ -111,6 +112,9 @@ async function getUserData(appId: string, userId: string) {
     _sum: { costCharged: true },
   });
 
+  // Get effective token balance (considering expired tokens)
+  const effectiveBalance = await getEffectiveTokenBalance(userId);
+
   return { 
     user, 
     jobs, 
@@ -123,6 +127,7 @@ async function getUserData(appId: string, userId: string) {
       totalRevenue: totalRevenue._sum.netRevenueUsd?.toNumber() || 0,
       totalExpenses: totalExpenses._sum?.costCharged?.toNumber() || 0,
     },
+    effectiveBalance,
   };
 }
 
@@ -134,7 +139,7 @@ export default async function UserDetailPage({ params }: PageProps) {
     notFound();
   }
 
-  const { user, jobs, tokenLedger, tokenEvents, revenueEvents, stats } = data;
+  const { user, jobs, tokenLedger, tokenEvents, revenueEvents, stats, effectiveBalance } = data;
 
   // Serialize for client component
   const serializedJobs = jobs.map((j) => ({
@@ -148,6 +153,7 @@ export default async function UserDetailPage({ params }: PageProps) {
   const serializedTokenLedger = tokenLedger.map((t) => ({
     ...t,
     createdAt: t.createdAt.toISOString(),
+    expiresAt: t.expiresAt?.toISOString() || null,
   }));
 
   const serializedTokenEvents = tokenEvents.map((e) => ({
@@ -226,6 +232,7 @@ export default async function UserDetailPage({ params }: PageProps) {
         revenueEvents={serializedRevenueEvents}
         stats={stats}
         counts={user._count}
+        effectiveBalance={effectiveBalance}
       />
     </div>
   );

@@ -11,6 +11,7 @@ interface App {
   description: string | null;
   isEnabled: boolean;
   defaultTokenGrant: number;
+  tokenExpirationDays: number | null;
   webhookUrl: string | null;
   webhookSecret: string | null;
   rateLimitPerUser: number;
@@ -48,6 +49,7 @@ export function AppSettingsForm({ app }: { app: App }) {
     description: app.description || "",
     isEnabled: app.isEnabled,
     defaultTokenGrant: app.defaultTokenGrant,
+    tokenExpirationDays: app.tokenExpirationDays,
     webhookUrl: app.webhookUrl || "",
     webhookSecret: app.webhookSecret || "",
     rateLimitPerUser: app.rateLimitPerUser,
@@ -204,15 +206,42 @@ export function AppSettingsForm({ app }: { app: App }) {
             />
           </div>
 
-          <div>
-            <label style={labelStyle}>Default Token Grant</label>
-            <input
-              type="number"
-              min="0"
-              value={form.defaultTokenGrant}
-              onChange={(e) => setForm({ ...form, defaultTokenGrant: parseInt(e.target.value) || 0 })}
-              style={inputStyle}
-            />
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px" }}>
+            <div>
+              <label style={labelStyle}>Default Token Grant</label>
+              <input
+                type="number"
+                min="0"
+                value={form.defaultTokenGrant}
+                onChange={(e) => setForm({ ...form, defaultTokenGrant: parseInt(e.target.value) || 0 })}
+                style={inputStyle}
+              />
+            </div>
+
+            <div>
+              <label style={labelStyle}>Token Expiration (days)</label>
+              <input
+                type="number"
+                min="1"
+                value={form.tokenExpirationDays ?? ""}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setForm({ 
+                    ...form, 
+                    tokenExpirationDays: value === "" ? null : parseInt(value) || null 
+                  });
+                }}
+                style={inputStyle}
+                placeholder="Never expires"
+              />
+              <p style={{ 
+                fontSize: "12px", 
+                color: "#71717a", 
+                marginTop: "8px",
+              }}>
+                Leave empty for tokens that never expire
+              </p>
+            </div>
           </div>
         </div>
       </div>

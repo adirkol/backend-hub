@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/db";
-import { TokenEntryType } from "@prisma/client";
+import { TokenEntryType, Prisma } from "@prisma/client";
 
 /**
  * Token Ledger System
@@ -15,6 +15,91 @@ export interface TokenOperationResult {
   balance: number;
   transactionId?: string;
   error?: string;
+}
+
+/**
+ * Calculate expiration date based on app's tokenExpirationDays setting.
+ * Returns null if no expiration is set.
+ */
+export function calculateExpirationDate(tokenExpirationDays: number | null): Date | null {
+  if (tokenExpirationDays === null || tokenExpirationDays <= 0) {
+    return null;
+  }
+  const expiresAt = new Date();
+  expiresAt.setDate(expiresAt.getDate() + tokenExpirationDays);
+  return expiresAt;
+}
+
+/**
+ * Calculate effective token balance considering expired tokens.
+ * 
+ * Logic:
+ * - Sum all valid (non-expired) positive entries (grants)
+ * - Sum all negative entries (debits) - these always count
+ * - Effective balance = valid grants + debits
+ * 
+ * Note: This may result in a balance lower than the raw tokenBalance
+ * stored on the user, as some grants may have expired.
+ */
+export async function getEffectiveTokenBalance(appUserId: string): Promise<{
+  rawBalance: number;
+  effectiveBalance: number;
+  expiredTokens: number;
+}> {
+  const now = new Date();
+  
+  // Get raw balance from user
+  const appUser = await prisma.appUser.findUnique({
+    where: { id: appUserId },
+  });
+  
+  if (!appUser) {
+    return { rawBalance: 0, effectiveBalance: 0, expiredTokens: 0 };
+  }
+  
+  // Sum of all valid grants (positive amounts that haven't expired)
+  const validGrantsResult = await prisma.tokenLedgerEntry.aggregate({
+    where: {
+      appUserId,
+      amount: { gt: 0 },
+      OR: [
+        { expiresAt: null }, // Never expires
+        { expiresAt: { gt: now } }, // Not yet expired
+      ],
+    },
+    _sum: { amount: true },
+  });
+  
+  // Sum of all expired grants
+  const expiredGrantsResult = await prisma.tokenLedgerEntry.aggregate({
+    where: {
+      appUserId,
+      amount: { gt: 0 },
+      expiresAt: { lte: now }, // Has expired
+    },
+    _sum: { amount: true },
+  });
+  
+  // Sum of all debits (negative amounts - always count)
+  const debitsResult = await prisma.tokenLedgerEntry.aggregate({
+    where: {
+      appUserId,
+      amount: { lt: 0 },
+    },
+    _sum: { amount: true },
+  });
+  
+  const validGrants = validGrantsResult._sum.amount ?? 0;
+  const expiredGrants = expiredGrantsResult._sum.amount ?? 0;
+  const debits = debitsResult._sum.amount ?? 0; // This is negative
+  
+  const effectiveBalance = Math.max(0, validGrants + debits);
+  
+  return {
+    rawBalance: appUser.tokenBalance,
+    effectiveBalance,
+    expiredTokens: expiredGrants,
+  };
 }
 
 /**
@@ -163,12 +248,15 @@ export async function refundTokens(
 /**
  * Grant tokens to a user (from app or admin).
  * Uses an optional idempotency key to prevent double-granting.
+ * 
+ * @param expiresAt - Optional expiration date for these tokens
  */
 export async function grantTokens(
   appUserId: string,
   amount: number,
   reason: string,
-  idempotencyKey?: string
+  idempotencyKey?: string,
+  expiresAt?: Date | null
 ): Promise<TokenOperationResult> {
   const key = idempotencyKey ?? `grant_${appUserId}_${Date.now()}`;
 
@@ -213,6 +301,7 @@ export async function grantTokens(
           type: TokenEntryType.GRANT,
           description: reason,
           idempotencyKey: key,
+          expiresAt: expiresAt ?? null,
         },
       });
 
@@ -228,12 +317,15 @@ export async function grantTokens(
 
 /**
  * Admin adjustment of token balance.
+ * 
+ * @param expiresAt - Optional expiration date for positive adjustments
  */
 export async function adminAdjustTokens(
   appUserId: string,
   amount: number,
   adminId: string,
-  reason: string
+  reason: string,
+  expiresAt?: Date | null
 ): Promise<TokenOperationResult> {
   const idempotencyKey = `admin_${adminId}_${Date.now()}`;
 
@@ -266,6 +358,8 @@ export async function adminAdjustTokens(
           type: TokenEntryType.ADMIN_ADJUSTMENT,
           description: `Admin adjustment: ${reason}`,
           idempotencyKey,
+          // Only set expiration for positive amounts (grants)
+          expiresAt: amount > 0 ? (expiresAt ?? null) : null,
         },
       });
 
@@ -303,12 +397,15 @@ export async function getTokenHistory(appUserId: string, limit = 50) {
 /**
  * Adjust tokens from RevenueCat webhook.
  * Uses an idempotency key based on the RevenueCat event ID.
+ * 
+ * @param expiresAt - Optional expiration date for positive adjustments
  */
 export async function revenueCatAdjustTokens(
   appUserId: string,
   amount: number,
   revenueCatEventId: string,
-  description: string
+  description: string,
+  expiresAt?: Date | null
 ): Promise<TokenOperationResult> {
   const idempotencyKey = `rc_token_${revenueCatEventId}`;
 
@@ -353,6 +450,8 @@ export async function revenueCatAdjustTokens(
           type: amount > 0 ? TokenEntryType.REVENUECAT_GRANT : TokenEntryType.REVENUECAT_REFUND,
           description,
           idempotencyKey,
+          // Only set expiration for positive amounts (grants)
+          expiresAt: amount > 0 ? (expiresAt ?? null) : null,
         },
       });
 

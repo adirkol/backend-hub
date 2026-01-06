@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { TokenEntryType, RevenueCatEventType, EventCategory } from "@prisma/client";
+import { calculateExpirationDate } from "@/lib/tokens";
 
 interface RouteParams {
   params: Promise<{ appId: string }>;
@@ -67,8 +68,8 @@ const PurchaseEventSchema = BaseEventSchema.extend({
   original_transaction_id: z.string().optional(),
   purchased_at_ms: z.number().optional(),
   expiration_at_ms: z.number().nullable().optional(),
-  renewal_number: z.number().optional(),
-  is_trial_conversion: z.boolean().optional(),
+  renewal_number: z.number().nullable().optional(),
+  is_trial_conversion: z.boolean().nullable().optional(),
   offer_code: z.string().nullable().optional(),
   country_code: z.string().optional(),
 });
@@ -113,7 +114,7 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
     // Find app by RevenueCat app ID
     const app = await prisma.app.findUnique({
       where: { revenueCatAppId: appId },
-      select: { id: true, name: true, defaultTokenGrant: true },
+      select: { id: true, name: true, defaultTokenGrant: true, tokenExpirationDays: true },
     });
 
     if (!app) {
@@ -228,6 +229,8 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
         if (!existingLedger) {
           const newBalance = appUser.tokenBalance + tokenAmount;
           const currentAppUser = appUser; // Capture for closure
+          // Only set expiration for positive token grants
+          const tokenExpiresAt = tokenAmount > 0 ? calculateExpirationDate(app.tokenExpirationDays) : null;
           
           await prisma.$transaction(async (tx) => {
             await tx.appUser.update({
@@ -243,6 +246,7 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
                 type: tokenAmount! > 0 ? TokenEntryType.REVENUECAT_GRANT : TokenEntryType.REVENUECAT_REFUND,
                 description: `RevenueCat: ${source || "token adjustment"} (${vcEvent.product_id || "unknown product"})`,
                 idempotencyKey,
+                expiresAt: tokenExpiresAt,
               },
             });
           });
