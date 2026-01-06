@@ -14,7 +14,9 @@ datasource db {
 // Admin Authentication (NextAuth)
 // ============================================
 
-model AdminUser {
+// Note: Named "User" for NextAuth Prisma adapter compatibility
+// This represents admin users only, not app users
+model User {
   id            String    @id @default(cuid())
   email         String    @unique
   emailVerified DateTime?
@@ -28,6 +30,7 @@ model AdminUser {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  @@map("AdminUser")  // Keep existing table name
   @@index([email])
 }
 
@@ -50,7 +53,7 @@ model Account {
   id_token          String? @db.Text
   session_state     String?
 
-  user AdminUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
   @@index([userId])
@@ -62,7 +65,7 @@ model Session {
   userId       String
   expires      DateTime
 
-  user AdminUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
 }
@@ -105,12 +108,31 @@ model App {
   users            AppUser[]
   jobs             GenerationJob[]
   usageLogs        ProviderUsageLog[]
+  modelTokenConfigs AppModelTokenConfig[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([apiKey])
   @@index([slug])
+}
+
+// Per-app token cost overrides for AI models
+model AppModelTokenConfig {
+  id        String  @id @default(cuid())
+  appId     String
+  modelId   String
+  tokenCost Int     // Override token cost for this app
+
+  app   App     @relation(fields: [appId], references: [id], onDelete: Cascade)
+  model AIModel @relation(fields: [modelId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([appId, modelId])
+  @@index([appId])
+  @@index([modelId])
 }
 
 // Users are scoped per-app (no cross-app identity)
@@ -221,8 +243,9 @@ model AIModel {
   
   isEnabled   Boolean  @default(true)
 
-  providerConfigs ModelProviderConfig[]
-  jobs            GenerationJob[]
+  providerConfigs   ModelProviderConfig[]
+  jobs              GenerationJob[]
+  appTokenConfigs   AppModelTokenConfig[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
