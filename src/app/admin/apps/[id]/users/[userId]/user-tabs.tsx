@@ -36,6 +36,8 @@ interface TokenLedgerEntry {
 
 interface RevenueCatEvent {
   id: string;
+  revenueCatEventId: string;
+  transactionId: string | null;
   eventType: string;
   eventCategory: string;
   productId: string | null;
@@ -439,38 +441,95 @@ export function UserTabs({
               Recent Activity
             </h2>
             <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-              {tokenLedger.slice(0, 5).map((entry) => (
-                <div 
-                  key={entry.id}
-                  style={{ 
-                    display: "flex", 
-                    justifyContent: "space-between", 
-                    alignItems: "center",
-                    padding: "12px",
-                    borderRadius: "8px",
-                    background: "rgba(39, 39, 42, 0.4)",
-                  }}
-                >
-                  <div>
-                    <p style={{ fontSize: "13px", color: "#e4e4e7" }}>{entry.description || entry.type}</p>
-                    <p style={{ fontSize: "11px", color: "#71717a", marginTop: "2px" }}>
-                      {formatDate(entry.createdAt)}
+              {(() => {
+                // Combine token and revenue activities
+                const tokenActivities = tokenLedger.map((entry) => ({
+                  id: entry.id,
+                  type: "token" as const,
+                  label: entry.description || entry.type.replace(/_/g, " "),
+                  date: entry.createdAt,
+                  value: entry.amount,
+                  valueType: "tokens" as const,
+                }));
+                
+                const revenueActivities = revenueEvents.map((event) => ({
+                  id: event.id,
+                  type: "revenue" as const,
+                  label: `${getEventLabel(event.eventType)}${event.productId ? ` - ${event.productId}` : ""}`,
+                  date: new Date(parseInt(event.eventTimestampMs)).toISOString(),
+                  value: event.netRevenueUsd,
+                  valueType: "currency" as const,
+                }));
+                
+                const allActivities = [...tokenActivities, ...revenueActivities]
+                  .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+                  .slice(0, 8);
+                
+                if (allActivities.length === 0) {
+                  return (
+                    <p style={{ fontSize: "14px", color: "#71717a", textAlign: "center", padding: "20px" }}>
+                      No activity yet
                     </p>
+                  );
+                }
+                
+                return allActivities.map((activity) => (
+                  <div 
+                    key={activity.id}
+                    style={{ 
+                      display: "flex", 
+                      justifyContent: "space-between", 
+                      alignItems: "center",
+                      padding: "12px",
+                      borderRadius: "8px",
+                      background: "rgba(39, 39, 42, 0.4)",
+                    }}
+                  >
+                    <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                      <div style={{
+                        width: "28px",
+                        height: "28px",
+                        borderRadius: "6px",
+                        background: activity.type === "revenue" 
+                          ? "rgba(16, 185, 129, 0.15)" 
+                          : "rgba(251, 191, 36, 0.15)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}>
+                        {activity.type === "revenue" ? (
+                          <DollarSign style={{ width: "14px", height: "14px", color: "#34d399" }} />
+                        ) : (
+                          <Coins style={{ width: "14px", height: "14px", color: "#fbbf24" }} />
+                        )}
+                      </div>
+                      <div>
+                        <p style={{ fontSize: "13px", color: "#e4e4e7" }}>{activity.label}</p>
+                        <p style={{ fontSize: "11px", color: "#71717a", marginTop: "2px" }}>
+                          {formatDate(activity.date)}
+                        </p>
+                      </div>
+                    </div>
+                    {activity.valueType === "currency" && activity.value !== null ? (
+                      <span style={{ 
+                        fontSize: "14px", 
+                        fontWeight: "600", 
+                        color: activity.value >= 0 ? "#34d399" : "#f87171",
+                      }}>
+                        {activity.value >= 0 ? "+" : ""}{formatCurrency(activity.value)}
+                      </span>
+                    ) : activity.valueType === "tokens" ? (
+                      <span style={{ 
+                        fontSize: "14px", 
+                        fontWeight: "600", 
+                        color: (activity.value as number) > 0 ? "#34d399" : "#f87171",
+                      }}>
+                        {(activity.value as number) > 0 ? "+" : ""}{activity.value} tokens
+                      </span>
+                    ) : null}
                   </div>
-                  <span style={{ 
-                    fontSize: "14px", 
-                    fontWeight: "600", 
-                    color: entry.amount > 0 ? "#34d399" : "#f87171",
-                  }}>
-                    {entry.amount > 0 ? "+" : ""}{entry.amount}
-                  </span>
-                </div>
-              ))}
-              {tokenLedger.length === 0 && (
-                <p style={{ fontSize: "14px", color: "#71717a", textAlign: "center", padding: "20px" }}>
-                  No activity yet
-                </p>
-              )}
+                ));
+              })()}
             </div>
           </div>
         </div>
@@ -640,7 +699,7 @@ export function UserTabs({
           <table style={{ width: "100%", borderCollapse: "collapse" }}>
             <thead>
               <tr style={{ borderBottom: "1px solid rgba(63, 63, 70, 0.4)" }}>
-                {["Event", "Product", "Store", "Price", "Net Revenue", "Date"].map((header) => (
+                {["Event", "Transaction ID", "Product", "Store", "Price", "Net Revenue", "Date"].map((header) => (
                   <th 
                     key={header}
                     style={{ 
@@ -698,6 +757,26 @@ export function UserTabs({
                       </div>
                     </div>
                   </td>
+                  <td style={{ padding: "18px 20px" }}>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                      {event.transactionId && (
+                        <code style={{ 
+                          fontSize: "11px", 
+                          color: "#a1a1aa", 
+                          fontFamily: "monospace",
+                        }}>
+                          {event.transactionId}
+                        </code>
+                      )}
+                      <code style={{ 
+                        fontSize: "10px", 
+                        color: "#71717a", 
+                        fontFamily: "monospace",
+                      }}>
+                        {event.revenueCatEventId}
+                      </code>
+                    </div>
+                  </td>
                   <td style={{ padding: "18px 20px", fontSize: "13px", color: "#a1a1aa", fontFamily: "monospace" }}>
                     {event.productId || "-"}
                   </td>
@@ -733,7 +812,7 @@ export function UserTabs({
               ))}
               {revenueEvents.length === 0 && (
                 <tr>
-                  <td colSpan={6} style={{ padding: "64px 20px", textAlign: "center", color: "#71717a" }}>
+                  <td colSpan={7} style={{ padding: "64px 20px", textAlign: "center", color: "#71717a" }}>
                     No revenue events. Connect RevenueCat to track purchases and subscriptions.
                   </td>
                 </tr>

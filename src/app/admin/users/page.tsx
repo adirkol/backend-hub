@@ -162,9 +162,17 @@ export default async function UsersPage({ searchParams }: PageProps) {
                 <tr 
                   key={user.id} 
                   className="table-row-hover"
-                  style={{ borderBottom: "1px solid rgba(63, 63, 70, 0.25)" }}
+                  style={{ borderBottom: "1px solid rgba(63, 63, 70, 0.25)", position: "relative", cursor: "pointer" }}
                 >
                   <td style={{ padding: "18px 20px" }}>
+                    <Link
+                      href={`/admin/apps/${user.appId}/users/${user.id}`}
+                      style={{
+                        position: "absolute",
+                        inset: 0,
+                        zIndex: 1,
+                      }}
+                    />
                     <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
                       <div style={{
                         width: "40px",
@@ -198,7 +206,9 @@ export default async function UsersPage({ searchParams }: PageProps) {
                         gap: "8px", 
                         fontSize: "14px", 
                         color: "#e4e4e7", 
-                        textDecoration: "none" 
+                        textDecoration: "none",
+                        position: "relative",
+                        zIndex: 2,
                       }}
                     >
                       <AppWindow style={{ width: "16px", height: "16px", color: "#71717a" }} />
@@ -237,7 +247,7 @@ export default async function UsersPage({ searchParams }: PageProps) {
                     </span>
                   </td>
                   <td style={{ padding: "18px 20px", fontSize: "13px", color: "#71717a" }}>
-                    {new Date(user.createdAt).toLocaleDateString()}
+                    {new Date(user.createdAt).toLocaleString([], { dateStyle: "short", timeStyle: "short" })}
                   </td>
                 </tr>
               ))}

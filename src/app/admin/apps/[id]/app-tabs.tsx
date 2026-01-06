@@ -430,7 +430,7 @@ export function AppTabs({ app, users, jobs, userCount, jobCount }: AppTabsProps)
                       </span>
                     </td>
                     <td style={{ padding: "18px 20px", fontSize: "13px", color: "#71717a" }}>
-                      {new Date(user.createdAt).toLocaleDateString()}
+                      {new Date(user.createdAt).toLocaleString([], { dateStyle: "short", timeStyle: "short" })}
                     </td>
                   </tr>
                 ))}
