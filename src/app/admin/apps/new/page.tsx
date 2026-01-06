@@ -3,12 +3,29 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Save, Loader2 } from "lucide-react";
+import Image from "next/image";
+import { ArrowLeft, Save, Loader2, Sparkles, ExternalLink } from "lucide-react";
+
+interface AppStoreInfo {
+  name: string;
+  slug: string;
+  description: string;
+  iconUrl: string;
+  bundleId: string;
+  appStoreUrl: string;
+  developer: string;
+  category: string;
+  rating?: number;
+  ratingCount?: number;
+}
 
 export default function NewAppPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [lookupLoading, setLookupLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [appStoreUrl, setAppStoreUrl] = useState("");
+  const [appStoreInfo, setAppStoreInfo] = useState<AppStoreInfo | null>(null);
   const [form, setForm] = useState({
     name: "",
     slug: "",
@@ -17,7 +34,49 @@ export default function NewAppPage() {
     webhookUrl: "",
     rateLimitPerUser: 30,
     rateLimitPerApp: 1000,
+    iconUrl: "",
+    appStoreUrl: "",
+    bundleId: "",
   });
+
+  const handleAppStoreLookup = async () => {
+    if (!appStoreUrl.trim()) return;
+    
+    setLookupLoading(true);
+    setError(null);
+    
+    try {
+      const res = await fetch("/api/admin/apps/appstore-lookup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: appStoreUrl }),
+      });
+      
+      const data = await res.json();
+      
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to lookup app");
+      }
+      
+      const info: AppStoreInfo = data.app;
+      setAppStoreInfo(info);
+      
+      // Auto-fill the form
+      setForm({
+        ...form,
+        name: info.name,
+        slug: info.slug,
+        description: info.description,
+        iconUrl: info.iconUrl,
+        appStoreUrl: info.appStoreUrl,
+        bundleId: info.bundleId,
+      });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to lookup app");
+    } finally {
+      setLookupLoading(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -106,6 +165,115 @@ export default function NewAppPage() {
         </p>
       </div>
 
+      {/* Quick Add from App Store */}
+      <div className="glass" style={{ 
+        padding: "24px", 
+        marginBottom: "12px",
+        background: "linear-gradient(135deg, rgba(168, 85, 247, 0.08) 0%, rgba(59, 130, 246, 0.08) 100%)",
+        border: "1px solid rgba(168, 85, 247, 0.2)",
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "16px" }}>
+          <Sparkles style={{ width: "20px", height: "20px", color: "#a855f7" }} />
+          <h2 style={{ fontWeight: "600", color: "#e4e4e7", fontSize: "16px" }}>
+            Quick Add from App Store
+          </h2>
+        </div>
+        <p style={{ fontSize: "13px", color: "#a1a1aa", marginBottom: "16px" }}>
+          Paste an App Store URL to automatically fill in app details
+        </p>
+        <div style={{ display: "flex", gap: "12px" }}>
+          <input
+            type="url"
+            value={appStoreUrl}
+            onChange={(e) => setAppStoreUrl(e.target.value)}
+            placeholder="https://apps.apple.com/us/app/your-app/id123456789"
+            style={{
+              flex: 1,
+              padding: "12px 16px",
+              borderRadius: "10px",
+              background: "rgba(39, 39, 42, 0.6)",
+              border: "1px solid rgba(168, 85, 247, 0.3)",
+              color: "#fafafa",
+              fontSize: "14px",
+              outline: "none",
+            }}
+          />
+          <button
+            type="button"
+            onClick={handleAppStoreLookup}
+            disabled={lookupLoading || !appStoreUrl.trim()}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              padding: "12px 20px",
+              background: lookupLoading ? "rgba(168, 85, 247, 0.4)" : "linear-gradient(135deg, #a855f7 0%, #7c3aed 100%)",
+              color: "#fff",
+              borderRadius: "10px",
+              fontSize: "14px",
+              fontWeight: "500",
+              border: "none",
+              cursor: lookupLoading || !appStoreUrl.trim() ? "not-allowed" : "pointer",
+              opacity: !appStoreUrl.trim() ? 0.5 : 1,
+              transition: "all 0.15s ease",
+            }}
+          >
+            {lookupLoading ? (
+              <Loader2 style={{ width: "16px", height: "16px" }} className="animate-spin" />
+            ) : (
+              <ExternalLink style={{ width: "16px", height: "16px" }} />
+            )}
+            Fetch Info
+          </button>
+        </div>
+        
+        {/* App Store Preview */}
+        {appStoreInfo && (
+          <div style={{ 
+            marginTop: "20px", 
+            padding: "16px", 
+            background: "rgba(39, 39, 42, 0.4)", 
+            borderRadius: "12px",
+            display: "flex",
+            alignItems: "center",
+            gap: "16px",
+          }}>
+            {appStoreInfo.iconUrl && (
+              <Image
+                src={appStoreInfo.iconUrl}
+                alt={appStoreInfo.name}
+                width={64}
+                height={64}
+                style={{ borderRadius: "14px" }}
+              />
+            )}
+            <div style={{ flex: 1 }}>
+              <div style={{ fontWeight: "600", color: "#fafafa", fontSize: "15px" }}>
+                {appStoreInfo.name}
+              </div>
+              <div style={{ fontSize: "13px", color: "#a1a1aa", marginTop: "4px" }}>
+                {appStoreInfo.developer} • {appStoreInfo.category}
+              </div>
+              {appStoreInfo.rating && (
+                <div style={{ fontSize: "12px", color: "#71717a", marginTop: "4px" }}>
+                  ⭐ {appStoreInfo.rating.toFixed(1)} ({appStoreInfo.ratingCount?.toLocaleString()} ratings)
+                </div>
+              )}
+            </div>
+            <div style={{ 
+              padding: "6px 12px", 
+              background: "rgba(16, 185, 129, 0.15)", 
+              borderRadius: "20px",
+              fontSize: "12px",
+              color: "#34d399",
+              fontWeight: "500",
+            }}>
+              ✓ Auto-filled
+            </div>
+          </div>
+        )}
+      </div>
+
       {/* Form */}
       <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "28px" }}>
         {error && (
@@ -122,16 +290,20 @@ export default function NewAppPage() {
         )}
 
         <div className="glass" style={{ padding: "28px" }}>
-          <h2 style={{ 
-            fontWeight: "600", 
-            color: "#e4e4e7", 
-            paddingBottom: "20px", 
-            borderBottom: "1px solid rgba(63, 63, 70, 0.4)",
-            marginBottom: "24px",
-            fontSize: "16px",
-          }}>
-            Basic Information
-          </h2>
+          <div style={{ display: "flex", alignItems: "center", gap: "16px", marginBottom: "24px", paddingBottom: "20px", borderBottom: "1px solid rgba(63, 63, 70, 0.4)" }}>
+            {form.iconUrl && (
+              <Image
+                src={form.iconUrl}
+                alt={form.name || "App icon"}
+                width={48}
+                height={48}
+                style={{ borderRadius: "10px" }}
+              />
+            )}
+            <h2 style={{ fontWeight: "600", color: "#e4e4e7", fontSize: "16px" }}>
+              Basic Information
+            </h2>
+          </div>
 
           <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
             <div>

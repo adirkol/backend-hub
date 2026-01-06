@@ -104,6 +104,11 @@ model App {
   rateLimitPerUser Int      @default(30)
   rateLimitPerApp  Int      @default(1000)
   
+  // App Store info (optional, for quick-add)
+  appStoreUrl      String?
+  iconUrl          String?
+  bundleId         String?
+  
   // Relations
   users            AppUser[]
   jobs             GenerationJob[]

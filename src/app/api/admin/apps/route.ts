@@ -11,6 +11,10 @@ const CreateAppSchema = z.object({
   webhookUrl: z.string().url().optional().or(z.literal("")),
   rateLimitPerUser: z.number().int().min(1).default(30),
   rateLimitPerApp: z.number().int().min(1).default(1000),
+  // App Store info (optional)
+  appStoreUrl: z.string().url().optional().or(z.literal("")),
+  iconUrl: z.string().url().optional().or(z.literal("")),
+  bundleId: z.string().max(255).optional().or(z.literal("")),
 });
 
 function generateApiKey(slug: string): { apiKey: string; prefix: string } {
@@ -86,6 +90,9 @@ export async function POST(req: NextRequest) {
         webhookSecret,
         rateLimitPerUser: data.rateLimitPerUser,
         rateLimitPerApp: data.rateLimitPerApp,
+        appStoreUrl: data.appStoreUrl || null,
+        iconUrl: data.iconUrl || null,
+        bundleId: data.bundleId || null,
       },
     });
 
@@ -95,4 +102,5 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
+
 
