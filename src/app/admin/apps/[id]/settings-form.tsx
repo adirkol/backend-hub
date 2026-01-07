@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Save, Loader2, Trash2, Copy, Check, ExternalLink } from "lucide-react";
 
@@ -57,9 +57,16 @@ export function AppSettingsForm({ app }: { app: App }) {
     revenueCatAppId: app.revenueCatAppId || "",
   });
 
+  // Track the origin for the webhook URL (client-side only to avoid hydration mismatch)
+  const [origin, setOrigin] = useState<string>("");
+  
+  useEffect(() => {
+    setOrigin(window.location.origin);
+  }, []);
+
   // Generate the RevenueCat webhook URL
-  const revenueCatWebhookUrl = form.revenueCatAppId 
-    ? `${typeof window !== 'undefined' ? window.location.origin : ''}/api/webhooks/revenuecat/${form.revenueCatAppId}`
+  const revenueCatWebhookUrl = form.revenueCatAppId && origin
+    ? `${origin}/api/webhooks/revenuecat/${form.revenueCatAppId}`
     : null;
 
   const handleSubmit = async (e: React.FormEvent) => {
