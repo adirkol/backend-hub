@@ -56,7 +56,7 @@ function StatusBadge({ status }: { status: string }) {
     FAILED: { bg: "rgba(239, 68, 68, 0.15)", color: "#f87171", border: "rgba(239, 68, 68, 0.3)" },
     RUNNING: { bg: "rgba(245, 158, 11, 0.15)", color: "#fbbf24", border: "rgba(245, 158, 11, 0.3)" },
     QUEUED: { bg: "rgba(59, 130, 246, 0.15)", color: "#60a5fa", border: "rgba(59, 130, 246, 0.3)" },
-    CANCELLED: { bg: "rgba(113, 113, 122, 0.2)", color: "#a1a1aa", border: "rgba(113, 113, 122, 0.3)" },
+    CANCELLED: { bg: "rgba(113, 113, 122, 0.2)", color: "#b8b8c8", border: "rgba(113, 113, 122, 0.3)" },
   };
 
   const style = styles[status] || styles.CANCELLED;
@@ -102,7 +102,7 @@ export default async function JobsPage({ searchParams }: PageProps) {
           <h1 style={{ fontSize: "28px", fontWeight: "700", color: "#fafafa", letterSpacing: "-0.02em" }}>
             Jobs
           </h1>
-          <p style={{ color: "#71717a", marginTop: "6px", fontSize: "15px" }}>
+          <p style={{ color: "#9ca3af", marginTop: "6px", fontSize: "15px" }}>
             {total.toLocaleString()} total jobs
           </p>
         </div>
@@ -115,7 +115,7 @@ export default async function JobsPage({ searchParams }: PageProps) {
             borderRadius: "12px",
             fontSize: "14px",
             fontWeight: "500",
-            color: "#a1a1aa",
+            color: "#b8b8c8",
             background: "rgba(39, 39, 42, 0.6)",
             border: "1px solid rgba(63, 63, 70, 0.5)",
             cursor: "pointer",
@@ -129,8 +129,8 @@ export default async function JobsPage({ searchParams }: PageProps) {
       {/* Filters */}
       <div style={{ display: "flex", alignItems: "center", gap: "16px", flexWrap: "wrap" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-          <Filter style={{ width: "16px", height: "16px", color: "#71717a" }} />
-          <span style={{ fontSize: "14px", color: "#71717a" }}>Filter:</span>
+          <Filter style={{ width: "16px", height: "16px", color: "#9ca3af" }} />
+          <span style={{ fontSize: "14px", color: "#9ca3af" }}>Filter:</span>
         </div>
 
         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
@@ -145,9 +145,9 @@ export default async function JobsPage({ searchParams }: PageProps) {
                 fontWeight: "500",
                 textDecoration: "none",
                 background: params.status === status 
-                  ? "linear-gradient(135deg, #10b981 0%, #059669 100%)" 
+                  ? "linear-gradient(135deg, #00f0ff 0%, #00b8cc 100%)" 
                   : "rgba(39, 39, 42, 0.6)",
-                color: params.status === status ? "#09090b" : "#a1a1aa",
+                color: params.status === status ? "#000" : "#b8b8c8",
                 transition: "all 0.15s ease",
               }}
             >
@@ -162,7 +162,7 @@ export default async function JobsPage({ searchParams }: PageProps) {
                 borderRadius: "10px",
                 fontSize: "13px",
                 fontWeight: "500",
-                color: "#71717a",
+                color: "#9ca3af",
                 textDecoration: "none",
               }}
             >
@@ -206,7 +206,7 @@ export default async function JobsPage({ searchParams }: PageProps) {
                       textAlign: "left", 
                       fontSize: "12px", 
                       fontWeight: "600",
-                      color: "#71717a",
+                      color: "#9ca3af",
                       textTransform: "uppercase",
                       letterSpacing: "0.05em",
                     }}
@@ -253,7 +253,7 @@ export default async function JobsPage({ searchParams }: PageProps) {
                   <td style={{ 
                     padding: "16px 20px", 
                     fontSize: "13px", 
-                    color: "#a1a1aa", 
+                    color: "#b8b8c8", 
                     fontFamily: "monospace",
                     maxWidth: "140px",
                     overflow: "hidden",
@@ -262,29 +262,29 @@ export default async function JobsPage({ searchParams }: PageProps) {
                   }}>
                     {job.appUser.externalId}
                   </td>
-                  <td style={{ padding: "16px 20px", fontSize: "14px", color: "#a1a1aa" }}>
+                  <td style={{ padding: "16px 20px", fontSize: "14px", color: "#b8b8c8" }}>
                     {job.aiModel.name}
                   </td>
                   <td style={{ padding: "16px 20px" }}>
                     <StatusBadge status={job.status} />
                   </td>
-                  <td style={{ padding: "16px 20px", fontSize: "13px", color: "#71717a" }}>
+                  <td style={{ padding: "16px 20px", fontSize: "13px", color: "#9ca3af" }}>
                     {job.usedProvider || "—"}
                   </td>
-                  <td style={{ padding: "16px 20px", fontSize: "14px", color: "#a1a1aa" }}>
+                  <td style={{ padding: "16px 20px", fontSize: "14px", color: "#b8b8c8" }}>
                     {job.tokenCost}
                     {job.tokensRefunded && (
                       <span style={{ marginLeft: "6px", fontSize: "12px", color: "#fbbf24" }}>(refunded)</span>
                     )}
                   </td>
-                  <td style={{ padding: "16px 20px", fontSize: "13px", color: "#71717a" }}>
+                  <td style={{ padding: "16px 20px", fontSize: "13px", color: "#9ca3af" }}>
                     {new Date(job.createdAt).toLocaleString()}
                   </td>
                 </tr>
               ))}
               {jobs.length === 0 && (
                 <tr>
-                  <td colSpan={8} style={{ padding: "64px 20px", textAlign: "center", color: "#71717a" }}>
+                  <td colSpan={8} style={{ padding: "64px 20px", textAlign: "center", color: "#9ca3af" }}>
                     No jobs found
                   </td>
                 </tr>
@@ -297,7 +297,7 @@ export default async function JobsPage({ searchParams }: PageProps) {
       {/* Pagination */}
       {totalPages > 1 && (
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <p style={{ fontSize: "14px", color: "#71717a" }}>
+          <p style={{ fontSize: "14px", color: "#9ca3af" }}>
             Showing {(page - 1) * limit + 1} to {Math.min(page * limit, total)} of {total}
           </p>
           <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
@@ -308,7 +308,7 @@ export default async function JobsPage({ searchParams }: PageProps) {
                   padding: "10px 18px",
                   borderRadius: "10px",
                   fontSize: "14px",
-                  color: "#a1a1aa",
+                  color: "#b8b8c8",
                   textDecoration: "none",
                   background: "rgba(39, 39, 42, 0.5)",
                 }}
@@ -326,7 +326,7 @@ export default async function JobsPage({ searchParams }: PageProps) {
                   padding: "10px 18px",
                   borderRadius: "10px",
                   fontSize: "14px",
-                  color: "#a1a1aa",
+                  color: "#b8b8c8",
                   textDecoration: "none",
                   background: "rgba(39, 39, 42, 0.5)",
                 }}

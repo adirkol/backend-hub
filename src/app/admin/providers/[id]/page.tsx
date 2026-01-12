@@ -90,7 +90,7 @@ export default function ProviderDetailPage({ params }: { params: Promise<{ id: s
   if (loading) {
     return (
       <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "400px" }}>
-        <Loader2 style={{ width: "32px", height: "32px", color: "#71717a" }} className="animate-spin" />
+        <Loader2 style={{ width: "32px", height: "32px", color: "#9ca3af" }} className="animate-spin" />
       </div>
     );
   }
@@ -98,7 +98,7 @@ export default function ProviderDetailPage({ params }: { params: Promise<{ id: s
   if (!provider) {
     return (
       <div style={{ textAlign: "center", padding: "64px" }}>
-        <p style={{ color: "#71717a" }}>Provider not found</p>
+        <p style={{ color: "#9ca3af" }}>Provider not found</p>
         <Link href="/admin/providers" style={{ color: "#fbbf24", marginTop: "16px", display: "inline-block" }}>
           Back to providers
         </Link>
@@ -116,7 +116,7 @@ export default function ProviderDetailPage({ params }: { params: Promise<{ id: s
             display: "inline-flex", 
             alignItems: "center", 
             gap: "6px", 
-            color: "#71717a", 
+            color: "#9ca3af", 
             fontSize: "14px",
             textDecoration: "none",
             marginBottom: "16px",
@@ -143,7 +143,7 @@ export default function ProviderDetailPage({ params }: { params: Promise<{ id: s
             <h1 style={{ fontSize: "28px", fontWeight: "700", color: "#fafafa", letterSpacing: "-0.02em" }}>
               {provider.displayName}
             </h1>
-            <p style={{ color: "#71717a", marginTop: "4px", fontSize: "14px", fontFamily: "monospace" }}>
+            <p style={{ color: "#9ca3af", marginTop: "4px", fontSize: "14px", fontFamily: "monospace" }}>
               {provider.name}
             </p>
           </div>
@@ -159,7 +159,7 @@ export default function ProviderDetailPage({ params }: { params: Promise<{ id: s
           </h2>
           <span style={{ 
             fontSize: "13px", 
-            color: "#71717a", 
+            color: "#9ca3af", 
             background: "rgba(39, 39, 42, 0.5)", 
             padding: "4px 10px", 
             borderRadius: "9999px" 
@@ -175,8 +175,8 @@ export default function ProviderDetailPage({ params }: { params: Promise<{ id: s
             background: "rgba(39, 39, 42, 0.3)",
             borderRadius: "12px",
           }}>
-            <Package style={{ width: "40px", height: "40px", color: "#52525b", margin: "0 auto 16px" }} />
-            <p style={{ color: "#71717a", fontSize: "15px" }}>
+            <Package style={{ width: "40px", height: "40px", color: "#71717a", margin: "0 auto 16px" }} />
+            <p style={{ color: "#9ca3af", fontSize: "15px" }}>
               No models are configured to use this provider yet.
             </p>
             <Link 
@@ -219,9 +219,9 @@ export default function ProviderDetailPage({ params }: { params: Promise<{ id: s
                     >
                       {config.model.displayName}
                     </Link>
-                    <p style={{ fontSize: "13px", color: "#71717a", marginTop: "2px" }}>
-                      <code style={{ color: "#a1a1aa" }}>{config.providerModelId}</code>
-                      <span style={{ margin: "0 8px", color: "#52525b" }}>•</span>
+                    <p style={{ fontSize: "13px", color: "#9ca3af", marginTop: "2px" }}>
+                      <code style={{ color: "#b8b8c8" }}>{config.providerModelId}</code>
+                      <span style={{ margin: "0 8px", color: "#71717a" }}>•</span>
                       Priority #{config.priority}
                     </p>
                   </div>
@@ -229,7 +229,7 @@ export default function ProviderDetailPage({ params }: { params: Promise<{ id: s
 
                 <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                    <span style={{ color: "#71717a", fontSize: "14px" }}>$</span>
+                    <span style={{ color: "#9ca3af", fontSize: "14px" }}>$</span>
                     <input
                       type="number"
                       step="0.0001"
@@ -247,7 +247,7 @@ export default function ProviderDetailPage({ params }: { params: Promise<{ id: s
                         fontFamily: "monospace",
                       }}
                     />
-                    <span style={{ color: "#71717a", fontSize: "13px" }}>/req</span>
+                    <span style={{ color: "#9ca3af", fontSize: "13px" }}>/req</span>
                   </div>
 
                   <button
@@ -256,13 +256,13 @@ export default function ProviderDetailPage({ params }: { params: Promise<{ id: s
                     style={{
                       padding: "8px 16px",
                       background: savedConfigs.has(config.id) 
-                        ? "rgba(16, 185, 129, 0.15)" 
+                        ? "rgba(0, 240, 255, 0.15)" 
                         : "rgba(251, 191, 36, 0.15)",
                       border: savedConfigs.has(config.id)
-                        ? "1px solid rgba(16, 185, 129, 0.3)"
+                        ? "1px solid rgba(0, 240, 255, 0.3)"
                         : "1px solid rgba(251, 191, 36, 0.3)",
                       borderRadius: "8px",
-                      color: savedConfigs.has(config.id) ? "#34d399" : "#fbbf24",
+                      color: savedConfigs.has(config.id) ? "#00f0ff" : "#fbbf24",
                       fontSize: "13px",
                       fontWeight: "500",
                       cursor: saving === config.id ? "wait" : "pointer",
@@ -295,7 +295,7 @@ export default function ProviderDetailPage({ params }: { params: Promise<{ id: s
 
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px" }}>
           <div>
-            <label style={{ fontSize: "13px", color: "#71717a", display: "block", marginBottom: "8px" }}>
+            <label style={{ fontSize: "13px", color: "#9ca3af", display: "block", marginBottom: "8px" }}>
               Base URL
             </label>
             <code style={{ 
@@ -303,7 +303,7 @@ export default function ProviderDetailPage({ params }: { params: Promise<{ id: s
               padding: "12px 16px", 
               background: "rgba(24, 24, 27, 0.8)", 
               borderRadius: "8px",
-              color: "#a1a1aa",
+              color: "#b8b8c8",
               fontSize: "13px",
               border: "1px solid rgba(63, 63, 70, 0.5)",
             }}>
@@ -312,7 +312,7 @@ export default function ProviderDetailPage({ params }: { params: Promise<{ id: s
           </div>
 
           <div>
-            <label style={{ fontSize: "13px", color: "#71717a", display: "block", marginBottom: "8px" }}>
+            <label style={{ fontSize: "13px", color: "#9ca3af", display: "block", marginBottom: "8px" }}>
               API Key Environment Variable
             </label>
             <code style={{ 
@@ -320,7 +320,7 @@ export default function ProviderDetailPage({ params }: { params: Promise<{ id: s
               padding: "12px 16px", 
               background: "rgba(24, 24, 27, 0.8)", 
               borderRadius: "8px",
-              color: "#10b981",
+              color: "#00f0ff",
               fontSize: "13px",
               border: "1px solid rgba(63, 63, 70, 0.5)",
             }}>
@@ -346,17 +346,17 @@ export default function ProviderDetailPage({ params }: { params: Promise<{ id: s
             fontSize: "13px",
             fontWeight: "500",
             background: provider.healthStatus === "HEALTHY" 
-              ? "rgba(16, 185, 129, 0.15)" 
+              ? "rgba(0, 240, 255, 0.15)" 
               : provider.healthStatus === "DEGRADED"
                 ? "rgba(245, 158, 11, 0.15)"
                 : "rgba(113, 113, 122, 0.2)",
             color: provider.healthStatus === "HEALTHY" 
-              ? "#34d399" 
+              ? "#00f0ff" 
               : provider.healthStatus === "DEGRADED"
                 ? "#fbbf24"
-                : "#a1a1aa",
+                : "#b8b8c8",
             border: `1px solid ${provider.healthStatus === "HEALTHY" 
-              ? "rgba(16, 185, 129, 0.3)" 
+              ? "rgba(0, 240, 255, 0.3)" 
               : provider.healthStatus === "DEGRADED"
                 ? "rgba(245, 158, 11, 0.3)"
                 : "rgba(113, 113, 122, 0.3)"}`,

@@ -119,7 +119,7 @@ function SortableProviderItem({
         gap: "16px",
         padding: "16px 20px",
         background: isDragging ? "rgba(39, 39, 42, 0.9)" : "rgba(24, 24, 27, 0.6)",
-        border: `1px solid ${isDragging ? "rgba(16, 185, 129, 0.5)" : "rgba(63, 63, 70, 0.4)"}`,
+        border: `1px solid ${isDragging ? "rgba(0, 240, 255, 0.5)" : "rgba(63, 63, 70, 0.4)"}`,
         borderRadius: "12px",
         marginBottom: "12px",
       }}
@@ -133,7 +133,7 @@ function SortableProviderItem({
           background: "transparent",
           border: "none",
           cursor: "grab",
-          color: "#71717a",
+          color: "#9ca3af",
           display: "flex",
           alignItems: "center",
         }}
@@ -146,7 +146,7 @@ function SortableProviderItem({
         width: "32px",
         height: "32px",
         borderRadius: "8px",
-        background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
+        background: "linear-gradient(135deg, #00f0ff 0%, #00b8cc 100%)",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
@@ -163,7 +163,7 @@ function SortableProviderItem({
         <div style={{ fontWeight: "600", color: "#fafafa", fontSize: "14px" }}>
           {config.provider.displayName}
         </div>
-        <div style={{ fontSize: "12px", color: "#71717a", fontFamily: "monospace" }}>
+        <div style={{ fontSize: "12px", color: "#9ca3af", fontFamily: "monospace" }}>
           {config.provider.name}
         </div>
       </div>
@@ -201,7 +201,7 @@ function SortableProviderItem({
         alignItems: "center",
         gap: "4px",
       }}>
-        <span style={{ color: "#a1a1aa", fontSize: "12px" }}>Cost:</span>
+        <span style={{ color: "#b8b8c8", fontSize: "12px" }}>Cost:</span>
         ${config.costPerRequest.toFixed(4)}
       </div>
 
@@ -341,10 +341,10 @@ export function ModelEditForm({ model, allProviders, apps }: Props) {
           alignItems: "center",
           gap: "12px",
           background: message.type === "success" 
-            ? "rgba(16, 185, 129, 0.15)" 
+            ? "rgba(0, 240, 255, 0.15)" 
             : "rgba(239, 68, 68, 0.15)",
           border: `1px solid ${message.type === "success" 
-            ? "rgba(16, 185, 129, 0.3)" 
+            ? "rgba(0, 240, 255, 0.3)" 
             : "rgba(239, 68, 68, 0.3)"}`,
         }}>
           {message.type === "success" ? (
@@ -371,7 +371,7 @@ export function ModelEditForm({ model, allProviders, apps }: Props) {
         <div style={{ display: "grid", gap: "20px" }}>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px" }}>
             <div>
-              <label style={{ display: "block", fontSize: "14px", fontWeight: "500", color: "#a1a1aa", marginBottom: "8px" }}>
+              <label style={{ display: "block", fontSize: "14px", fontWeight: "500", color: "#b8b8c8", marginBottom: "8px" }}>
                 Display Name
               </label>
               <input
@@ -391,7 +391,7 @@ export function ModelEditForm({ model, allProviders, apps }: Props) {
             </div>
 
             <div>
-              <label style={{ display: "block", fontSize: "14px", fontWeight: "500", color: "#a1a1aa", marginBottom: "8px" }}>
+              <label style={{ display: "block", fontSize: "14px", fontWeight: "500", color: "#b8b8c8", marginBottom: "8px" }}>
                 Default Token Cost
               </label>
               <div style={{ position: "relative" }}>
@@ -424,7 +424,7 @@ export function ModelEditForm({ model, allProviders, apps }: Props) {
           </div>
 
           <div>
-            <label style={{ display: "block", fontSize: "14px", fontWeight: "500", color: "#a1a1aa", marginBottom: "8px" }}>
+            <label style={{ display: "block", fontSize: "14px", fontWeight: "500", color: "#b8b8c8", marginBottom: "8px" }}>
               Description
             </label>
             <textarea
@@ -454,7 +454,7 @@ export function ModelEditForm({ model, allProviders, apps }: Props) {
                 border: "none",
                 cursor: "pointer",
                 background: isEnabled 
-                  ? "linear-gradient(135deg, #10b981 0%, #059669 100%)"
+                  ? "linear-gradient(135deg, #00f0ff 0%, #00b8cc 100%)"
                   : "rgba(63, 63, 70, 0.5)",
                 position: "relative",
                 transition: "background 0.2s ease",
@@ -471,7 +471,7 @@ export function ModelEditForm({ model, allProviders, apps }: Props) {
                 transition: "left 0.2s ease",
               }} />
             </button>
-            <span style={{ fontSize: "14px", color: "#a1a1aa" }}>
+            <span style={{ fontSize: "14px", color: "#b8b8c8" }}>
               Model is {isEnabled ? "enabled" : "disabled"}
             </span>
           </div>
@@ -485,7 +485,7 @@ export function ModelEditForm({ model, allProviders, apps }: Props) {
             <h2 style={{ fontSize: "18px", fontWeight: "600", color: "#fafafa", marginBottom: "4px" }}>
               Provider Priority
             </h2>
-            <p style={{ fontSize: "14px", color: "#71717a" }}>
+            <p style={{ fontSize: "14px", color: "#9ca3af" }}>
               Drag to reorder. Lower priority numbers are tried first.
             </p>
           </div>
@@ -524,7 +524,7 @@ export function ModelEditForm({ model, allProviders, apps }: Props) {
                 transform: "translateY(-50%)",
                 width: "16px",
                 height: "16px",
-                color: "#71717a",
+                color: "#9ca3af",
                 pointerEvents: "none",
               }} />
             </div>
@@ -556,7 +556,7 @@ export function ModelEditForm({ model, allProviders, apps }: Props) {
           <div style={{
             padding: "40px",
             textAlign: "center",
-            color: "#71717a",
+            color: "#9ca3af",
             fontSize: "14px",
           }}>
             No providers configured. Add a provider to enable this model.
@@ -570,7 +570,7 @@ export function ModelEditForm({ model, allProviders, apps }: Props) {
           <h2 style={{ fontSize: "18px", fontWeight: "600", color: "#fafafa", marginBottom: "4px" }}>
             Per-App Token Cost Overrides
           </h2>
-          <p style={{ fontSize: "14px", color: "#71717a" }}>
+          <p style={{ fontSize: "14px", color: "#9ca3af" }}>
             Set custom token costs for specific apps. Leave empty to use the default ({tokenCost} tokens).
           </p>
         </div>
@@ -598,7 +598,7 @@ export function ModelEditForm({ model, allProviders, apps }: Props) {
                 <div style={{ fontWeight: "500", color: "#fafafa", fontSize: "14px" }}>
                   {app.name}
                 </div>
-                <div style={{ fontSize: "12px", color: "#71717a", fontFamily: "monospace" }}>
+                <div style={{ fontSize: "12px", color: "#9ca3af", fontFamily: "monospace" }}>
                   {app.slug}
                 </div>
               </div>
@@ -610,7 +610,7 @@ export function ModelEditForm({ model, allProviders, apps }: Props) {
                   transform: "translateY(-50%)",
                   width: "14px",
                   height: "14px",
-                  color: appTokenOverrides[app.id] ? "#facc15" : "#52525b",
+                  color: appTokenOverrides[app.id] ? "#facc15" : "#71717a",
                 }} />
                 <input
                   type="number"
@@ -646,7 +646,7 @@ export function ModelEditForm({ model, allProviders, apps }: Props) {
           <div style={{
             padding: "40px",
             textAlign: "center",
-            color: "#71717a",
+            color: "#9ca3af",
             fontSize: "14px",
           }}>
             No apps configured yet.
@@ -664,14 +664,14 @@ export function ModelEditForm({ model, allProviders, apps }: Props) {
             alignItems: "center",
             gap: "10px",
             padding: "14px 28px",
-            background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
+            background: "linear-gradient(135deg, #00f0ff 0%, #00b8cc 100%)",
             color: "#09090b",
             borderRadius: "12px",
             fontSize: "15px",
             fontWeight: "600",
             border: "none",
             cursor: saving ? "wait" : "pointer",
-            boxShadow: "0 4px 12px rgba(16, 185, 129, 0.3)",
+            boxShadow: "0 4px 12px rgba(0, 240, 255, 0.3)",
             opacity: saving ? 0.7 : 1,
           }}
         >

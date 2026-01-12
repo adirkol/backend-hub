@@ -50,7 +50,7 @@ export default function AdminLoginPage() {
       className="min-h-screen flex items-center justify-center p-8"
       style={{
         background: `
-          radial-gradient(ellipse 80% 50% at 50% -20%, rgba(16, 185, 129, 0.08), transparent),
+          radial-gradient(ellipse 80% 50% at 50% -20%, rgba(0, 240, 255, 0.06), transparent),
           radial-gradient(ellipse 60% 40% at 80% 100%, rgba(99, 102, 241, 0.05), transparent),
           radial-gradient(rgba(39, 39, 42, 0.3) 1px, transparent 1px),
           #09090b
@@ -76,8 +76,8 @@ export default function AdminLoginPage() {
               style={{
                 width: '80px',
                 height: '80px',
-                background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-                boxShadow: '0 0 40px rgba(16, 185, 129, 0.4), 0 12px 40px rgba(0, 0, 0, 0.4)'
+                background: 'linear-gradient(135deg, #00f0ff 0%, #00b8cc 100%)',
+                boxShadow: '0 0 40px rgba(0, 240, 255, 0.3), 0 12px 40px rgba(0, 0, 0, 0.4)'
               }}
             >
               <Zap style={{ width: '40px', height: '40px', color: '#09090b' }} strokeWidth={2.5} />
@@ -95,7 +95,7 @@ export default function AdminLoginPage() {
             }}>
               AI Backend Hub
             </h1>
-            <p style={{ fontSize: '16px', color: '#a1a1aa' }}>
+            <p style={{ fontSize: '16px', color: '#b8b8c8' }}>
               Sign in to access the admin panel
             </p>
           </div>
@@ -132,7 +132,7 @@ export default function AdminLoginPage() {
                     zIndex: 10
                   }}
                 >
-                  <Mail style={{ width: '20px', height: '20px', color: '#71717a' }} />
+                  <Mail style={{ width: '20px', height: '20px', color: '#9ca3af' }} />
                 </div>
                 <input
                   id="email"
@@ -190,14 +190,14 @@ export default function AdminLoginPage() {
                 justifyContent: 'center',
                 gap: '10px',
                 background: isLoading 
-                  ? 'rgba(16, 185, 129, 0.4)'
-                  : 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-                color: '#09090b',
+                  ? 'rgba(0, 240, 255, 0.4)'
+                  : 'linear-gradient(135deg, #00f0ff 0%, #00b8cc 100%)',
+                color: '#000',
                 border: 'none',
                 cursor: isLoading ? 'not-allowed' : 'pointer',
                 boxShadow: isLoading 
                   ? 'none' 
-                  : '0 4px 20px rgba(16, 185, 129, 0.4)',
+                  : '0 4px 20px rgba(0, 240, 255, 0.3)',
                 transition: 'all 0.2s ease'
               }}
             >
@@ -219,7 +219,7 @@ export default function AdminLoginPage() {
             marginTop: '32px', 
             textAlign: 'center', 
             fontSize: '14px', 
-            color: '#71717a' 
+            color: '#9ca3af' 
           }}>
             We&apos;ll send you a magic link to sign in securely
           </p>
@@ -230,7 +230,7 @@ export default function AdminLoginPage() {
           marginTop: '32px', 
           textAlign: 'center', 
           fontSize: '14px', 
-          color: '#52525b' 
+          color: '#71717a' 
         }}>
           Only authorized administrators can access this panel
         </p>

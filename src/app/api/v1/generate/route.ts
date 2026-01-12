@@ -4,6 +4,7 @@ import { validateApiRequest } from "@/lib/api-auth";
 import { prisma } from "@/lib/db";
 import { reserveTokens } from "@/lib/tokens";
 import { addGenerationJob } from "@/lib/queue";
+import { checkApiRateLimits, getRateLimitHeaders } from "@/lib/rate-limit";
 
 const GenerateSchema = z.object({
   model: z.string().min(1),
@@ -29,6 +30,32 @@ export async function POST(req: NextRequest) {
     const auth = await validateApiRequest(req, { requireUser: true });
     if (!auth.success || !auth.app || !auth.appUser) {
       return NextResponse.json({ error: auth.error }, { status: 401 });
+    }
+
+    // Check rate limits
+    const rateLimits = await checkApiRateLimits({
+      appId: auth.app.id,
+      userId: auth.appUser.id,
+      rateLimitPerUser: auth.app.rateLimitPerUser,
+      rateLimitPerApp: auth.app.rateLimitPerApp,
+    });
+
+    if (!rateLimits.allowed) {
+      // Determine which limit was exceeded
+      const exceeded = !rateLimits.userLimit.success 
+        ? rateLimits.userLimit 
+        : rateLimits.appLimit;
+      
+      return NextResponse.json(
+        { 
+          error: "Rate limit exceeded",
+          retry_after: exceeded.retryAfter,
+        },
+        { 
+          status: 429,
+          headers: getRateLimitHeaders(exceeded),
+        }
+      );
     }
 
     // Parse and validate body
@@ -172,7 +199,10 @@ export async function POST(req: NextRequest) {
         tokens_charged: tokenCost,
         user_balance: tokenResult.balance,
       },
-      { status: 202 }
+      { 
+        status: 202,
+        headers: getRateLimitHeaders(rateLimits.userLimit),
+      }
     );
   } catch (error) {
     console.error("Generate error:", error);

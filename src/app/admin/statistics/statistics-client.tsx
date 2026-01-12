@@ -117,21 +117,21 @@ function StatCard({
     <div className="glass" style={{ padding: "24px" }}>
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
         <div>
-          <p style={{ fontSize: "14px", color: "#71717a", marginBottom: "8px" }}>{title}</p>
+          <p style={{ fontSize: "14px", color: "#9ca3af", marginBottom: "8px" }}>{title}</p>
           <p style={{ fontSize: "32px", fontWeight: "700", color: "#fafafa", letterSpacing: "-0.02em" }}>
             {typeof value === "number" ? value.toLocaleString() : value}
           </p>
           {change !== undefined && (
             <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "12px" }}>
               {change >= 0 ? (
-                <TrendingUp style={{ width: "16px", height: "16px", color: "#34d399" }} />
+                <TrendingUp style={{ width: "16px", height: "16px", color: "#00f0ff" }} />
               ) : (
                 <TrendingDown style={{ width: "16px", height: "16px", color: "#f87171" }} />
               )}
               <span style={{ fontSize: "14px", color: change >= 0 ? "#34d399" : "#f87171" }}>
                 {change >= 0 ? "+" : ""}{change}%
               </span>
-              <span style={{ fontSize: "14px", color: "#71717a" }}>vs last period</span>
+              <span style={{ fontSize: "14px", color: "#9ca3af" }}>vs last period</span>
             </div>
           )}
         </div>
@@ -151,7 +151,7 @@ function StatCard({
   );
 }
 
-function MiniChart({ data, color = "#10b981" }: { data: Array<{ value: number }>; color?: string }) {
+function MiniChart({ data, color = "#00f0ff" }: { data: Array<{ value: number }>; color?: string }) {
   const maxValue = Math.max(...data.map((d) => d.value), 1);
   const minValue = Math.min(...data.map((d) => d.value));
   const range = maxValue - minValue || 1;
@@ -184,7 +184,7 @@ function SimpleBarChart({ data }: { data: Array<{ label: string; value: number }
         <div key={i} style={{ display: "flex", alignItems: "center", gap: "14px" }}>
           <span style={{ 
             fontSize: "13px", 
-            color: "#a1a1aa", 
+            color: "#b8b8c8", 
             width: "100px", 
             overflow: "hidden",
             textOverflow: "ellipsis",
@@ -196,7 +196,7 @@ function SimpleBarChart({ data }: { data: Array<{ label: string; value: number }
             <div
               style={{
                 height: "100%",
-                background: "linear-gradient(90deg, #10b981 0%, #34d399 100%)",
+                background: "linear-gradient(90deg, #00f0ff 0%, #66f7ff 100%)",
                 borderRadius: "6px",
                 width: `${(item.value / maxValue) * 100}%`,
                 transition: "width 0.5s ease",
@@ -293,9 +293,9 @@ export function StatisticsClient({ data }: { data: StatisticsData }) {
               cursor: "pointer",
             }}
           >
-            <Calendar style={{ width: "16px", height: "16px", color: "#71717a" }} />
+            <Calendar style={{ width: "16px", height: "16px", color: "#9ca3af" }} />
             {rangeOptions.find(r => r.id === dateRange)?.label}
-            <ChevronDown style={{ width: "16px", height: "16px", color: "#71717a" }} />
+            <ChevronDown style={{ width: "16px", height: "16px", color: "#9ca3af" }} />
           </button>
           {showRangeDropdown && (
             <div style={{
@@ -320,9 +320,9 @@ export function StatisticsClient({ data }: { data: StatisticsData }) {
                     width: "100%",
                     padding: "10px 12px",
                     borderRadius: "8px",
-                    background: dateRange === option.id ? "rgba(16, 185, 129, 0.15)" : "transparent",
+                    background: dateRange === option.id ? "rgba(0, 240, 255, 0.15)" : "transparent",
                     border: "none",
-                    color: dateRange === option.id ? "#34d399" : "#a1a1aa",
+                    color: dateRange === option.id ? "#00f0ff" : "#b8b8c8",
                     fontSize: "14px",
                     textAlign: "left",
                     cursor: "pointer",
@@ -352,9 +352,9 @@ export function StatisticsClient({ data }: { data: StatisticsData }) {
               cursor: "pointer",
             }}
           >
-            <Filter style={{ width: "16px", height: "16px", color: "#71717a" }} />
+            <Filter style={{ width: "16px", height: "16px", color: "#9ca3af" }} />
             {selectedApp === "all" ? "All Apps" : data.apps.find(a => a.id === selectedApp)?.name || "All Apps"}
-            <ChevronDown style={{ width: "16px", height: "16px", color: "#71717a" }} />
+            <ChevronDown style={{ width: "16px", height: "16px", color: "#9ca3af" }} />
           </button>
           {showAppDropdown && (
             <div style={{
@@ -379,9 +379,9 @@ export function StatisticsClient({ data }: { data: StatisticsData }) {
                   width: "100%",
                   padding: "10px 12px",
                   borderRadius: "8px",
-                  background: selectedApp === "all" ? "rgba(16, 185, 129, 0.15)" : "transparent",
+                  background: selectedApp === "all" ? "rgba(0, 240, 255, 0.15)" : "transparent",
                   border: "none",
-                  color: selectedApp === "all" ? "#34d399" : "#a1a1aa",
+                  color: selectedApp === "all" ? "#00f0ff" : "#b8b8c8",
                   fontSize: "14px",
                   textAlign: "left",
                   cursor: "pointer",
@@ -398,9 +398,9 @@ export function StatisticsClient({ data }: { data: StatisticsData }) {
                     width: "100%",
                     padding: "10px 12px",
                     borderRadius: "8px",
-                    background: selectedApp === app.id ? "rgba(16, 185, 129, 0.15)" : "transparent",
+                    background: selectedApp === app.id ? "rgba(0, 240, 255, 0.15)" : "transparent",
                     border: "none",
-                    color: selectedApp === app.id ? "#34d399" : "#a1a1aa",
+                    color: selectedApp === app.id ? "#00f0ff" : "#b8b8c8",
                     fontSize: "14px",
                     textAlign: "left",
                     cursor: "pointer",
@@ -431,10 +431,10 @@ export function StatisticsClient({ data }: { data: StatisticsData }) {
               padding: "14px 24px",
               fontSize: "14px",
               fontWeight: "500",
-              color: activeTab === tab.id ? "#fafafa" : "#71717a",
+              color: activeTab === tab.id ? "#fafafa" : "#9ca3af",
               background: activeTab === tab.id ? "rgba(39, 39, 42, 0.6)" : "transparent",
               border: "none",
-              borderBottom: activeTab === tab.id ? "2px solid #10b981" : "2px solid transparent",
+              borderBottom: activeTab === tab.id ? "2px solid #00f0ff" : "2px solid transparent",
               cursor: "pointer",
               transition: "all 0.15s ease",
               marginBottom: "-1px",
@@ -455,15 +455,15 @@ export function StatisticsClient({ data }: { data: StatisticsData }) {
               title="Total Jobs"
               value={filteredTotals.totalJobs}
               icon={Zap}
-              iconBg="linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(5, 150, 105, 0.3) 100%)"
-              iconColor="#34d399"
+              iconBg="linear-gradient(135deg, rgba(0, 240, 255, 0.2) 0%, rgba(0, 184, 204, 0.3) 100%)"
+              iconColor="#00f0ff"
             />
             <StatCard
               title="Succeeded"
               value={filteredTotals.succeededJobs}
               icon={CheckCircle}
               iconBg="linear-gradient(135deg, rgba(34, 197, 94, 0.2) 0%, rgba(22, 163, 74, 0.3) 100%)"
-              iconColor="#22c55e"
+              iconColor="#00f0ff"
             />
             <StatCard
               title="Failed"
@@ -492,26 +492,26 @@ export function StatisticsClient({ data }: { data: StatisticsData }) {
                 <>
                   <MiniChart data={filteredData.dailyStats.map(d => ({ value: d.count }))} />
                   <div style={{ display: "flex", justifyContent: "space-between", marginTop: "12px" }}>
-                    <span style={{ fontSize: "12px", color: "#71717a" }}>{filteredData.dailyStats[0]?.date}</span>
-                    <span style={{ fontSize: "12px", color: "#71717a" }}>{filteredData.dailyStats[filteredData.dailyStats.length - 1]?.date}</span>
+                    <span style={{ fontSize: "12px", color: "#9ca3af" }}>{filteredData.dailyStats[0]?.date}</span>
+                    <span style={{ fontSize: "12px", color: "#9ca3af" }}>{filteredData.dailyStats[filteredData.dailyStats.length - 1]?.date}</span>
                   </div>
                   <div style={{ display: "flex", alignItems: "center", gap: "24px", marginTop: "20px" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                       <CheckCircle style={{ width: "16px", height: "16px", color: "#34d399" }} />
-                      <span style={{ fontSize: "14px", color: "#a1a1aa" }}>
+                      <span style={{ fontSize: "14px", color: "#b8b8c8" }}>
                         {filteredTotals.succeededJobs} succeeded
                       </span>
                     </div>
                     <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                       <XCircle style={{ width: "16px", height: "16px", color: "#f87171" }} />
-                      <span style={{ fontSize: "14px", color: "#a1a1aa" }}>
+                      <span style={{ fontSize: "14px", color: "#b8b8c8" }}>
                         {filteredTotals.failedJobs} failed
                       </span>
                     </div>
                   </div>
                 </>
               ) : (
-                <p style={{ color: "#71717a", textAlign: "center", padding: "40px 0" }}>No data available</p>
+                <p style={{ color: "#9ca3af", textAlign: "center", padding: "40px 0" }}>No data available</p>
               )}
             </div>
 
@@ -524,10 +524,10 @@ export function StatisticsClient({ data }: { data: StatisticsData }) {
                 <>
                   <MiniChart data={filteredData.userGrowth.map(d => ({ value: d.count }))} color="#60a5fa" />
                   <div style={{ display: "flex", justifyContent: "space-between", marginTop: "12px" }}>
-                    <span style={{ fontSize: "12px", color: "#71717a" }}>{filteredData.userGrowth[0]?.date}</span>
-                    <span style={{ fontSize: "12px", color: "#71717a" }}>{filteredData.userGrowth[filteredData.userGrowth.length - 1]?.date}</span>
+                    <span style={{ fontSize: "12px", color: "#9ca3af" }}>{filteredData.userGrowth[0]?.date}</span>
+                    <span style={{ fontSize: "12px", color: "#9ca3af" }}>{filteredData.userGrowth[filteredData.userGrowth.length - 1]?.date}</span>
                   </div>
-                  <p style={{ marginTop: "20px", fontSize: "14px", color: "#a1a1aa" }}>
+                  <p style={{ marginTop: "20px", fontSize: "14px", color: "#b8b8c8" }}>
                     <span style={{ color: "#60a5fa", fontWeight: "600" }}>
                       {filteredTotals.newUsers}
                     </span>{" "}
@@ -535,7 +535,7 @@ export function StatisticsClient({ data }: { data: StatisticsData }) {
                   </p>
                 </>
               ) : (
-                <p style={{ color: "#71717a", textAlign: "center", padding: "40px 0" }}>No data available</p>
+                <p style={{ color: "#9ca3af", textAlign: "center", padding: "40px 0" }}>No data available</p>
               )}
             </div>
           </div>
@@ -550,7 +550,7 @@ export function StatisticsClient({ data }: { data: StatisticsData }) {
               {data.topApps.length > 0 ? (
                 <SimpleBarChart data={data.topApps.map(a => ({ label: a.name, value: a.jobs }))} />
               ) : (
-                <p style={{ color: "#71717a", textAlign: "center", padding: "40px 0" }}>No data available</p>
+                <p style={{ color: "#9ca3af", textAlign: "center", padding: "40px 0" }}>No data available</p>
               )}
             </div>
 
@@ -573,17 +573,17 @@ export function StatisticsClient({ data }: { data: StatisticsData }) {
                     }}>
                       <div>
                         <p style={{ fontSize: "14px", fontWeight: "500", color: "#e4e4e7" }}>{p.provider}</p>
-                        <p style={{ fontSize: "13px", color: "#71717a", marginTop: "4px" }}>{p.count.toLocaleString()} requests</p>
+                        <p style={{ fontSize: "13px", color: "#9ca3af", marginTop: "4px" }}>{p.count.toLocaleString()} requests</p>
                       </div>
                       <div style={{ textAlign: "right" }}>
                         <p style={{ fontSize: "14px", color: "#e4e4e7" }}>{p.avgLatency}ms</p>
-                        <p style={{ fontSize: "13px", color: "#71717a", marginTop: "4px" }}>avg latency</p>
+                        <p style={{ fontSize: "13px", color: "#9ca3af", marginTop: "4px" }}>avg latency</p>
                       </div>
                     </div>
                   ))}
                 </div>
               ) : (
-                <p style={{ color: "#71717a", textAlign: "center", padding: "40px 0" }}>No data available</p>
+                <p style={{ color: "#9ca3af", textAlign: "center", padding: "40px 0" }}>No data available</p>
               )}
             </div>
 
@@ -601,9 +601,9 @@ export function StatisticsClient({ data }: { data: StatisticsData }) {
                       GENERATION_REFUND: { label: "Refunded", color: "#fbbf24" },
                       ADMIN_ADJUSTMENT: { label: "Adjusted", color: "#60a5fa" },
                       BONUS: { label: "Bonus", color: "#a78bfa" },
-                      EXPIRY: { label: "Expired", color: "#a1a1aa" },
+                      EXPIRY: { label: "Expired", color: "#b8b8c8" },
                     };
-                    const config = typeLabels[t.type] || { label: t.type, color: "#a1a1aa" };
+                    const config = typeLabels[t.type] || { label: t.type, color: "#b8b8c8" };
 
                     return (
                       <div key={i} style={{ 
@@ -613,7 +613,7 @@ export function StatisticsClient({ data }: { data: StatisticsData }) {
                         padding: "12px 0",
                         borderBottom: i < data.tokenStats.length - 1 ? "1px solid rgba(63, 63, 70, 0.3)" : "none",
                       }}>
-                        <span style={{ fontSize: "14px", color: "#a1a1aa" }}>{config.label}</span>
+                        <span style={{ fontSize: "14px", color: "#b8b8c8" }}>{config.label}</span>
                         <span style={{ fontSize: "14px", fontWeight: "600", color: config.color }}>
                           {t.total.toLocaleString()} tokens
                         </span>
@@ -622,7 +622,7 @@ export function StatisticsClient({ data }: { data: StatisticsData }) {
                   })}
                 </div>
               ) : (
-                <p style={{ color: "#71717a", textAlign: "center", padding: "40px 0" }}>No data available</p>
+                <p style={{ color: "#9ca3af", textAlign: "center", padding: "40px 0" }}>No data available</p>
               )}
             </div>
           </div>
@@ -645,8 +645,8 @@ export function StatisticsClient({ data }: { data: StatisticsData }) {
               title="Total Jobs"
               value={filteredTotals.totalJobs}
               icon={Zap}
-              iconBg="linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(5, 150, 105, 0.3) 100%)"
-              iconColor="#34d399"
+              iconBg="linear-gradient(135deg, rgba(0, 240, 255, 0.2) 0%, rgba(0, 184, 204, 0.3) 100%)"
+              iconColor="#00f0ff"
             />
             <StatCard
               title="Avg Cost / Job"
@@ -675,15 +675,15 @@ export function StatisticsClient({ data }: { data: StatisticsData }) {
                 <>
                   <MiniChart data={filteredData.expenseDaily.map(d => ({ value: d.amount }))} color="#f87171" />
                   <div style={{ display: "flex", justifyContent: "space-between", marginTop: "12px" }}>
-                    <span style={{ fontSize: "12px", color: "#71717a" }}>{filteredData.expenseDaily[0]?.date}</span>
-                    <span style={{ fontSize: "12px", color: "#71717a" }}>{filteredData.expenseDaily[filteredData.expenseDaily.length - 1]?.date}</span>
+                    <span style={{ fontSize: "12px", color: "#9ca3af" }}>{filteredData.expenseDaily[0]?.date}</span>
+                    <span style={{ fontSize: "12px", color: "#9ca3af" }}>{filteredData.expenseDaily[filteredData.expenseDaily.length - 1]?.date}</span>
                   </div>
-                  <p style={{ marginTop: "20px", fontSize: "14px", color: "#a1a1aa" }}>
+                  <p style={{ marginTop: "20px", fontSize: "14px", color: "#b8b8c8" }}>
                     Total: <span style={{ color: "#f87171", fontWeight: "600" }}>${filteredTotals.totalExpenses.toFixed(2)}</span>
                   </p>
                 </>
               ) : (
-                <p style={{ color: "#71717a", textAlign: "center", padding: "40px 0" }}>No expense data available</p>
+                <p style={{ color: "#9ca3af", textAlign: "center", padding: "40px 0" }}>No expense data available</p>
               )}
             </div>
 
@@ -706,11 +706,11 @@ export function StatisticsClient({ data }: { data: StatisticsData }) {
                     }}>
                       <div>
                         <p style={{ fontSize: "14px", fontWeight: "500", color: "#e4e4e7" }}>{p.name}</p>
-                        <p style={{ fontSize: "13px", color: "#71717a", marginTop: "4px" }}>{p.count.toLocaleString()} requests</p>
+                        <p style={{ fontSize: "13px", color: "#9ca3af", marginTop: "4px" }}>{p.count.toLocaleString()} requests</p>
                       </div>
                       <div style={{ textAlign: "right" }}>
                         <p style={{ fontSize: "16px", fontWeight: "600", color: "#f87171" }}>${p.amount.toFixed(2)}</p>
-                        <p style={{ fontSize: "13px", color: "#71717a", marginTop: "4px" }}>
+                        <p style={{ fontSize: "13px", color: "#9ca3af", marginTop: "4px" }}>
                           ${p.count > 0 ? (p.amount / p.count).toFixed(4) : "0.0000"}/req
                         </p>
                       </div>
@@ -718,7 +718,7 @@ export function StatisticsClient({ data }: { data: StatisticsData }) {
                   ))}
                 </div>
               ) : (
-                <p style={{ color: "#71717a", textAlign: "center", padding: "40px 0" }}>No data available</p>
+                <p style={{ color: "#9ca3af", textAlign: "center", padding: "40px 0" }}>No data available</p>
               )}
             </div>
           </div>
@@ -748,18 +748,18 @@ export function StatisticsClient({ data }: { data: StatisticsData }) {
                       <span style={{ fontSize: "24px", fontWeight: "700", color: "#f87171" }}>
                         ${m.amount.toFixed(2)}
                       </span>
-                      <span style={{ fontSize: "13px", color: "#71717a" }}>
+                      <span style={{ fontSize: "13px", color: "#9ca3af" }}>
                         {m.count.toLocaleString()} jobs
                       </span>
                     </div>
-                    <p style={{ fontSize: "13px", color: "#71717a", marginTop: "8px" }}>
+                    <p style={{ fontSize: "13px", color: "#9ca3af", marginTop: "8px" }}>
                       Avg: ${m.count > 0 ? (m.amount / m.count).toFixed(4) : "0.0000"}/request
                     </p>
                   </div>
                 ))}
               </div>
             ) : (
-              <p style={{ color: "#71717a", textAlign: "center", padding: "40px 0" }}>No expense data available</p>
+              <p style={{ color: "#9ca3af", textAlign: "center", padding: "40px 0" }}>No expense data available</p>
             )}
           </div>
         </div>

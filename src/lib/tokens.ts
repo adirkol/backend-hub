@@ -105,6 +105,9 @@ export async function getEffectiveTokenBalance(appUserId: string): Promise<{
 /**
  * Reserve tokens for a generation job.
  * Uses an idempotency key to prevent double-charging.
+ * 
+ * Uses FIFO logic: checks effective balance (excludes expired grants)
+ * and deducts from the user's raw balance.
  */
 export async function reserveTokens(
   appUserId: string,
@@ -121,20 +124,29 @@ export async function reserveTokens(
     });
 
     if (existing) {
-      // Already processed, return current balance
-      const appUser = await prisma.appUser.findUnique({
-        where: { id: appUserId },
-      });
+      // Already processed, return effective balance
+      const { effectiveBalance } = await getEffectiveTokenBalance(appUserId);
       return {
         success: true,
-        balance: appUser?.tokenBalance ?? 0,
+        balance: effectiveBalance,
         transactionId: existing.id,
+      };
+    }
+
+    // Check effective balance first (excludes expired tokens)
+    const { effectiveBalance } = await getEffectiveTokenBalance(appUserId);
+    
+    if (effectiveBalance < amount) {
+      return { 
+        success: false, 
+        balance: effectiveBalance, 
+        error: "Insufficient tokens" 
       };
     }
 
     // Atomic transaction
     const result = await prisma.$transaction(async (tx) => {
-      // Lock and get current balance
+      // Lock and get current raw balance
       const appUser = await tx.appUser.findUnique({
         where: { id: appUserId },
       });
@@ -143,24 +155,21 @@ export async function reserveTokens(
         throw new Error("User not found");
       }
 
-      if (appUser.tokenBalance < amount) {
-        throw new Error("Insufficient tokens");
-      }
+      // Deduct from raw balance
+      const newRawBalance = appUser.tokenBalance - amount;
 
-      const newBalance = appUser.tokenBalance - amount;
-
-      // Update balance
+      // Update raw balance
       await tx.appUser.update({
         where: { id: appUserId },
-        data: { tokenBalance: newBalance },
+        data: { tokenBalance: newRawBalance },
       });
 
-      // Create ledger entry
+      // Create ledger entry (debit entries don't expire)
       const entry = await tx.tokenLedgerEntry.create({
         data: {
           appUserId,
           amount: -amount,
-          balanceAfter: newBalance,
+          balanceAfter: newRawBalance,
           type: TokenEntryType.GENERATION_DEBIT,
           description: description ?? "Generation token debit",
           jobId,
@@ -168,7 +177,7 @@ export async function reserveTokens(
         },
       });
 
-      return { balance: newBalance, transactionId: entry.id };
+      return { balance: effectiveBalance - amount, transactionId: entry.id };
     });
 
     return { success: true, ...result };
@@ -374,7 +383,8 @@ export async function adminAdjustTokens(
 }
 
 /**
- * Get user's current token balance.
+ * Get user's current token balance (raw, not effective).
+ * For most use cases, prefer getEffectiveTokenBalance() instead.
  */
 export async function getTokenBalance(appUserId: string): Promise<number> {
   const appUser = await prisma.appUser.findUnique({

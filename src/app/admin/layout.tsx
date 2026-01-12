@@ -22,9 +22,10 @@ export default async function AdminLayout({
         display: 'flex',
         overflow: 'hidden', // Prevent body scroll
         background: `
-          radial-gradient(ellipse 50% 30% at 0% 0%, rgba(16, 185, 129, 0.04), transparent),
-          radial-gradient(ellipse 40% 25% at 100% 100%, rgba(99, 102, 241, 0.03), transparent),
-          #09090b
+          radial-gradient(ellipse 60% 40% at 0% 0%, rgba(0, 240, 255, 0.03), transparent),
+          radial-gradient(ellipse 50% 35% at 100% 100%, rgba(170, 85, 255, 0.03), transparent),
+          radial-gradient(ellipse 40% 30% at 50% 50%, rgba(0, 255, 136, 0.02), transparent),
+          linear-gradient(135deg, #0a0a0f 0%, #0f0f18 50%, #0a0a12 100%)
         `
       }}
     >

@@ -62,7 +62,7 @@ function StatusBadge({ status }: { status: string }) {
   const config: Record<string, { bg: string; color: string; border: string; icon: React.ReactNode }> = {
     SUCCEEDED: {
       bg: "rgba(16, 185, 129, 0.15)",
-      color: "#34d399",
+      color: "#00f0ff",
       border: "rgba(16, 185, 129, 0.3)",
       icon: <CheckCircle2 style={{ width: "16px", height: "16px" }} />,
     },
@@ -86,7 +86,7 @@ function StatusBadge({ status }: { status: string }) {
     },
     CANCELLED: {
       bg: "rgba(113, 113, 122, 0.2)",
-      color: "#a1a1aa",
+      color: "#b8b8c8",
       border: "rgba(113, 113, 122, 0.3)",
       icon: <XCircle style={{ width: "16px", height: "16px" }} />,
     },
@@ -146,7 +146,7 @@ export default async function JobDetailPage({ params }: PageProps) {
               alignItems: "center",
               gap: "8px",
               fontSize: "14px",
-              color: "#71717a",
+              color: "#9ca3af",
               textDecoration: "none",
               marginBottom: "12px",
             }}
@@ -159,7 +159,7 @@ export default async function JobDetailPage({ params }: PageProps) {
           </h1>
           <code style={{
             fontSize: "14px",
-            color: "#71717a",
+            color: "#9ca3af",
             fontFamily: "monospace",
             marginTop: "8px",
             display: "block",
@@ -174,7 +174,7 @@ export default async function JobDetailPage({ params }: PageProps) {
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "16px" }}>
         {/* App */}
         <div className="glass" style={{ padding: "20px" }}>
-          <div style={{ fontSize: "12px", color: "#71717a", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+          <div style={{ fontSize: "12px", color: "#9ca3af", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
             App
           </div>
           <Link
@@ -183,23 +183,23 @@ export default async function JobDetailPage({ params }: PageProps) {
           >
             {job.app.name}
           </Link>
-          <div style={{ fontSize: "13px", color: "#71717a", fontFamily: "monospace" }}>{job.app.slug}</div>
+          <div style={{ fontSize: "13px", color: "#9ca3af", fontFamily: "monospace" }}>{job.app.slug}</div>
         </div>
 
         {/* User */}
         <div className="glass" style={{ padding: "20px" }}>
-          <div style={{ fontSize: "12px", color: "#71717a", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+          <div style={{ fontSize: "12px", color: "#9ca3af", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
             User
           </div>
           <div style={{ fontSize: "16px", fontWeight: "600", color: "#e4e4e7", fontFamily: "monospace" }}>
             {job.appUser.externalId}
           </div>
-          <div style={{ fontSize: "13px", color: "#71717a" }}>Balance: {job.appUser.tokenBalance} tokens</div>
+          <div style={{ fontSize: "13px", color: "#9ca3af" }}>Balance: {job.appUser.tokenBalance} tokens</div>
         </div>
 
         {/* Model */}
         <div className="glass" style={{ padding: "20px" }}>
-          <div style={{ fontSize: "12px", color: "#71717a", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+          <div style={{ fontSize: "12px", color: "#9ca3af", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
             Model
           </div>
           <Link
@@ -208,23 +208,23 @@ export default async function JobDetailPage({ params }: PageProps) {
           >
             {job.aiModel.displayName}
           </Link>
-          <div style={{ fontSize: "13px", color: "#71717a", fontFamily: "monospace" }}>{job.aiModel.name}</div>
+          <div style={{ fontSize: "13px", color: "#9ca3af", fontFamily: "monospace" }}>{job.aiModel.name}</div>
         </div>
 
         {/* Tokens */}
         <div className="glass" style={{ padding: "20px" }}>
-          <div style={{ fontSize: "12px", color: "#71717a", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+          <div style={{ fontSize: "12px", color: "#9ca3af", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
             Tokens
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
             <Coins style={{ width: "18px", height: "18px", color: "#fbbf24" }} />
             <span style={{ fontSize: "20px", fontWeight: "700", color: "#fbbf24" }}>{job.tokenCost}</span>
           </div>
-          <div style={{ fontSize: "13px", color: "#71717a" }}>
+          <div style={{ fontSize: "13px", color: "#9ca3af" }}>
             {job.tokensRefunded ? (
               <span style={{ color: "#f87171" }}>Refunded</span>
             ) : job.tokensCharged ? (
-              <span style={{ color: "#34d399" }}>Charged</span>
+              <span style={{ color: "#00f0ff" }}>Charged</span>
             ) : (
               "Pending"
             )}
@@ -233,7 +233,7 @@ export default async function JobDetailPage({ params }: PageProps) {
 
         {/* Duration */}
         <div className="glass" style={{ padding: "20px" }}>
-          <div style={{ fontSize: "12px", color: "#71717a", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+          <div style={{ fontSize: "12px", color: "#9ca3af", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
             Duration
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
@@ -242,14 +242,14 @@ export default async function JobDetailPage({ params }: PageProps) {
               {formatDuration(job.startedAt, job.completedAt)}
             </span>
           </div>
-          <div style={{ fontSize: "13px", color: "#71717a" }}>
+          <div style={{ fontSize: "13px", color: "#9ca3af" }}>
             {job.attemptsCount} provider attempt{job.attemptsCount !== 1 ? "s" : ""}
           </div>
         </div>
 
         {/* Provider Used */}
         <div className="glass" style={{ padding: "20px" }}>
-          <div style={{ fontSize: "12px", color: "#71717a", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+          <div style={{ fontSize: "12px", color: "#9ca3af", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
             Provider Used
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
@@ -259,7 +259,7 @@ export default async function JobDetailPage({ params }: PageProps) {
             </span>
           </div>
           {job.providerTaskId && (
-            <div style={{ fontSize: "11px", color: "#71717a", fontFamily: "monospace", marginTop: "4px" }}>
+            <div style={{ fontSize: "11px", color: "#9ca3af", fontFamily: "monospace", marginTop: "4px" }}>
               Task: {job.providerTaskId.slice(0, 16)}...
             </div>
           )}
@@ -274,15 +274,15 @@ export default async function JobDetailPage({ params }: PageProps) {
         </h2>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "20px" }}>
           <div>
-            <div style={{ fontSize: "12px", color: "#71717a", marginBottom: "4px" }}>Created</div>
+            <div style={{ fontSize: "12px", color: "#9ca3af", marginBottom: "4px" }}>Created</div>
             <div style={{ fontSize: "14px", color: "#e4e4e7" }}>{job.createdAt.toISOString()}</div>
           </div>
           <div>
-            <div style={{ fontSize: "12px", color: "#71717a", marginBottom: "4px" }}>Started</div>
+            <div style={{ fontSize: "12px", color: "#9ca3af", marginBottom: "4px" }}>Started</div>
             <div style={{ fontSize: "14px", color: "#e4e4e7" }}>{job.startedAt?.toISOString() || "—"}</div>
           </div>
           <div>
-            <div style={{ fontSize: "12px", color: "#71717a", marginBottom: "4px" }}>Completed</div>
+            <div style={{ fontSize: "12px", color: "#9ca3af", marginBottom: "4px" }}>Completed</div>
             <div style={{ fontSize: "14px", color: "#e4e4e7" }}>{job.completedAt?.toISOString() || "—"}</div>
           </div>
         </div>
@@ -331,7 +331,7 @@ export default async function JobDetailPage({ params }: PageProps) {
         </h2>
         
         {providerLogs.length === 0 ? (
-          <div style={{ padding: "32px", textAlign: "center", color: "#71717a" }}>
+          <div style={{ padding: "32px", textAlign: "center", color: "#9ca3af" }}>
             No provider attempts logged yet
           </div>
         ) : (
@@ -342,9 +342,9 @@ export default async function JobDetailPage({ params }: PageProps) {
                 style={{
                   padding: "16px 20px",
                   background: log.success
-                    ? "rgba(16, 185, 129, 0.08)"
+                    ? "rgba(0, 240, 255, 0.08)"
                     : "rgba(239, 68, 68, 0.08)",
-                  border: `1px solid ${log.success ? "rgba(16, 185, 129, 0.2)" : "rgba(239, 68, 68, 0.2)"}`,
+                  border: `1px solid ${log.success ? "rgba(0, 240, 255, 0.2)" : "rgba(239, 68, 68, 0.2)"}`,
                   borderRadius: "10px",
                 }}
               >
@@ -356,7 +356,7 @@ export default async function JobDetailPage({ params }: PageProps) {
                       height: "28px",
                       borderRadius: "6px",
                       background: log.success
-                        ? "linear-gradient(135deg, #10b981 0%, #059669 100%)"
+                        ? "linear-gradient(135deg, #00f0ff 0%, #00b8cc 100%)"
                         : "linear-gradient(135deg, #ef4444 0%, #dc2626 100%)",
                       display: "flex",
                       alignItems: "center",
@@ -380,7 +380,7 @@ export default async function JobDetailPage({ params }: PageProps) {
                       <div style={{ fontWeight: "600", color: "#e4e4e7", fontSize: "14px" }}>
                         {log.provider.displayName}
                       </div>
-                      <div style={{ fontSize: "12px", color: "#71717a", fontFamily: "monospace" }}>
+                      <div style={{ fontSize: "12px", color: "#9ca3af", fontFamily: "monospace" }}>
                         {log.providerModelId}
                       </div>
                     </div>
@@ -389,7 +389,7 @@ export default async function JobDetailPage({ params }: PageProps) {
                   {/* Stats */}
                   <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
                     {log.latencyMs && (
-                      <div style={{ display: "flex", alignItems: "center", gap: "4px", fontSize: "13px", color: "#a1a1aa" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "4px", fontSize: "13px", color: "#b8b8c8" }}>
                         <Clock style={{ width: "14px", height: "14px" }} />
                         {log.latencyMs}ms
                       </div>
@@ -406,7 +406,7 @@ export default async function JobDetailPage({ params }: PageProps) {
                         padding: "4px 8px",
                         background: "rgba(39, 39, 42, 0.6)",
                         borderRadius: "4px",
-                        color: "#a1a1aa",
+                        color: "#b8b8c8",
                       }}>
                         {log.providerTaskId.slice(0, 12)}...
                       </code>
@@ -431,7 +431,7 @@ export default async function JobDetailPage({ params }: PageProps) {
                 )}
 
                 {/* Timestamp */}
-                <div style={{ fontSize: "11px", color: "#52525b", marginTop: "8px" }}>
+                <div style={{ fontSize: "11px", color: "#71717a", marginTop: "8px" }}>
                   {log.createdAt.toISOString()}
                 </div>
               </div>
@@ -452,7 +452,7 @@ export default async function JobDetailPage({ params }: PageProps) {
           borderRadius: "8px",
           fontSize: "13px",
           fontFamily: "monospace",
-          color: "#a1a1aa",
+          color: "#b8b8c8",
           overflow: "auto",
           maxHeight: "400px",
           whiteSpace: "pre-wrap",
@@ -467,7 +467,7 @@ export default async function JobDetailPage({ params }: PageProps) {
       {outputs && outputs.length > 0 && (
         <div className="glass" style={{ padding: "24px" }}>
           <h2 style={{ fontSize: "16px", fontWeight: "600", color: "#e4e4e7", marginBottom: "16px", display: "flex", alignItems: "center", gap: "10px" }}>
-            <ImageIcon style={{ width: "18px", height: "18px", color: "#34d399" }} />
+            <ImageIcon style={{ width: "18px", height: "18px", color: "#00f0ff" }} />
             Outputs ({outputs.length})
           </h2>
           <div style={{ display: "flex", gap: "16px", flexWrap: "wrap" }}>
@@ -507,8 +507,8 @@ export default async function JobDetailPage({ params }: PageProps) {
                   alignItems: "center",
                   justifyContent: "space-between",
                 }}>
-                  <span style={{ fontSize: "12px", color: "#a1a1aa" }}>Output {output.index + 1}</span>
-                  <ExternalLink style={{ width: "14px", height: "14px", color: "#71717a" }} />
+                  <span style={{ fontSize: "12px", color: "#b8b8c8" }}>Output {output.index + 1}</span>
+                  <ExternalLink style={{ width: "14px", height: "14px", color: "#9ca3af" }} />
                 </div>
               </a>
             ))}
@@ -516,14 +516,14 @@ export default async function JobDetailPage({ params }: PageProps) {
 
           {/* Output URLs */}
           <div style={{ marginTop: "16px" }}>
-            <div style={{ fontSize: "12px", color: "#71717a", marginBottom: "8px" }}>Output URLs:</div>
+            <div style={{ fontSize: "12px", color: "#9ca3af", marginBottom: "8px" }}>Output URLs:</div>
             <pre style={{
               padding: "12px",
               background: "rgba(9, 9, 11, 0.6)",
               borderRadius: "6px",
               fontSize: "11px",
               fontFamily: "monospace",
-              color: "#a1a1aa",
+              color: "#b8b8c8",
               overflow: "auto",
               maxHeight: "150px",
               whiteSpace: "pre-wrap",

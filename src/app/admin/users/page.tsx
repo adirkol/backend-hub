@@ -61,7 +61,7 @@ export default async function UsersPage({ searchParams }: PageProps) {
         <h1 style={{ fontSize: "28px", fontWeight: "700", color: "#fafafa", letterSpacing: "-0.02em" }}>
           Users
         </h1>
-        <p style={{ color: "#71717a", marginTop: "6px", fontSize: "15px" }}>
+        <p style={{ color: "#9ca3af", marginTop: "6px", fontSize: "15px" }}>
           {total.toLocaleString()} total users across all apps
         </p>
       </div>
@@ -77,7 +77,7 @@ export default async function UsersPage({ searchParams }: PageProps) {
               transform: "translateY(-50%)", 
               width: "18px", 
               height: "18px", 
-              color: "#71717a" 
+              color: "#9ca3af" 
             }} />
             <input
               type="text"
@@ -147,7 +147,7 @@ export default async function UsersPage({ searchParams }: PageProps) {
                       textAlign: "left", 
                       fontSize: "12px", 
                       fontWeight: "600",
-                      color: "#71717a",
+                      color: "#9ca3af",
                       textTransform: "uppercase",
                       letterSpacing: "0.05em",
                     }}
@@ -183,11 +183,11 @@ export default async function UsersPage({ searchParams }: PageProps) {
                         alignItems: "center",
                         justifyContent: "center",
                       }}>
-                        <User style={{ width: "18px", height: "18px", color: "#71717a" }} />
+                        <User style={{ width: "18px", height: "18px", color: "#9ca3af" }} />
                       </div>
                       <code style={{ 
                         fontSize: "12px", 
-                        color: "#a1a1aa", 
+                        color: "#b8b8c8", 
                         background: "rgba(39, 39, 42, 0.5)", 
                         padding: "6px 10px", 
                         borderRadius: "6px",
@@ -211,7 +211,7 @@ export default async function UsersPage({ searchParams }: PageProps) {
                         zIndex: 2,
                       }}
                     >
-                      <AppWindow style={{ width: "16px", height: "16px", color: "#71717a" }} />
+                      <AppWindow style={{ width: "16px", height: "16px", color: "#9ca3af" }} />
                       {user.app.name}
                     </Link>
                   </td>
@@ -236,7 +236,7 @@ export default async function UsersPage({ searchParams }: PageProps) {
                     </div>
                   </td>
                   <td style={{ padding: "18px 20px" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "8px", color: "#a1a1aa", fontSize: "14px" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px", color: "#b8b8c8", fontSize: "14px" }}>
                       <Zap style={{ width: "16px", height: "16px" }} />
                       <span>{user._count.jobs}</span>
                     </div>
@@ -246,14 +246,14 @@ export default async function UsersPage({ searchParams }: PageProps) {
                       {user.isActive ? "Active" : "Inactive"}
                     </span>
                   </td>
-                  <td style={{ padding: "18px 20px", fontSize: "13px", color: "#71717a" }}>
+                  <td style={{ padding: "18px 20px", fontSize: "13px", color: "#9ca3af" }}>
                     {new Date(user.createdAt).toLocaleString([], { dateStyle: "short", timeStyle: "short" })}
                   </td>
                 </tr>
               ))}
               {users.length === 0 && (
                 <tr>
-                  <td colSpan={7} style={{ padding: "64px 20px", textAlign: "center", color: "#71717a" }}>
+                  <td colSpan={7} style={{ padding: "64px 20px", textAlign: "center", color: "#9ca3af" }}>
                     {params.q ? `No users matching "${params.q}"` : "No users yet"}
                   </td>
                 </tr>
@@ -266,7 +266,7 @@ export default async function UsersPage({ searchParams }: PageProps) {
       {/* Pagination */}
       {totalPages > 1 && (
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <p style={{ fontSize: "14px", color: "#71717a" }}>
+          <p style={{ fontSize: "14px", color: "#9ca3af" }}>
             Showing {(page - 1) * limit + 1} to {Math.min(page * limit, total)} of {total}
           </p>
           <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
@@ -277,7 +277,7 @@ export default async function UsersPage({ searchParams }: PageProps) {
                   padding: "10px 18px",
                   borderRadius: "10px",
                   fontSize: "14px",
-                  color: "#a1a1aa",
+                  color: "#b8b8c8",
                   textDecoration: "none",
                   background: "rgba(39, 39, 42, 0.5)",
                 }}
@@ -295,7 +295,7 @@ export default async function UsersPage({ searchParams }: PageProps) {
                   padding: "10px 18px",
                   borderRadius: "10px",
                   fontSize: "14px",
-                  color: "#a1a1aa",
+                  color: "#b8b8c8",
                   textDecoration: "none",
                   background: "rgba(39, 39, 42, 0.5)",
                 }}

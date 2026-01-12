@@ -29,7 +29,7 @@ export default async function AppsPage() {
           <h1 style={{ fontSize: "28px", fontWeight: "700", color: "#fafafa", letterSpacing: "-0.02em" }}>
             Apps
           </h1>
-          <p style={{ color: "#71717a", marginTop: "6px", fontSize: "15px" }}>
+          <p style={{ color: "#9ca3af", marginTop: "6px", fontSize: "15px" }}>
             Manage your tenant applications
           </p>
         </div>
@@ -40,13 +40,13 @@ export default async function AppsPage() {
             alignItems: "center",
             gap: "8px",
             padding: "12px 20px",
-            background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
-            color: "#09090b",
+            background: "linear-gradient(135deg, #00f0ff 0%, #00b8cc 100%)",
+            color: "#000",
             borderRadius: "12px",
             fontSize: "14px",
             fontWeight: "600",
             textDecoration: "none",
-            boxShadow: "0 4px 12px rgba(16, 185, 129, 0.3)",
+            boxShadow: "0 4px 12px rgba(0, 240, 255, 0.3)",
             transition: "all 0.15s ease",
           }}
         >
@@ -84,22 +84,22 @@ export default async function AppsPage() {
                   alignItems: "center",
                   justifyContent: "center",
                 }}>
-                  <AppWindow style={{ width: "22px", height: "22px", color: "#a1a1aa" }} />
+                  <AppWindow style={{ width: "22px", height: "22px", color: "#b8b8c8" }} />
                 </div>
                 <div>
                   <h3 style={{ fontWeight: "600", color: "#fafafa", fontSize: "16px", marginBottom: "4px" }}>
                     {app.name}
                   </h3>
-                  <p style={{ fontSize: "13px", color: "#71717a", fontFamily: "monospace" }}>{app.slug}</p>
+                  <p style={{ fontSize: "13px", color: "#9ca3af", fontFamily: "monospace" }}>{app.slug}</p>
                 </div>
               </div>
-              <ArrowUpRight style={{ width: "18px", height: "18px", color: "#52525b" }} />
+              <ArrowUpRight style={{ width: "18px", height: "18px", color: "#71717a" }} />
             </div>
 
             {app.description && (
               <p style={{ 
                 fontSize: "14px", 
-                color: "#a1a1aa", 
+                color: "#b8b8c8", 
                 marginBottom: "20px",
                 lineHeight: "1.5",
                 display: "-webkit-box",
@@ -119,18 +119,18 @@ export default async function AppsPage() {
               borderTop: "1px solid rgba(63, 63, 70, 0.4)" 
             }}>
               <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                <Users style={{ width: "16px", height: "16px", color: "#71717a" }} />
+                <Users style={{ width: "16px", height: "16px", color: "#9ca3af" }} />
                 <span style={{ color: "#e4e4e7", fontWeight: "600", fontSize: "14px" }}>
                   {app._count.users.toLocaleString()}
                 </span>
-                <span style={{ color: "#71717a", fontSize: "14px" }}>users</span>
+                <span style={{ color: "#9ca3af", fontSize: "14px" }}>users</span>
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                <Zap style={{ width: "16px", height: "16px", color: "#71717a" }} />
+                <Zap style={{ width: "16px", height: "16px", color: "#9ca3af" }} />
                 <span style={{ color: "#e4e4e7", fontWeight: "600", fontSize: "14px" }}>
                   {app._count.jobs.toLocaleString()}
                 </span>
-                <span style={{ color: "#71717a", fontSize: "14px" }}>jobs</span>
+                <span style={{ color: "#9ca3af", fontSize: "14px" }}>jobs</span>
               </div>
               <span
                 className={app.isEnabled ? "badge-success" : "badge-error"}
@@ -169,9 +169,9 @@ export default async function AppsPage() {
             justifyContent: "center",
             marginBottom: "16px",
           }}>
-            <Plus style={{ width: "28px", height: "28px", color: "#71717a" }} />
+            <Plus style={{ width: "28px", height: "28px", color: "#9ca3af" }} />
           </div>
-          <p style={{ fontWeight: "500", color: "#71717a", fontSize: "15px" }}>
+          <p style={{ fontWeight: "500", color: "#9ca3af", fontSize: "15px" }}>
             Create new app
           </p>
         </Link>
@@ -192,12 +192,12 @@ export default async function AppsPage() {
               justifyContent: "center",
               margin: "0 auto 20px",
             }}>
-              <AppWindow style={{ width: "32px", height: "32px", color: "#71717a" }} />
+              <AppWindow style={{ width: "32px", height: "32px", color: "#9ca3af" }} />
             </div>
             <h3 style={{ fontSize: "18px", fontWeight: "600", color: "#e4e4e7", marginBottom: "10px" }}>
               No apps yet
             </h3>
-            <p style={{ color: "#71717a", marginBottom: "28px", maxWidth: "360px", margin: "0 auto 28px", lineHeight: "1.5" }}>
+            <p style={{ color: "#9ca3af", marginBottom: "28px", maxWidth: "360px", margin: "0 auto 28px", lineHeight: "1.5" }}>
               Create your first app to start accepting AI generation requests from iOS apps
             </p>
             <Link
@@ -207,8 +207,8 @@ export default async function AppsPage() {
                 alignItems: "center",
                 gap: "8px",
                 padding: "14px 24px",
-                background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
-                color: "#09090b",
+                background: "linear-gradient(135deg, #00f0ff 0%, #00b8cc 100%)",
+                color: "#000",
                 borderRadius: "12px",
                 fontSize: "15px",
                 fontWeight: "600",

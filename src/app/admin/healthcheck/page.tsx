@@ -57,19 +57,19 @@ export default async function HealthcheckPage() {
             width: "56px",
             height: "56px",
             borderRadius: "14px",
-            background: "linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(5, 150, 105, 0.3) 100%)",
-            border: "1px solid rgba(16, 185, 129, 0.4)",
+            background: "linear-gradient(135deg, rgba(0, 240, 255, 0.2) 0%, rgba(0, 184, 204, 0.3) 100%)",
+            border: "1px solid rgba(0, 240, 255, 0.4)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
           }}>
-            <Activity style={{ width: "28px", height: "28px", color: "#34d399" }} />
+            <Activity style={{ width: "28px", height: "28px", color: "#00f0ff" }} />
           </div>
           <div>
             <h1 style={{ fontSize: "28px", fontWeight: "700", color: "#fafafa", letterSpacing: "-0.02em" }}>
               Model Healthcheck
             </h1>
-            <p style={{ color: "#71717a", fontSize: "14px", marginTop: "4px" }}>
+            <p style={{ color: "#9ca3af", fontSize: "14px", marginTop: "4px" }}>
               Test API endpoints for all AI models across providers
             </p>
           </div>
@@ -80,7 +80,7 @@ export default async function HealthcheckPage() {
           border: "1px solid rgba(63, 63, 70, 0.4)",
           borderRadius: "10px",
           fontSize: "13px",
-          color: "#a1a1aa",
+          color: "#b8b8c8",
         }}>
           {models.length} models • {providers.length} providers
         </div>

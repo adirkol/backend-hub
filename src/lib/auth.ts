@@ -36,7 +36,7 @@ export const authOptions: NextAuthOptions = {
                           <tr>
                             <td style="padding: 40px 32px; text-align: center;">
                               <!-- Logo -->
-                              <div style="width: 48px; height: 48px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius: 12px; margin: 0 auto 24px; display: flex; align-items: center; justify-content: center;">
+                              <div style="width: 48px; height: 48px; background: linear-gradient(135deg, #00f0ff 0%, #00b8cc 100%); border-radius: 12px; margin: 0 auto 24px; display: flex; align-items: center; justify-content: center;">
                                 <span style="color: #0a0a0b; font-size: 24px; font-weight: bold;">⚡</span>
                               </div>
                               
@@ -49,18 +49,18 @@ export const authOptions: NextAuthOptions = {
                               </p>
                               
                               <!-- Button -->
-                              <a href="${url}" style="display: inline-block; padding: 14px 32px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #0a0a0b; font-size: 15px; font-weight: 600; text-decoration: none; border-radius: 10px; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);">
+                              <a href="${url}" style="display: inline-block; padding: 14px 32px; background: linear-gradient(135deg, #00f0ff 0%, #00b8cc 100%); color: #000; font-size: 15px; font-weight: 600; text-decoration: none; border-radius: 10px; box-shadow: 0 4px 12px rgba(0, 240, 255, 0.3);">
                                 Sign in to Admin Panel
                               </a>
                               
-                              <p style="margin: 32px 0 0; color: #52525b; font-size: 13px;">
+                              <p style="margin: 32px 0 0; color: #71717a; font-size: 13px;">
                                 This link expires in 24 hours and can only be used once.
                               </p>
                             </td>
                           </tr>
                           <tr>
                             <td style="padding: 20px 32px; background: rgba(0,0,0,0.2); border-top: 1px solid rgba(63, 63, 70, 0.3);">
-                              <p style="margin: 0; color: #52525b; font-size: 12px; text-align: center;">
+                              <p style="margin: 0; color: #71717a; font-size: 12px; text-align: center;">
                                 If you didn't request this email, you can safely ignore it.
                               </p>
                             </td>

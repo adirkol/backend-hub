@@ -138,9 +138,9 @@ export function AppSettingsForm({ app }: { app: App }) {
         <div style={{
           padding: "16px 20px",
           borderRadius: "12px",
-          background: "rgba(16, 185, 129, 0.1)",
-          border: "1px solid rgba(16, 185, 129, 0.25)",
-          color: "#34d399",
+          background: "rgba(0, 240, 255, 0.1)",
+          border: "1px solid rgba(0, 240, 255, 0.25)",
+          color: "#00f0ff",
           fontSize: "14px",
         }}>
           Settings saved successfully!
@@ -181,7 +181,7 @@ export function AppSettingsForm({ app }: { app: App }) {
                   width: "52px",
                   height: "28px",
                   borderRadius: "9999px",
-                  background: form.isEnabled ? "#10b981" : "rgba(63, 63, 70, 0.8)",
+                  background: form.isEnabled ? "#00f0ff" : "rgba(63, 63, 70, 0.8)",
                   border: "none",
                   cursor: "pointer",
                   transition: "background 0.2s ease",
@@ -243,7 +243,7 @@ export function AppSettingsForm({ app }: { app: App }) {
               />
               <p style={{ 
                 fontSize: "12px", 
-                color: "#71717a", 
+                color: "#9ca3af", 
                 marginTop: "8px",
               }}>
                 Leave empty for tokens that never expire
@@ -345,7 +345,7 @@ export function AppSettingsForm({ app }: { app: App }) {
             target="_blank"
             rel="noopener noreferrer"
             style={{ 
-              color: "#71717a", 
+              color: "#9ca3af", 
               display: "inline-flex",
               transition: "color 0.15s ease",
             }}
@@ -367,7 +367,7 @@ export function AppSettingsForm({ app }: { app: App }) {
             />
             <p style={{ 
               fontSize: "13px", 
-              color: "#71717a", 
+              color: "#9ca3af", 
               marginTop: "10px",
               lineHeight: "1.5",
             }}>
@@ -380,12 +380,12 @@ export function AppSettingsForm({ app }: { app: App }) {
             <div style={{
               padding: "20px",
               borderRadius: "12px",
-              background: "rgba(16, 185, 129, 0.08)",
-              border: "1px solid rgba(16, 185, 129, 0.2)",
+              background: "rgba(0, 240, 255, 0.08)",
+              border: "1px solid rgba(0, 240, 255, 0.2)",
             }}>
               <label style={{ 
                 ...labelStyle, 
-                color: "#34d399", 
+                color: "#00f0ff", 
                 marginBottom: "12px",
                 fontSize: "13px",
                 textTransform: "uppercase",
@@ -419,9 +419,9 @@ export function AppSettingsForm({ app }: { app: App }) {
                   style={{
                     padding: "12px",
                     borderRadius: "10px",
-                    background: webhookCopied ? "rgba(16, 185, 129, 0.2)" : "rgba(39, 39, 42, 0.6)",
-                    border: webhookCopied ? "1px solid rgba(16, 185, 129, 0.4)" : "1px solid rgba(63, 63, 70, 0.5)",
-                    color: webhookCopied ? "#34d399" : "#a1a1aa",
+                    background: webhookCopied ? "rgba(0, 240, 255, 0.2)" : "rgba(39, 39, 42, 0.6)",
+                    border: webhookCopied ? "1px solid rgba(0, 240, 255, 0.4)" : "1px solid rgba(63, 63, 70, 0.5)",
+                    color: webhookCopied ? "#00f0ff" : "#b8b8c8",
                     cursor: "pointer",
                     transition: "all 0.15s ease",
                   }}
@@ -436,12 +436,12 @@ export function AppSettingsForm({ app }: { app: App }) {
               </div>
               <p style={{ 
                 fontSize: "13px", 
-                color: "#71717a", 
+                color: "#9ca3af", 
                 marginTop: "14px",
                 lineHeight: "1.5",
               }}>
                 Add this URL to RevenueCat under Project Settings → Integrations → Webhooks. 
-                Enable <strong style={{ color: "#a1a1aa" }}>VIRTUAL_CURRENCY_TRANSACTION</strong> for token management 
+                Enable <strong style={{ color: "#b8b8c8" }}>VIRTUAL_CURRENCY_TRANSACTION</strong> for token management 
                 and purchase events for revenue tracking.
               </p>
             </div>
@@ -480,14 +480,14 @@ export function AppSettingsForm({ app }: { app: App }) {
             alignItems: "center",
             gap: "10px",
             padding: "14px 28px",
-            background: loading ? "rgba(16, 185, 129, 0.4)" : "linear-gradient(135deg, #10b981 0%, #059669 100%)",
+            background: loading ? "rgba(0, 240, 255, 0.4)" : "linear-gradient(135deg, #00f0ff 0%, #00b8cc 100%)",
             color: "#09090b",
             borderRadius: "12px",
             fontSize: "15px",
             fontWeight: "600",
             border: "none",
             cursor: loading ? "not-allowed" : "pointer",
-            boxShadow: loading ? "none" : "0 4px 12px rgba(16, 185, 129, 0.3)",
+            boxShadow: loading ? "none" : "0 4px 12px rgba(0, 240, 255, 0.3)",
             transition: "all 0.15s ease",
           }}
         >

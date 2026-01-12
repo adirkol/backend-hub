@@ -16,6 +16,7 @@ import {
   Zap,
   HeartPulse,
   BookOpen,
+  Shield,
 } from "lucide-react";
 
 interface User {
@@ -31,6 +32,7 @@ const navItems = [
   { href: "/admin/healthcheck", label: "Healthcheck", icon: HeartPulse },
   { href: "/admin/jobs", label: "Jobs", icon: Activity },
   { href: "/admin/users", label: "Users", icon: Users },
+  { href: "/admin/audit-logs", label: "Audit Logs", icon: Shield },
   { href: "/admin/statistics", label: "Statistics", icon: BarChart3 },
   { href: "/admin/docs", label: "Documentation", icon: BookOpen },
 ];
@@ -50,12 +52,13 @@ export function AdminSidebar({ user }: { user: User }) {
         width: collapsed ? '72px' : '260px',
         height: '100vh',
         flexShrink: 0,
-        background: 'linear-gradient(180deg, rgba(15, 15, 17, 0.98) 0%, rgba(9, 9, 11, 0.99) 100%)',
-        borderRight: '1px solid rgba(39, 39, 42, 0.5)',
+        background: 'linear-gradient(180deg, rgba(12, 12, 18, 0.98) 0%, rgba(8, 8, 12, 0.99) 100%)',
+        borderRight: '1px solid rgba(60, 60, 80, 0.3)',
         display: 'flex',
         flexDirection: 'column',
         transition: 'width 0.2s ease',
-        zIndex: 40
+        zIndex: 40,
+        boxShadow: '4px 0 24px rgba(0, 0, 0, 0.3)'
       }}
     >
       {/* Logo */}
@@ -64,7 +67,7 @@ export function AdminSidebar({ user }: { user: User }) {
           height: '72px',
           display: 'flex',
           alignItems: 'center',
-          borderBottom: '1px solid rgba(39, 39, 42, 0.4)',
+          borderBottom: '1px solid rgba(60, 60, 80, 0.25)',
           padding: collapsed ? '0 16px' : '0 20px',
           justifyContent: collapsed ? 'center' : 'flex-start'
         }}
@@ -75,18 +78,23 @@ export function AdminSidebar({ user }: { user: User }) {
               width: '40px',
               height: '40px',
               borderRadius: '12px',
-              background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+              background: 'linear-gradient(135deg, #00f0ff 0%, #00b8cc 100%)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               flexShrink: 0,
-              boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)'
+              boxShadow: '0 4px 16px rgba(0, 240, 255, 0.4), 0 0 20px rgba(0, 240, 255, 0.2)'
             }}
           >
-            <Zap style={{ width: '22px', height: '22px', color: '#09090b' }} />
+            <Zap style={{ width: '22px', height: '22px', color: '#000' }} />
           </div>
           {!collapsed && (
-            <span style={{ fontSize: '18px', fontWeight: '600', color: '#fafafa', letterSpacing: '-0.01em' }}>
+            <span style={{ 
+              fontSize: '18px', 
+              fontWeight: '700', 
+              color: '#fafafa', 
+              letterSpacing: '-0.01em'
+            }}>
               AI Hub
             </span>
           )}
@@ -112,14 +120,15 @@ export function AdminSidebar({ user }: { user: User }) {
                     padding: collapsed ? '12px' : '12px 16px',
                     borderRadius: '10px',
                     fontSize: '14px',
-                    fontWeight: '500',
+                    fontWeight: active ? '600' : '500',
                     textDecoration: 'none',
                     justifyContent: collapsed ? 'center' : 'flex-start',
-                    color: active ? '#34d399' : '#71717a',
+                    color: active ? '#00f0ff' : '#b0b0c0',
                     background: active 
-                      ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(16, 185, 129, 0.06) 100%)'
+                      ? 'linear-gradient(135deg, rgba(0, 240, 255, 0.12) 0%, rgba(0, 240, 255, 0.04) 100%)'
                       : 'transparent',
-                    border: active ? '1px solid rgba(16, 185, 129, 0.2)' : '1px solid transparent',
+                    border: active ? '1px solid rgba(0, 240, 255, 0.25)' : '1px solid transparent',
+                    boxShadow: active ? '0 0 20px rgba(0, 240, 255, 0.1)' : 'none',
                     transition: 'all 0.15s ease'
                   }}
                 >
@@ -127,7 +136,8 @@ export function AdminSidebar({ user }: { user: User }) {
                     width: '20px', 
                     height: '20px', 
                     flexShrink: 0,
-                    color: active ? '#34d399' : '#71717a'
+                    color: active ? '#00f0ff' : '#b0b0c0',
+                    filter: active ? 'drop-shadow(0 0 6px rgba(0, 240, 255, 0.5))' : 'none'
                   }} />
                   {!collapsed && <span>{item.label}</span>}
                 </Link>
@@ -138,13 +148,27 @@ export function AdminSidebar({ user }: { user: User }) {
       </nav>
 
       {/* User section */}
-      <div style={{ borderTop: '1px solid rgba(39, 39, 42, 0.4)', padding: '16px 12px' }}>
+      <div style={{ borderTop: '1px solid rgba(60, 60, 80, 0.25)', padding: '16px 12px' }}>
         {!collapsed && (
           <div style={{ padding: '8px 12px', marginBottom: '8px' }}>
-            <p style={{ fontSize: '14px', fontWeight: '500', color: '#d4d4d8', marginBottom: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            <p style={{ 
+              fontSize: '14px', 
+              fontWeight: '600', 
+              color: '#e0e0e8', 
+              marginBottom: '2px', 
+              overflow: 'hidden', 
+              textOverflow: 'ellipsis', 
+              whiteSpace: 'nowrap' 
+            }}>
               {user.name || "Admin"}
             </p>
-            <p style={{ fontSize: '12px', color: '#71717a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            <p style={{ 
+              fontSize: '12px', 
+              color: '#9090a8', 
+              overflow: 'hidden', 
+              textOverflow: 'ellipsis', 
+              whiteSpace: 'nowrap' 
+            }}>
               {user.email}
             </p>
           </div>
@@ -160,12 +184,22 @@ export function AdminSidebar({ user }: { user: User }) {
             padding: '10px 12px',
             borderRadius: '10px',
             fontSize: '14px',
-            color: '#71717a',
+            color: '#6868a0',
             background: 'transparent',
-            border: 'none',
+            border: '1px solid transparent',
             cursor: 'pointer',
             justifyContent: collapsed ? 'center' : 'flex-start',
             transition: 'all 0.15s ease'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = 'rgba(0, 240, 255, 0.08)';
+            e.currentTarget.style.borderColor = 'rgba(0, 240, 255, 0.2)';
+            e.currentTarget.style.color = '#00f0ff';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = 'transparent';
+            e.currentTarget.style.borderColor = 'transparent';
+            e.currentTarget.style.color = '#9090a8';
           }}
         >
           {collapsed ? (

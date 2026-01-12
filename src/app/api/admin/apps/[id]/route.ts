@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
 import crypto from "crypto";
+import { auditAdminAction } from "@/lib/audit";
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -100,6 +101,21 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
       data: updateData,
     });
 
+    // Audit log - track what changed
+    const changes: Record<string, { from: unknown; to: unknown }> = {};
+    for (const key of Object.keys(updateData)) {
+      const oldValue = existing[key as keyof typeof existing];
+      const newValue = updateData[key];
+      if (oldValue !== newValue) {
+        changes[key] = { from: oldValue, to: newValue };
+      }
+    }
+
+    await auditAdminAction(req, "app.updated", "App", id, {
+      appName: app.name,
+      changes,
+    });
+
     return NextResponse.json(app);
   } catch (error) {
     console.error("Update app error:", error);
@@ -116,6 +132,12 @@ export async function DELETE(req: NextRequest, { params }: RouteParams) {
     if (!existing) {
       return NextResponse.json({ error: "App not found" }, { status: 404 });
     }
+
+    // Audit log before deletion (capture app info)
+    await auditAdminAction(req, "app.deleted", "App", id, {
+      appName: existing.name,
+      appSlug: existing.slug,
+    });
 
     // Delete app (cascades to users, jobs, etc.)
     await prisma.app.delete({ where: { id } });

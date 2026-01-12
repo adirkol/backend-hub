@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { validateApiRequest } from "@/lib/api-auth";
 import { prisma } from "@/lib/db";
-import { grantTokens } from "@/lib/tokens";
+import { grantTokens, calculateExpirationDate, getEffectiveTokenBalance } from "@/lib/tokens";
 
 interface RouteParams {
   params: Promise<{ externalId: string }>;
@@ -58,14 +58,19 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
       });
     }
 
-    const previousBalance = appUser.tokenBalance;
+    // Get previous effective balance
+    const { effectiveBalance: previousBalance } = await getEffectiveTokenBalance(appUser.id);
 
-    // Grant tokens with idempotency
+    // Calculate expiration date based on app settings
+    const expiresAt = calculateExpirationDate(auth.app.tokenExpirationDays);
+
+    // Grant tokens with idempotency and expiration
     const result = await grantTokens(
       appUser.id,
       amount,
       reason,
-      idempotency_key
+      idempotency_key,
+      expiresAt
     );
 
     if (!result.success) {
@@ -78,6 +83,7 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
       amount_added: amount,
       new_balance: result.balance,
       transaction_id: result.transactionId,
+      expires_at: expiresAt?.toISOString() ?? null,
     });
   } catch (error) {
     console.error("Grant tokens error:", error);
@@ -114,16 +120,19 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    // Get token history
-    const history = await prisma.tokenLedgerEntry.findMany({
-      where: { appUserId: appUser.id },
-      orderBy: { createdAt: "desc" },
-      take: limit,
-    });
+    // Get token history and effective balance
+    const [history, balanceInfo] = await Promise.all([
+      prisma.tokenLedgerEntry.findMany({
+        where: { appUserId: appUser.id },
+        orderBy: { createdAt: "desc" },
+        take: limit,
+      }),
+      getEffectiveTokenBalance(appUser.id),
+    ]);
 
     return NextResponse.json({
       external_id: externalId,
-      current_balance: appUser.tokenBalance,
+      current_balance: balanceInfo.effectiveBalance,
       transactions: history.map((entry) => ({
         id: entry.id,
         amount: entry.amount,
@@ -131,6 +140,7 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
         type: entry.type.toLowerCase(),
         description: entry.description,
         job_id: entry.jobId,
+        expires_at: entry.expiresAt?.toISOString() ?? null,
         created_at: entry.createdAt.toISOString(),
       })),
     });

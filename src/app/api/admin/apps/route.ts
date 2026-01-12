@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
 import crypto from "crypto";
+import { auditAdminAction } from "@/lib/audit";
 
 const CreateAppSchema = z.object({
   name: z.string().min(1).max(100),
@@ -94,6 +95,13 @@ export async function POST(req: NextRequest) {
         iconUrl: data.iconUrl || null,
         bundleId: data.bundleId || null,
       },
+    });
+
+    // Audit log
+    await auditAdminAction(req, "app.created", "App", app.id, {
+      name: app.name,
+      slug: app.slug,
+      defaultTokenGrant: app.defaultTokenGrant,
     });
 
     return NextResponse.json(app, { status: 201 });

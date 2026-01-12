@@ -191,7 +191,7 @@ export default async function UserDetailPage({ params }: PageProps) {
             alignItems: "center",
             gap: "8px",
             fontSize: "14px",
-            color: "#71717a",
+            color: "#9ca3af",
             textDecoration: "none",
             marginBottom: "20px",
           }}
@@ -204,7 +204,7 @@ export default async function UserDetailPage({ params }: PageProps) {
             <h1 style={{ fontSize: "28px", fontWeight: "700", color: "#fafafa", letterSpacing: "-0.02em" }}>
               User Details
             </h1>
-            <p style={{ color: "#71717a", marginTop: "6px", fontSize: "15px", fontFamily: "monospace" }}>
+            <p style={{ color: "#9ca3af", marginTop: "6px", fontSize: "15px", fontFamily: "monospace" }}>
               {user.externalId}
             </p>
           </div>

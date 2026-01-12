@@ -401,13 +401,13 @@ export function HealthcheckClient({ models }: Props) {
   // ==========================================================================
 
   const getStatusColor = (result?: TestResult) => {
-    if (!result) return "#71717a";
+    if (!result) return "#9ca3af";
     switch (result.status) {
       case "success": return "#34d399";
       case "error": return "#ef4444";
       case "pending": return "#facc15";
       case "running": return "#60a5fa";
-      default: return "#71717a";
+      default: return "#9ca3af";
     }
   };
 
@@ -440,7 +440,7 @@ export function HealthcheckClient({ models }: Props) {
             borderRadius: "10px",
             fontSize: "14px",
             fontWeight: "500",
-            color: "#a1a1aa",
+            color: "#b8b8c8",
             cursor: "pointer",
           }}
         >
@@ -459,7 +459,7 @@ export function HealthcheckClient({ models }: Props) {
             borderRadius: "10px",
             fontSize: "14px",
             fontWeight: "500",
-            color: "#a1a1aa",
+            color: "#b8b8c8",
             cursor: "pointer",
           }}
         >
@@ -492,8 +492,8 @@ export function HealthcheckClient({ models }: Props) {
       <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
         <div style={{
           padding: "14px 18px",
-          background: "rgba(16, 185, 129, 0.1)",
-          border: "1px solid rgba(16, 185, 129, 0.2)",
+          background: "rgba(0, 240, 255, 0.1)",
+          border: "1px solid rgba(0, 240, 255, 0.2)",
           borderRadius: "10px",
           fontSize: "13px",
           color: "#6ee7b7",
@@ -558,9 +558,9 @@ export function HealthcheckClient({ models }: Props) {
               >
                 <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
                   {expandedModels.has(model.id) ? (
-                    <ChevronDown style={{ width: "20px", height: "20px", color: "#71717a" }} />
+                    <ChevronDown style={{ width: "20px", height: "20px", color: "#9ca3af" }} />
                   ) : (
-                    <ChevronRight style={{ width: "20px", height: "20px", color: "#71717a" }} />
+                    <ChevronRight style={{ width: "20px", height: "20px", color: "#9ca3af" }} />
                   )}
                   <div style={{
                     width: "44px",
@@ -578,7 +578,7 @@ export function HealthcheckClient({ models }: Props) {
                     <div style={{ fontWeight: "600", color: "#fafafa", fontSize: "16px" }}>
                       {model.displayName}
                     </div>
-                    <div style={{ fontSize: "13px", color: "#71717a", fontFamily: "monospace" }}>
+                    <div style={{ fontSize: "13px", color: "#9ca3af", fontFamily: "monospace" }}>
                       {model.name}
                     </div>
                   </div>
@@ -604,7 +604,7 @@ export function HealthcheckClient({ models }: Props) {
                     border: "1px solid rgba(63, 63, 70, 0.4)",
                     borderRadius: "8px",
                     fontSize: "12px",
-                    color: "#a1a1aa",
+                    color: "#b8b8c8",
                   }}>
                     {model.providerConfigs.length} provider{model.providerConfigs.length !== 1 ? "s" : ""}
                   </span>
@@ -619,8 +619,8 @@ export function HealthcheckClient({ models }: Props) {
                   {/* ================================================================ */}
                   <div style={{
                     padding: "20px",
-                    background: "rgba(16, 185, 129, 0.05)",
-                    border: "1px solid rgba(16, 185, 129, 0.15)",
+                    background: "rgba(0, 240, 255, 0.05)",
+                    border: "1px solid rgba(0, 240, 255, 0.15)",
                     borderRadius: "12px",
                     marginBottom: "16px",
                   }}>
@@ -630,11 +630,11 @@ export function HealthcheckClient({ models }: Props) {
                       gap: "10px", 
                       marginBottom: "16px" 
                     }}>
-                      <Smartphone style={{ width: "18px", height: "18px", color: "#34d399" }} />
+                      <Smartphone style={{ width: "18px", height: "18px", color: "#00f0ff" }} />
                       <span style={{ 
                         fontSize: "14px", 
                         fontWeight: "600", 
-                        color: "#34d399",
+                        color: "#00f0ff",
                         textTransform: "uppercase",
                         letterSpacing: "0.05em",
                       }}>
@@ -662,7 +662,7 @@ export function HealthcheckClient({ models }: Props) {
                             padding: "10px 16px",
                             background: isCreateRunning 
                               ? "rgba(250, 204, 21, 0.15)"
-                              : "linear-gradient(135deg, #10b981 0%, #059669 100%)",
+                              : "linear-gradient(135deg, #00f0ff 0%, #00b8cc 100%)",
                             border: "none",
                             borderRadius: "8px",
                             fontSize: "13px",
@@ -683,7 +683,7 @@ export function HealthcheckClient({ models }: Props) {
                           color: "#6ee7b7", 
                           fontFamily: "monospace",
                           padding: "2px 4px",
-                          background: "rgba(16, 185, 129, 0.1)",
+                          background: "rgba(0, 240, 255, 0.1)",
                           borderRadius: "4px",
                         }}>
                           POST /api/v1/generate
@@ -741,8 +741,8 @@ export function HealthcheckClient({ models }: Props) {
                           background: "rgba(39, 39, 42, 0.5)",
                           borderRadius: "6px",
                         }}>
-                          <span style={{ fontSize: "11px", color: "#71717a" }}>Job:</span>
-                          <code style={{ fontSize: "11px", color: "#a1a1aa", fontFamily: "monospace" }}>
+                          <span style={{ fontSize: "11px", color: "#9ca3af" }}>Job:</span>
+                          <code style={{ fontSize: "11px", color: "#b8b8c8", fontFamily: "monospace" }}>
                             {currentJobId.slice(0, 12)}...
                           </code>
                         </div>
@@ -755,7 +755,7 @@ export function HealthcheckClient({ models }: Props) {
                           {createResult.status === "error" && <XCircle style={{ width: "16px", height: "16px", color: "#ef4444" }} />}
                           {createResult.status === "running" && <Loader2 style={{ width: "16px", height: "16px", color: "#60a5fa", animation: "spin 1s linear infinite" }} />}
                           {createResult.latencyMs && (
-                            <span style={{ fontSize: "11px", color: "#71717a", display: "flex", alignItems: "center", gap: "3px" }}>
+                            <span style={{ fontSize: "11px", color: "#9ca3af", display: "flex", alignItems: "center", gap: "3px" }}>
                               <Clock style={{ width: "11px", height: "11px" }} />
                               {createResult.latencyMs}ms
                             </span>
@@ -901,7 +901,7 @@ export function HealthcheckClient({ models }: Props) {
                                     width: "24px",
                                     height: "24px",
                                     borderRadius: "4px",
-                                    background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
+                                    background: "linear-gradient(135deg, #00f0ff 0%, #00b8cc 100%)",
                                     display: "flex",
                                     alignItems: "center",
                                     justifyContent: "center",
@@ -911,12 +911,12 @@ export function HealthcheckClient({ models }: Props) {
                                   }}>
                                     {config.priority}
                                   </div>
-                                  <Server style={{ width: "16px", height: "16px", color: "#71717a" }} />
+                                  <Server style={{ width: "16px", height: "16px", color: "#9ca3af" }} />
                                   <div>
                                     <div style={{ fontWeight: "500", color: "#e4e4e7", fontSize: "13px" }}>
                                       {config.provider.displayName}
                                     </div>
-                                    <div style={{ fontSize: "11px", color: "#71717a", fontFamily: "monospace" }}>
+                                    <div style={{ fontSize: "11px", color: "#9ca3af", fontFamily: "monospace" }}>
                                       {config.providerModelId}
                                     </div>
                                   </div>
@@ -950,7 +950,7 @@ export function HealthcheckClient({ models }: Props) {
                                       Create
                                     </button>
                                     {createResult?.endpoint && (
-                                      <code style={{ fontSize: "9px", color: "#a1a1aa", maxWidth: "120px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                      <code style={{ fontSize: "9px", color: "#b8b8c8", maxWidth: "120px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                                         {createResult.endpoint.replace("POST ", "")}
                                       </code>
                                     )}
@@ -984,7 +984,7 @@ export function HealthcheckClient({ models }: Props) {
                                       Poll
                                     </button>
                                     {pollResult?.endpoint && (
-                                      <code style={{ fontSize: "9px", color: "#a1a1aa", maxWidth: "120px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                      <code style={{ fontSize: "9px", color: "#b8b8c8", maxWidth: "120px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                                         {pollResult.endpoint.replace("GET ", "")}
                                       </code>
                                     )}
@@ -1005,9 +1005,9 @@ export function HealthcheckClient({ models }: Props) {
                                       }}
                                     >
                                       {isExpanded ? (
-                                        <ChevronDown style={{ width: "12px", height: "12px", color: "#71717a" }} />
+                                        <ChevronDown style={{ width: "12px", height: "12px", color: "#9ca3af" }} />
                                       ) : (
-                                        <ChevronRight style={{ width: "12px", height: "12px", color: "#71717a" }} />
+                                        <ChevronRight style={{ width: "12px", height: "12px", color: "#9ca3af" }} />
                                       )}
                                     </button>
                                   )}
@@ -1016,8 +1016,8 @@ export function HealthcheckClient({ models }: Props) {
 
                               {/* Task ID Input */}
                               <div style={{ marginTop: "10px", display: "flex", alignItems: "center", gap: "8px" }}>
-                                <Code style={{ width: "12px", height: "12px", color: "#71717a" }} />
-                                <span style={{ fontSize: "11px", color: "#71717a" }}>Task ID:</span>
+                                <Code style={{ width: "12px", height: "12px", color: "#9ca3af" }} />
+                                <span style={{ fontSize: "11px", color: "#9ca3af" }}>Task ID:</span>
                                 <input
                                   type="text"
                                   value={currentTaskId}
@@ -1067,7 +1067,7 @@ export function HealthcheckClient({ models }: Props) {
                                           borderRadius: "4px",
                                           fontSize: "10px",
                                           fontFamily: "monospace",
-                                          color: "#a1a1aa",
+                                          color: "#b8b8c8",
                                           overflow: "auto",
                                           maxHeight: "150px",
                                           whiteSpace: "pre-wrap",
@@ -1121,7 +1121,7 @@ export function HealthcheckClient({ models }: Props) {
                                           borderRadius: "4px",
                                           fontSize: "10px",
                                           fontFamily: "monospace",
-                                          color: "#a1a1aa",
+                                          color: "#b8b8c8",
                                           overflow: "auto",
                                           maxHeight: "150px",
                                           whiteSpace: "pre-wrap",
@@ -1142,7 +1142,7 @@ export function HealthcheckClient({ models }: Props) {
                           <div style={{
                             padding: "20px",
                             textAlign: "center",
-                            color: "#71717a",
+                            color: "#9ca3af",
                             fontSize: "13px",
                           }}>
                             No providers configured for this model
@@ -1169,12 +1169,12 @@ export function HealthcheckClient({ models }: Props) {
               justifyContent: "center",
               margin: "0 auto 20px",
             }}>
-              <Layers style={{ width: "32px", height: "32px", color: "#71717a" }} />
+              <Layers style={{ width: "32px", height: "32px", color: "#9ca3af" }} />
             </div>
             <h3 style={{ fontSize: "18px", fontWeight: "600", color: "#e4e4e7", marginBottom: "10px" }}>
               No models to test
             </h3>
-            <p style={{ color: "#71717a", maxWidth: "320px", margin: "0 auto" }}>
+            <p style={{ color: "#9ca3af", maxWidth: "320px", margin: "0 auto" }}>
               Configure AI models and providers first
             </p>
           </div>

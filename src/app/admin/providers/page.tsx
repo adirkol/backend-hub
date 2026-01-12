@@ -47,7 +47,7 @@ function HealthBadge({ status }: { status: string }) {
     HEALTHY: { 
       icon: CheckCircle, 
       bg: "rgba(16, 185, 129, 0.15)", 
-      color: "#34d399", 
+      color: "#00f0ff", 
       border: "rgba(16, 185, 129, 0.3)",
       label: "Healthy" 
     },
@@ -68,7 +68,7 @@ function HealthBadge({ status }: { status: string }) {
     UNKNOWN: { 
       icon: HelpCircle, 
       bg: "rgba(113, 113, 122, 0.2)", 
-      color: "#a1a1aa", 
+      color: "#b8b8c8", 
       border: "rgba(113, 113, 122, 0.3)",
       label: "Unknown" 
     },
@@ -105,7 +105,7 @@ export default async function ProvidersPage() {
         <h1 style={{ fontSize: "28px", fontWeight: "700", color: "#fafafa", letterSpacing: "-0.02em" }}>
           AI Providers
         </h1>
-        <p style={{ color: "#71717a", marginTop: "6px", fontSize: "15px" }}>
+        <p style={{ color: "#9ca3af", marginTop: "6px", fontSize: "15px" }}>
           Monitor provider health and usage
         </p>
       </div>
@@ -152,12 +152,12 @@ export default async function ProvidersPage() {
                     <h3 style={{ fontWeight: "600", color: "#fafafa", fontSize: "16px", marginBottom: "4px" }}>
                       {provider.displayName}
                     </h3>
-                    <p style={{ fontSize: "13px", color: "#71717a", fontFamily: "monospace" }}>{provider.name}</p>
+                    <p style={{ fontSize: "13px", color: "#9ca3af", fontFamily: "monospace" }}>{provider.name}</p>
                   </div>
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
                   <HealthBadge status={provider.healthStatus} />
-                  <ChevronRight style={{ width: "20px", height: "20px", color: "#71717a" }} />
+                  <ChevronRight style={{ width: "20px", height: "20px", color: "#9ca3af" }} />
                 </div>
               </div>
 
@@ -165,27 +165,23 @@ export default async function ProvidersPage() {
               <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginBottom: "24px" }}>
                 {provider.baseUrl && (
                   <div style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "14px" }}>
-                    <ExternalLink style={{ width: "16px", height: "16px", color: "#71717a" }} />
-                    <a 
-                      href={provider.baseUrl} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
+                    <ExternalLink style={{ width: "16px", height: "16px", color: "#9ca3af" }} />
+                    <span 
                       style={{ 
-                        color: "#a1a1aa", 
-                        textDecoration: "none",
+                        color: "#b8b8c8", 
                         overflow: "hidden",
                         textOverflow: "ellipsis",
                         whiteSpace: "nowrap",
                       }}
                     >
                       {provider.baseUrl}
-                    </a>
+                    </span>
                   </div>
                 )}
                 <div style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "14px" }}>
-                  <Key style={{ width: "16px", height: "16px", color: "#71717a" }} />
-                  <span style={{ color: "#a1a1aa" }}>
-                    API Key: <code style={{ color: "#10b981" }}>{provider.apiKeyEnvVar}</code>
+                  <Key style={{ width: "16px", height: "16px", color: "#9ca3af" }} />
+                  <span style={{ color: "#b8b8c8" }}>
+                    API Key: <code style={{ color: "#00f0ff" }}>{provider.apiKeyEnvVar}</code>
                   </span>
                 </div>
               </div>
@@ -201,27 +197,27 @@ export default async function ProvidersPage() {
               }}>
                 <div style={{ padding: "20px", textAlign: "center", background: "rgba(24, 24, 27, 0.8)" }}>
                   <p style={{ fontSize: "24px", fontWeight: "700", color: "#fafafa" }}>{provider._count.modelConfigs}</p>
-                  <p style={{ fontSize: "12px", color: "#71717a", marginTop: "4px" }}>Models</p>
+                  <p style={{ fontSize: "12px", color: "#9ca3af", marginTop: "4px" }}>Models</p>
                 </div>
                 <div style={{ padding: "20px", textAlign: "center", background: "rgba(24, 24, 27, 0.8)" }}>
                   <p style={{ fontSize: "24px", fontWeight: "700", color: "#fafafa" }}>{total24h}</p>
-                  <p style={{ fontSize: "12px", color: "#71717a", marginTop: "4px" }}>Requests (24h)</p>
+                  <p style={{ fontSize: "12px", color: "#9ca3af", marginTop: "4px" }}>Requests (24h)</p>
                 </div>
                 <div style={{ padding: "20px", textAlign: "center", background: "rgba(24, 24, 27, 0.8)" }}>
                   <p style={{ 
                     fontSize: "24px", 
                     fontWeight: "700", 
                     color: successRate === null 
-                      ? "#71717a" 
+                      ? "#9ca3af" 
                       : successRate >= 95 
-                        ? "#34d399" 
+                        ? "#00f0ff" 
                         : successRate >= 80 
                           ? "#fbbf24" 
                           : "#f87171"
                   }}>
                     {successRate !== null ? `${successRate}%` : "—"}
                   </p>
-                  <p style={{ fontSize: "12px", color: "#71717a", marginTop: "4px" }}>Success Rate</p>
+                  <p style={{ fontSize: "12px", color: "#9ca3af", marginTop: "4px" }}>Success Rate</p>
                 </div>
               </div>
 
@@ -236,7 +232,7 @@ export default async function ProvidersPage() {
                   {provider.isEnabled ? "Enabled" : "Disabled"}
                 </span>
                 {provider.lastHealthCheck && (
-                  <span style={{ fontSize: "13px", color: "#71717a" }}>
+                  <span style={{ fontSize: "13px", color: "#9ca3af" }}>
                     Last check: {new Date(provider.lastHealthCheck).toLocaleTimeString()}
                   </span>
                 )}
@@ -261,12 +257,12 @@ export default async function ProvidersPage() {
               justifyContent: "center",
               margin: "0 auto 20px",
             }}>
-              <Zap style={{ width: "32px", height: "32px", color: "#71717a" }} />
+              <Zap style={{ width: "32px", height: "32px", color: "#9ca3af" }} />
             </div>
             <h3 style={{ fontSize: "18px", fontWeight: "600", color: "#e4e4e7", marginBottom: "10px" }}>
               No providers configured
             </h3>
-            <p style={{ color: "#71717a", maxWidth: "320px", margin: "0 auto" }}>
+            <p style={{ color: "#9ca3af", maxWidth: "320px", margin: "0 auto" }}>
               Add providers to enable AI generation
             </p>
           </div>

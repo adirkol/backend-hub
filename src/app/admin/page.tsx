@@ -95,10 +95,10 @@ function StatCard({
     >
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div style={{ flex: 1 }}>
-          <p style={{ fontSize: '14px', fontWeight: '500', color: '#a1a1aa', marginBottom: '8px' }}>{title}</p>
+          <p style={{ fontSize: '14px', fontWeight: '500', color: '#b8b8c8', marginBottom: '8px' }}>{title}</p>
           <p style={{ fontSize: '32px', fontWeight: '700', color: '#fafafa', letterSpacing: '-0.02em' }}>{value}</p>
           {subtitle && (
-            <p style={{ fontSize: '13px', color: '#71717a', marginTop: '8px' }}>{subtitle}</p>
+            <p style={{ fontSize: '13px', color: '#9ca3af', marginTop: '8px' }}>{subtitle}</p>
           )}
         </div>
         <div 
@@ -113,7 +113,7 @@ function StatCard({
             justifyContent: 'center'
           }}
         >
-          <Icon style={{ width: '22px', height: '22px', color: '#34d399' }} />
+          <Icon style={{ width: '22px', height: '22px', color: '#00f0ff' }} />
         </div>
       </div>
       {trend && (
@@ -122,11 +122,11 @@ function StatCard({
             style={{ 
               width: '14px', 
               height: '14px',
-              color: trend === "up" ? '#34d399' : trend === "down" ? '#f87171' : '#71717a',
+              color: trend === "up" ? '#34d399' : trend === "down" ? '#f87171' : '#9ca3af',
               transform: trend === "down" ? 'rotate(180deg)' : 'none'
             }}
           />
-          <span style={{ fontSize: '13px', color: trend === "up" ? '#34d399' : trend === "down" ? '#f87171' : '#71717a' }}>
+          <span style={{ fontSize: '13px', color: trend === "up" ? '#34d399' : trend === "down" ? '#f87171' : '#9ca3af' }}>
             vs last week
           </span>
         </div>
@@ -151,7 +151,7 @@ function StatusBadge({ status }: { status: string }) {
     FAILED: { bg: 'rgba(239, 68, 68, 0.15)', color: '#fca5a5', border: 'rgba(239, 68, 68, 0.3)' },
     RUNNING: { bg: 'rgba(234, 179, 8, 0.15)', color: '#fde047', border: 'rgba(234, 179, 8, 0.3)' },
     QUEUED: { bg: 'rgba(59, 130, 246, 0.15)', color: '#93c5fd', border: 'rgba(59, 130, 246, 0.3)' },
-    CANCELLED: { bg: 'rgba(113, 113, 122, 0.15)', color: '#a1a1aa', border: 'rgba(113, 113, 122, 0.3)' },
+    CANCELLED: { bg: 'rgba(113, 113, 122, 0.15)', color: '#b8b8c8', border: 'rgba(113, 113, 122, 0.3)' },
   };
 
   const style = styles[status] || styles.CANCELLED;
@@ -182,7 +182,7 @@ export default async function AdminDashboard() {
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '32px' }}>
         <div>
           <h1 style={{ fontSize: '28px', fontWeight: '700', color: '#fafafa', letterSpacing: '-0.02em' }}>Dashboard</h1>
-          <p style={{ color: '#71717a', marginTop: '6px', fontSize: '15px' }}>Overview of your AI Backend Hub</p>
+          <p style={{ color: '#9ca3af', marginTop: '6px', fontSize: '15px' }}>Overview of your AI Backend Hub</p>
         </div>
         <Link 
           href="/admin/apps/new" 
@@ -194,10 +194,10 @@ export default async function AdminDashboard() {
             borderRadius: '12px',
             fontSize: '14px',
             fontWeight: '600',
-            background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-            color: '#09090b',
+            background: 'linear-gradient(135deg, #00f0ff 0%, #00b8cc 100%)',
+            color: '#000',
             textDecoration: 'none',
-            boxShadow: '0 4px 14px rgba(16, 185, 129, 0.3)'
+            boxShadow: '0 4px 14px rgba(0, 240, 255, 0.3)'
           }}
         >
           <Zap style={{ width: '18px', height: '18px' }} />
@@ -250,19 +250,19 @@ export default async function AdminDashboard() {
               width: '40px',
               height: '40px',
               borderRadius: '10px',
-              background: 'rgba(16, 185, 129, 0.1)',
+              background: 'rgba(0, 240, 255, 0.1)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center'
             }}>
-              <Activity style={{ width: '20px', height: '20px', color: '#34d399' }} />
+              <Activity style={{ width: '20px', height: '20px', color: '#00f0ff' }} />
             </div>
             <h3 style={{ fontSize: '15px', fontWeight: '600', color: '#e4e4e7' }}>This Week</h3>
           </div>
           <div style={{ fontSize: '32px', fontWeight: '700', color: '#fafafa', letterSpacing: '-0.02em' }}>
             {stats.jobsThisWeek.toLocaleString()}
           </div>
-          <p style={{ fontSize: '14px', color: '#71717a', marginTop: '6px' }}>total generations</p>
+          <p style={{ fontSize: '14px', color: '#9ca3af', marginTop: '6px' }}>total generations</p>
         </div>
 
         <div style={{
@@ -276,12 +276,12 @@ export default async function AdminDashboard() {
               width: '40px',
               height: '40px',
               borderRadius: '10px',
-              background: 'rgba(16, 185, 129, 0.1)',
+              background: 'rgba(0, 240, 255, 0.1)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center'
             }}>
-              <CheckCircle style={{ width: '20px', height: '20px', color: '#34d399' }} />
+              <CheckCircle style={{ width: '20px', height: '20px', color: '#00f0ff' }} />
             </div>
             <h3 style={{ fontSize: '15px', fontWeight: '600', color: '#e4e4e7' }}>Success Rate</h3>
           </div>
@@ -290,7 +290,7 @@ export default async function AdminDashboard() {
               ? Math.round((stats.succeededToday / stats.jobsToday) * 100)
               : 100}%
           </div>
-          <p style={{ fontSize: '14px', color: '#71717a', marginTop: '6px' }}>today&apos;s jobs</p>
+          <p style={{ fontSize: '14px', color: '#9ca3af', marginTop: '6px' }}>today&apos;s jobs</p>
         </div>
 
         <div style={{
@@ -316,7 +316,7 @@ export default async function AdminDashboard() {
           <div style={{ fontSize: '32px', fontWeight: '700', color: '#fafafa', letterSpacing: '-0.02em' }}>
             {stats.failedToday}
           </div>
-          <p style={{ fontSize: '14px', color: '#71717a', marginTop: '6px' }}>jobs failed</p>
+          <p style={{ fontSize: '14px', color: '#9ca3af', marginTop: '6px' }}>jobs failed</p>
         </div>
       </div>
 
@@ -339,7 +339,7 @@ export default async function AdminDashboard() {
             href="/admin/jobs" 
             style={{ 
               fontSize: '14px', 
-              color: '#71717a', 
+              color: '#9ca3af', 
               textDecoration: 'none',
               display: 'flex',
               alignItems: 'center',
@@ -354,11 +354,11 @@ export default async function AdminDashboard() {
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr style={{ borderBottom: '1px solid rgba(63, 63, 70, 0.3)' }}>
-                <th style={{ padding: '14px 24px', textAlign: 'left', fontSize: '12px', fontWeight: '500', color: '#71717a', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Job ID</th>
-                <th style={{ padding: '14px 24px', textAlign: 'left', fontSize: '12px', fontWeight: '500', color: '#71717a', textTransform: 'uppercase', letterSpacing: '0.05em' }}>App</th>
-                <th style={{ padding: '14px 24px', textAlign: 'left', fontSize: '12px', fontWeight: '500', color: '#71717a', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Model</th>
-                <th style={{ padding: '14px 24px', textAlign: 'left', fontSize: '12px', fontWeight: '500', color: '#71717a', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Status</th>
-                <th style={{ padding: '14px 24px', textAlign: 'left', fontSize: '12px', fontWeight: '500', color: '#71717a', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Created</th>
+                <th style={{ padding: '14px 24px', textAlign: 'left', fontSize: '12px', fontWeight: '500', color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Job ID</th>
+                <th style={{ padding: '14px 24px', textAlign: 'left', fontSize: '12px', fontWeight: '500', color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em' }}>App</th>
+                <th style={{ padding: '14px 24px', textAlign: 'left', fontSize: '12px', fontWeight: '500', color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Model</th>
+                <th style={{ padding: '14px 24px', textAlign: 'left', fontSize: '12px', fontWeight: '500', color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Status</th>
+                <th style={{ padding: '14px 24px', textAlign: 'left', fontSize: '12px', fontWeight: '500', color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Created</th>
               </tr>
             </thead>
             <tbody>
@@ -372,7 +372,7 @@ export default async function AdminDashboard() {
                   <td style={{ padding: '16px 24px' }}>
                     <code style={{ 
                       fontSize: '13px', 
-                      color: '#a1a1aa', 
+                      color: '#b8b8c8', 
                       background: 'rgba(39, 39, 42, 0.5)', 
                       padding: '4px 10px', 
                       borderRadius: '6px',
@@ -382,11 +382,11 @@ export default async function AdminDashboard() {
                     </code>
                   </td>
                   <td style={{ padding: '16px 24px', fontSize: '14px', color: '#d4d4d8', fontWeight: '500' }}>{job.app.name}</td>
-                  <td style={{ padding: '16px 24px', fontSize: '14px', color: '#a1a1aa' }}>{job.aiModel.name}</td>
+                  <td style={{ padding: '16px 24px', fontSize: '14px', color: '#b8b8c8' }}>{job.aiModel.name}</td>
                   <td style={{ padding: '16px 24px' }}>
                     <StatusBadge status={job.status} />
                   </td>
-                  <td style={{ padding: '16px 24px', fontSize: '14px', color: '#71717a' }}>
+                  <td style={{ padding: '16px 24px', fontSize: '14px', color: '#9ca3af' }}>
                     {new Date(job.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </td>
                 </tr>
@@ -394,7 +394,7 @@ export default async function AdminDashboard() {
               {stats.recentJobs.length === 0 && (
                 <tr>
                   <td colSpan={5} style={{ padding: '48px 24px', textAlign: 'center' }}>
-                    <div style={{ color: '#71717a' }}>
+                    <div style={{ color: '#9ca3af' }}>
                       <Activity style={{ width: '32px', height: '32px', margin: '0 auto 12px', opacity: 0.5 }} />
                       <p style={{ fontSize: '15px' }}>No jobs yet</p>
                       <p style={{ fontSize: '13px', marginTop: '4px' }}>Jobs will appear here when iOS apps start generating</p>

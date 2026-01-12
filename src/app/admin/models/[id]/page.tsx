@@ -74,7 +74,7 @@ export default async function ModelEditPage({ params }: Props) {
             display: "inline-flex",
             alignItems: "center",
             gap: "8px",
-            color: "#71717a",
+            color: "#9ca3af",
             fontSize: "14px",
             textDecoration: "none",
             marginBottom: "16px",
@@ -101,7 +101,7 @@ export default async function ModelEditPage({ params }: Props) {
             <h1 style={{ fontSize: "28px", fontWeight: "700", color: "#fafafa", letterSpacing: "-0.02em" }}>
               {model.displayName}
             </h1>
-            <p style={{ color: "#71717a", fontSize: "14px", fontFamily: "monospace" }}>
+            <p style={{ color: "#9ca3af", fontSize: "14px", fontFamily: "monospace" }}>
               {model.name} • {model._count.jobs.toLocaleString()} jobs
             </p>
           </div>

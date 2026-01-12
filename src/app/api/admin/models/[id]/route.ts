@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { z } from "zod";
+import { auditAdminAction } from "@/lib/audit";
 
 const UpdateModelSchema = z.object({
   displayName: z.string().min(1).optional(),
@@ -175,6 +176,32 @@ export async function PATCH(
     return model;
   });
 
+  // Audit log
+  const changes: Record<string, unknown> = {};
+  if (displayName !== undefined && displayName !== existingModel.displayName) {
+    changes.displayName = { from: existingModel.displayName, to: displayName };
+  }
+  if (description !== undefined && description !== existingModel.description) {
+    changes.description = { from: existingModel.description, to: description };
+  }
+  if (tokenCost !== undefined && tokenCost !== existingModel.tokenCost) {
+    changes.tokenCost = { from: existingModel.tokenCost, to: tokenCost };
+  }
+  if (isEnabled !== undefined && isEnabled !== existingModel.isEnabled) {
+    changes.isEnabled = { from: existingModel.isEnabled, to: isEnabled };
+  }
+  if (providerConfigs) {
+    changes.providerConfigsUpdated = true;
+  }
+  if (appTokenOverrides) {
+    changes.appTokenOverridesUpdated = true;
+  }
+
+  await auditAdminAction(request, "model.updated", "AIModel", id, {
+    modelName: existingModel.name,
+    changes,
+  });
+
   return NextResponse.json(updatedModel);
 }
 
@@ -203,6 +230,12 @@ export async function DELETE(
       { status: 400 }
     );
   }
+
+  // Audit log before deletion
+  await auditAdminAction(request, "model.deleted", "AIModel", id, {
+    modelName: model.name,
+    displayName: model.displayName,
+  });
 
   await prisma.aIModel.delete({ where: { id } });
 

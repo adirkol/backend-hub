@@ -7,7 +7,7 @@ export default function VerifyPage() {
       className="min-h-screen flex items-center justify-center p-8"
       style={{
         background: `
-          radial-gradient(ellipse 80% 50% at 50% -20%, rgba(16, 185, 129, 0.08), transparent),
+          radial-gradient(ellipse 80% 50% at 50% -20%, rgba(0, 240, 255, 0.06), transparent),
           radial-gradient(ellipse 60% 40% at 80% 100%, rgba(99, 102, 241, 0.05), transparent),
           radial-gradient(rgba(39, 39, 42, 0.3) 1px, transparent 1px),
           #09090b
@@ -32,11 +32,11 @@ export default function VerifyPage() {
               style={{
                 width: '88px',
                 height: '88px',
-                background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(16, 185, 129, 0.05) 100%)',
-                border: '1px solid rgba(16, 185, 129, 0.25)'
+                background: 'linear-gradient(135deg, rgba(0, 240, 255, 0.15) 0%, rgba(0, 240, 255, 0.05) 100%)',
+                border: '1px solid rgba(0, 240, 255, 0.25)'
               }}
             >
-              <Mail style={{ width: '44px', height: '44px', color: '#10b981' }} strokeWidth={1.5} />
+              <Mail style={{ width: '44px', height: '44px', color: '#00f0ff' }} strokeWidth={1.5} />
             </div>
           </div>
           
@@ -53,7 +53,7 @@ export default function VerifyPage() {
           <p style={{ fontSize: '16px', color: '#d4d4d8', marginBottom: '8px' }}>
             We sent a magic link to your email address.
           </p>
-          <p style={{ fontSize: '14px', color: '#71717a', marginBottom: '40px' }}>
+          <p style={{ fontSize: '14px', color: '#9ca3af', marginBottom: '40px' }}>
             Click the link in the email to sign in to your account.
           </p>
           
@@ -68,7 +68,7 @@ export default function VerifyPage() {
               textAlign: 'left'
             }}
           >
-            <p style={{ fontSize: '14px', color: '#a1a1aa', lineHeight: '1.6' }}>
+            <p style={{ fontSize: '14px', color: '#b8b8c8', lineHeight: '1.6' }}>
               <span style={{ color: '#e4e4e7', fontWeight: '500' }}>Didn&apos;t receive it?</span>
               {" "}Check your spam folder or try again in a few minutes.
             </p>
@@ -84,7 +84,7 @@ export default function VerifyPage() {
               borderRadius: '12px',
               fontSize: '15px',
               fontWeight: '500',
-              color: '#a1a1aa',
+              color: '#b8b8c8',
               background: 'transparent',
               border: 'none'
             }}

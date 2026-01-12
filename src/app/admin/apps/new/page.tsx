@@ -133,7 +133,7 @@ export default function NewAppPage() {
 
   const hintStyle = {
     fontSize: "13px",
-    color: "#71717a",
+    color: "#9ca3af",
     marginTop: "8px",
   };
 
@@ -148,7 +148,7 @@ export default function NewAppPage() {
             alignItems: "center",
             gap: "8px",
             fontSize: "14px",
-            color: "#71717a",
+            color: "#9ca3af",
             textDecoration: "none",
             marginBottom: "20px",
             transition: "color 0.15s ease",
@@ -160,7 +160,7 @@ export default function NewAppPage() {
         <h1 style={{ fontSize: "28px", fontWeight: "700", color: "#fafafa", letterSpacing: "-0.02em" }}>
           Create New App
         </h1>
-        <p style={{ color: "#71717a", marginTop: "8px", fontSize: "15px" }}>
+        <p style={{ color: "#9ca3af", marginTop: "8px", fontSize: "15px" }}>
           Add a new tenant application
         </p>
       </div>
@@ -178,7 +178,7 @@ export default function NewAppPage() {
             Quick Add from App Store
           </h2>
         </div>
-        <p style={{ fontSize: "13px", color: "#a1a1aa", marginBottom: "16px" }}>
+        <p style={{ fontSize: "13px", color: "#b8b8c8", marginBottom: "16px" }}>
           Paste an App Store URL to automatically fill in app details
         </p>
         <div style={{ display: "flex", gap: "12px" }}>
@@ -251,21 +251,21 @@ export default function NewAppPage() {
               <div style={{ fontWeight: "600", color: "#fafafa", fontSize: "15px" }}>
                 {appStoreInfo.name}
               </div>
-              <div style={{ fontSize: "13px", color: "#a1a1aa", marginTop: "4px" }}>
+              <div style={{ fontSize: "13px", color: "#b8b8c8", marginTop: "4px" }}>
                 {appStoreInfo.developer} • {appStoreInfo.category}
               </div>
               {appStoreInfo.rating && (
-                <div style={{ fontSize: "12px", color: "#71717a", marginTop: "4px" }}>
+                <div style={{ fontSize: "12px", color: "#9ca3af", marginTop: "4px" }}>
                   ⭐ {appStoreInfo.rating.toFixed(1)} ({appStoreInfo.ratingCount?.toLocaleString()} ratings)
                 </div>
               )}
             </div>
             <div style={{ 
               padding: "6px 12px", 
-              background: "rgba(16, 185, 129, 0.15)", 
+              background: "rgba(0, 240, 255, 0.15)", 
               borderRadius: "20px",
               fontSize: "12px",
-              color: "#34d399",
+              color: "#00f0ff",
               fontWeight: "500",
             }}>
               ✓ Auto-filled
@@ -423,7 +423,7 @@ export default function NewAppPage() {
               borderRadius: "12px",
               fontSize: "14px",
               fontWeight: "500",
-              color: "#a1a1aa",
+              color: "#b8b8c8",
               textDecoration: "none",
               transition: "all 0.15s ease",
             }}
@@ -438,14 +438,14 @@ export default function NewAppPage() {
               alignItems: "center",
               gap: "10px",
               padding: "14px 28px",
-              background: loading ? "rgba(16, 185, 129, 0.4)" : "linear-gradient(135deg, #10b981 0%, #059669 100%)",
+              background: loading ? "rgba(0, 240, 255, 0.4)" : "linear-gradient(135deg, #00f0ff 0%, #00b8cc 100%)",
               color: "#09090b",
               borderRadius: "12px",
               fontSize: "15px",
               fontWeight: "600",
               border: "none",
               cursor: loading ? "not-allowed" : "pointer",
-              boxShadow: loading ? "none" : "0 4px 12px rgba(16, 185, 129, 0.3)",
+              boxShadow: loading ? "none" : "0 4px 12px rgba(0, 240, 255, 0.3)",
               transition: "all 0.15s ease",
             }}
           >

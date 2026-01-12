@@ -52,7 +52,7 @@ function EndpointCard({
   description,
   children,
 }: {
-  method: "GET" | "POST";
+  method: "GET" | "POST" | "DELETE";
   path: string;
   description: string;
   children?: React.ReactNode;
@@ -60,6 +60,7 @@ function EndpointCard({
   const methodColors = {
     GET: { bg: "rgba(59, 130, 246, 0.15)", color: "#60a5fa", border: "rgba(59, 130, 246, 0.3)" },
     POST: { bg: "rgba(16, 185, 129, 0.15)", color: "#34d399", border: "rgba(16, 185, 129, 0.3)" },
+    DELETE: { bg: "rgba(239, 68, 68, 0.15)", color: "#f87171", border: "rgba(239, 68, 68, 0.3)" },
   };
 
   const colors = methodColors[method];
@@ -87,7 +88,7 @@ function EndpointCard({
           {path}
         </code>
       </div>
-      <p style={{ color: "#a1a1aa", fontSize: "14px", marginBottom: children ? "20px" : 0 }}>
+      <p style={{ color: "#b8b8c8", fontSize: "14px", marginBottom: children ? "20px" : 0 }}>
         {description}
       </p>
       {children}
@@ -152,6 +153,35 @@ func waitForResult(jobId: String) async throws -> GenerationJob {
     }
     
     return result
+}`,
+  };
+
+  const cancelJobExamples = {
+    curl: `# Cancel a queued job
+curl -X DELETE "${baseUrl}/api/v1/jobs/JOB_ID_HERE" \\
+  -H "X-API-Key: your_api_key" \\
+  -H "X-User-ID: user_123"`,
+    swift: `// Cancel a job
+func cancelJob(jobId: String) async throws -> CancelResponse {
+    let client = AIHubClient(
+        apiKey: "your_api_key",
+        userId: "user_123"
+    )
+    
+    let result = try await client.cancelJob(id: jobId)
+    
+    print("Job cancelled, tokens refunded: \\(result.tokensRefunded)")
+    print("New balance: \\(result.userBalance)")
+    
+    return result
+}
+
+struct CancelResponse: Codable {
+    let jobId: String
+    let status: String
+    let tokensRefunded: Int
+    let userBalance: Int
+    let cancelledAt: String
 }`,
   };
 
@@ -328,6 +358,13 @@ class AIHubClient {
         return response.user.tokenBalance
     }
     
+    // MARK: - Cancel Job
+    
+    func cancelJob(id: String) async throws -> CancelJobResponse {
+        let data = try await request(method: "DELETE", path: "/jobs/\\(id)")
+        return try JSONDecoder().decode(CancelJobResponse.self, from: data)
+    }
+    
     // MARK: - Private
     
     private func request(
@@ -381,6 +418,13 @@ struct UserResponse: Codable {
     let success: Bool
     let user: User
     struct User: Codable { let externalId: String; let tokenBalance: Int }
+}
+struct CancelJobResponse: Codable {
+    let jobId: String
+    let status: String
+    let tokensRefunded: Int
+    let userBalance: Int
+    let cancelledAt: String
 }
 
 enum AIHubError: Error {
@@ -452,7 +496,7 @@ class GenerateViewController: UIViewController {
         <h3 style={{ 
           fontSize: "12px", 
           fontWeight: "600", 
-          color: "#71717a", 
+          color: "#9ca3af", 
           textTransform: "uppercase",
           letterSpacing: "0.05em",
           marginBottom: "16px",
@@ -467,6 +511,7 @@ class GenerateViewController: UIViewController {
             { id: "create-user", label: "POST /users" },
             { id: "generate", label: "POST /generate" },
             { id: "job-status", label: "GET /jobs/:id" },
+            { id: "cancel-job", label: "DELETE /jobs/:id" },
             { id: "user-info", label: "GET /users/:id" },
             { id: "grant-tokens", label: "POST /tokens" },
             { id: "full-client", label: "Full Swift Client" },
@@ -477,7 +522,7 @@ class GenerateViewController: UIViewController {
                 href={`#${item.id}`}
                 style={{
                   fontSize: "14px",
-                  color: "#a1a1aa",
+                  color: "#b8b8c8",
                   textDecoration: "none",
                   display: "block",
                   padding: "4px 0",
@@ -511,7 +556,7 @@ class GenerateViewController: UIViewController {
               <h1 style={{ fontSize: "28px", fontWeight: "700", color: "#fafafa", letterSpacing: "-0.02em" }}>
                 API Documentation
               </h1>
-              <p style={{ color: "#71717a", fontSize: "15px" }}>
+              <p style={{ color: "#9ca3af", fontSize: "15px" }}>
                 Complete reference for integrating AI generation into your iOS app
               </p>
             </div>
@@ -520,7 +565,7 @@ class GenerateViewController: UIViewController {
 
         {/* Overview */}
         <Section id="overview" title="Overview">
-          <p style={{ color: "#a1a1aa", fontSize: "15px", lineHeight: "1.7", marginBottom: "16px" }}>
+          <p style={{ color: "#b8b8c8", fontSize: "15px", lineHeight: "1.7", marginBottom: "16px" }}>
             The AI Hub API allows you to generate AI content from your iOS application. 
             The API uses a simple request-response pattern with asynchronous job processing.
           </p>
@@ -532,11 +577,11 @@ class GenerateViewController: UIViewController {
               borderRadius: "12px",
               border: "1px solid rgba(63, 63, 70, 0.3)",
             }}>
-              <Zap style={{ width: "24px", height: "24px", color: "#34d399", marginBottom: "12px" }} />
+              <Zap style={{ width: "24px", height: "24px", color: "#00f0ff", marginBottom: "12px" }} />
               <h4 style={{ fontSize: "14px", fontWeight: "600", color: "#fafafa", marginBottom: "4px" }}>
                 1. Submit Request
               </h4>
-              <p style={{ fontSize: "13px", color: "#71717a" }}>
+              <p style={{ fontSize: "13px", color: "#9ca3af" }}>
                 POST to /generate with your prompt and images
               </p>
             </div>
@@ -550,7 +595,7 @@ class GenerateViewController: UIViewController {
               <h4 style={{ fontSize: "14px", fontWeight: "600", color: "#fafafa", marginBottom: "4px" }}>
                 2. Poll Status
               </h4>
-              <p style={{ fontSize: "13px", color: "#71717a" }}>
+              <p style={{ fontSize: "13px", color: "#9ca3af" }}>
                 GET job status until completion
               </p>
             </div>
@@ -564,20 +609,20 @@ class GenerateViewController: UIViewController {
               <h4 style={{ fontSize: "14px", fontWeight: "600", color: "#fafafa", marginBottom: "4px" }}>
                 3. Get Results
               </h4>
-              <p style={{ fontSize: "13px", color: "#71717a" }}>
+              <p style={{ fontSize: "13px", color: "#9ca3af" }}>
                 Download generated images from URLs
               </p>
             </div>
           </div>
 
-          <p style={{ color: "#71717a", fontSize: "14px" }}>
-            Base URL: <code style={{ color: "#10b981", background: "rgba(16, 185, 129, 0.1)", padding: "2px 8px", borderRadius: "4px" }}>{baseUrl}/api/v1</code>
+          <p style={{ color: "#9ca3af", fontSize: "14px" }}>
+            Base URL: <code style={{ color: "#00f0ff", background: "rgba(0, 240, 255, 0.1)", padding: "2px 8px", borderRadius: "4px" }}>{baseUrl}/api/v1</code>
           </p>
         </Section>
 
         {/* Authentication */}
         <Section id="authentication" title="Authentication">
-          <p style={{ color: "#a1a1aa", fontSize: "15px", lineHeight: "1.7", marginBottom: "16px" }}>
+          <p style={{ color: "#b8b8c8", fontSize: "15px", lineHeight: "1.7", marginBottom: "16px" }}>
             All API requests require two headers for authentication:
           </p>
 
@@ -594,7 +639,7 @@ class GenerateViewController: UIViewController {
               <Key style={{ width: "20px", height: "20px", color: "#fbbf24", flexShrink: 0 }} />
               <div>
                 <code style={{ fontSize: "14px", color: "#fafafa", fontWeight: "600" }}>X-API-Key</code>
-                <p style={{ fontSize: "13px", color: "#71717a", marginTop: "4px" }}>
+                <p style={{ fontSize: "13px", color: "#9ca3af", marginTop: "4px" }}>
                   Your app&apos;s API key (found in Apps → Settings)
                 </p>
               </div>
@@ -611,7 +656,7 @@ class GenerateViewController: UIViewController {
               <Key style={{ width: "20px", height: "20px", color: "#60a5fa", flexShrink: 0 }} />
               <div>
                 <code style={{ fontSize: "14px", color: "#fafafa", fontWeight: "600" }}>X-User-ID</code>
-                <p style={{ fontSize: "13px", color: "#71717a", marginTop: "4px" }}>
+                <p style={{ fontSize: "13px", color: "#9ca3af", marginTop: "4px" }}>
                   A unique identifier for your user (any string you choose)
                 </p>
               </div>
@@ -621,8 +666,8 @@ class GenerateViewController: UIViewController {
 
         {/* Available Models */}
         <Section id="models" title="Available Models">
-          <p style={{ color: "#a1a1aa", fontSize: "15px", lineHeight: "1.7", marginBottom: "20px" }}>
-            The following AI models are available for generation. Use the <code style={{ color: "#10b981" }}>name</code> field in your API requests.
+          <p style={{ color: "#b8b8c8", fontSize: "15px", lineHeight: "1.7", marginBottom: "20px" }}>
+            The following AI models are available for generation. Use the <code style={{ color: "#00f0ff" }}>name</code> field in your API requests.
           </p>
 
           <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
@@ -643,8 +688,8 @@ class GenerateViewController: UIViewController {
                     </span>
                     <code style={{ 
                       fontSize: "12px", 
-                      color: "#10b981", 
-                      background: "rgba(16, 185, 129, 0.1)", 
+                      color: "#00f0ff",
+                      background: "rgba(0, 240, 255, 0.1)",
                       padding: "2px 8px", 
                       borderRadius: "4px" 
                     }}>
@@ -663,11 +708,11 @@ class GenerateViewController: UIViewController {
                   </span>
                 </div>
                 {model.description && (
-                  <p style={{ fontSize: "13px", color: "#71717a", marginBottom: "8px" }}>
+                  <p style={{ fontSize: "13px", color: "#9ca3af", marginBottom: "8px" }}>
                     {model.description}
                   </p>
                 )}
-                <div style={{ display: "flex", gap: "16px", fontSize: "12px", color: "#52525b" }}>
+                <div style={{ display: "flex", gap: "16px", fontSize: "12px", color: "#71717a" }}>
                   <span>Images: {model.supportsImages ? `✓ max ${model.maxInputImages}` : "✗"}</span>
                   <span>Prompt: {model.supportsPrompt ? "✓" : "✗"}</span>
                   <span>Ratios: {model.supportedAspectRatios.slice(0, 3).join(", ")}{model.supportedAspectRatios.length > 3 ? "..." : ""}</span>
@@ -676,7 +721,7 @@ class GenerateViewController: UIViewController {
             ))}
 
             {models.length === 0 && (
-              <p style={{ color: "#71717a", textAlign: "center", padding: "40px" }}>
+              <p style={{ color: "#9ca3af", textAlign: "center", padding: "40px" }}>
                 No models available
               </p>
             )}
@@ -700,10 +745,10 @@ class GenerateViewController: UIViewController {
               marginBottom: "16px",
               fontSize: "13px",
               fontFamily: "monospace",
-              color: "#a1a1aa",
+              color: "#b8b8c8",
             }}>
-              <div><span style={{ color: "#71717a" }}>external_id</span>: <span style={{ color: "#fbbf24" }}>string</span> <span style={{ color: "#f87171" }}>required</span> <span style={{ color: "#52525b" }}>- your user&apos;s unique ID</span></div>
-              <div><span style={{ color: "#71717a" }}>metadata</span>: <span style={{ color: "#fbbf24" }}>object</span> <span style={{ color: "#52525b" }}>optional - device info, app version, etc.</span></div>
+              <div><span style={{ color: "#9ca3af" }}>external_id</span>: <span style={{ color: "#fbbf24" }}>string</span> <span style={{ color: "#f87171" }}>required</span> <span style={{ color: "#71717a" }}>- your user&apos;s unique ID</span></div>
+              <div><span style={{ color: "#9ca3af" }}>metadata</span>: <span style={{ color: "#fbbf24" }}>object</span> <span style={{ color: "#71717a" }}>optional - device info, app version, etc.</span></div>
             </div>
 
             <h4 style={{ fontSize: "14px", fontWeight: "600", color: "#e4e4e7", marginBottom: "12px" }}>
@@ -715,12 +760,12 @@ class GenerateViewController: UIViewController {
               borderRadius: "8px",
               fontSize: "13px",
               fontFamily: "monospace",
-              color: "#a1a1aa",
+              color: "#b8b8c8",
             }}>
-              <div><span style={{ color: "#71717a" }}>success</span>: <span style={{ color: "#34d399" }}>true</span></div>
-              <div><span style={{ color: "#71717a" }}>created</span>: <span style={{ color: "#fbbf24" }}>boolean</span> <span style={{ color: "#52525b" }}>- true if new user, false if existing</span></div>
-              <div><span style={{ color: "#71717a" }}>user.external_id</span>: <span style={{ color: "#fbbf24" }}>string</span></div>
-              <div><span style={{ color: "#71717a" }}>user.token_balance</span>: <span style={{ color: "#fbbf24" }}>number</span> <span style={{ color: "#52525b" }}>- includes welcome bonus if configured</span></div>
+              <div><span style={{ color: "#9ca3af" }}>success</span>: <span style={{ color: "#34d399" }}>true</span></div>
+              <div><span style={{ color: "#9ca3af" }}>created</span>: <span style={{ color: "#fbbf24" }}>boolean</span> <span style={{ color: "#71717a" }}>- true if new user, false if existing</span></div>
+              <div><span style={{ color: "#9ca3af" }}>user.external_id</span>: <span style={{ color: "#fbbf24" }}>string</span></div>
+              <div><span style={{ color: "#9ca3af" }}>user.token_balance</span>: <span style={{ color: "#fbbf24" }}>number</span> <span style={{ color: "#71717a" }}>- includes welcome bonus if configured</span></div>
             </div>
           </EndpointCard>
 
@@ -751,12 +796,12 @@ class GenerateViewController: UIViewController {
               marginBottom: "16px",
               fontSize: "13px",
               fontFamily: "monospace",
-              color: "#a1a1aa",
+              color: "#b8b8c8",
             }}>
-              <div><span style={{ color: "#71717a" }}>model</span>: <span style={{ color: "#fbbf24" }}>string</span> <span style={{ color: "#f87171" }}>required</span></div>
-              <div><span style={{ color: "#71717a" }}>prompt</span>: <span style={{ color: "#fbbf24" }}>string</span> <span style={{ color: "#52525b" }}>optional</span></div>
-              <div><span style={{ color: "#71717a" }}>images</span>: <span style={{ color: "#fbbf24" }}>string[]</span> <span style={{ color: "#52525b" }}>optional - URLs or base64</span></div>
-              <div><span style={{ color: "#71717a" }}>aspect_ratio</span>: <span style={{ color: "#fbbf24" }}>string</span> <span style={{ color: "#52525b" }}>optional - default &quot;1:1&quot;</span></div>
+              <div><span style={{ color: "#9ca3af" }}>model</span>: <span style={{ color: "#fbbf24" }}>string</span> <span style={{ color: "#f87171" }}>required</span></div>
+              <div><span style={{ color: "#9ca3af" }}>prompt</span>: <span style={{ color: "#fbbf24" }}>string</span> <span style={{ color: "#71717a" }}>optional</span></div>
+              <div><span style={{ color: "#9ca3af" }}>images</span>: <span style={{ color: "#fbbf24" }}>string[]</span> <span style={{ color: "#71717a" }}>optional - URLs or base64</span></div>
+              <div><span style={{ color: "#9ca3af" }}>aspect_ratio</span>: <span style={{ color: "#fbbf24" }}>string</span> <span style={{ color: "#71717a" }}>optional - default &quot;1:1&quot;</span></div>
             </div>
           </EndpointCard>
 
@@ -782,10 +827,11 @@ class GenerateViewController: UIViewController {
             </h4>
             <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
               {[
-                { status: "QUEUED", color: "#71717a" },
+                { status: "QUEUED", color: "#9ca3af" },
                 { status: "RUNNING", color: "#fbbf24" },
                 { status: "SUCCEEDED", color: "#34d399" },
                 { status: "FAILED", color: "#f87171" },
+                { status: "CANCELLED", color: "#a78bfa" },
               ].map((s) => (
                 <span 
                   key={s.status}
@@ -810,6 +856,88 @@ class GenerateViewController: UIViewController {
             tabs={[
               { language: "curl", label: "cURL", code: jobStatusExamples.curl },
               { language: "swift", label: "Swift", code: jobStatusExamples.swift },
+            ]}
+          />
+        </Section>
+
+        {/* DELETE /jobs/:id */}
+        <Section id="cancel-job" title="DELETE /jobs/:id">
+          <EndpointCard 
+            method="DELETE" 
+            path="/api/v1/jobs/:id"
+            description="Cancel a queued job and refund tokens. Only the user who created the job can cancel it."
+          >
+            <h4 style={{ fontSize: "14px", fontWeight: "600", color: "#e4e4e7", marginBottom: "12px" }}>
+              Requirements
+            </h4>
+            <div style={{ 
+              padding: "16px", 
+              background: "rgba(9, 9, 11, 0.6)", 
+              borderRadius: "8px",
+              marginBottom: "16px",
+              fontSize: "13px",
+              fontFamily: "monospace",
+              color: "#b8b8c8",
+            }}>
+              <div><span style={{ color: "#9ca3af" }}>Job Status</span>: <span style={{ color: "#fbbf24" }}>QUEUED</span> <span style={{ color: "#71717a" }}>- only queued jobs can be cancelled</span></div>
+              <div><span style={{ color: "#9ca3af" }}>Owner</span>: <span style={{ color: "#71717a" }}>Only the user who created the job can cancel it</span></div>
+            </div>
+
+            <h4 style={{ fontSize: "14px", fontWeight: "600", color: "#e4e4e7", marginBottom: "12px" }}>
+              Response
+            </h4>
+            <div style={{ 
+              padding: "16px", 
+              background: "rgba(9, 9, 11, 0.6)", 
+              borderRadius: "8px",
+              fontSize: "13px",
+              fontFamily: "monospace",
+              color: "#b8b8c8",
+            }}>
+              <div><span style={{ color: "#9ca3af" }}>job_id</span>: <span style={{ color: "#fbbf24" }}>string</span></div>
+              <div><span style={{ color: "#9ca3af" }}>status</span>: <span style={{ color: "#34d399" }}>&quot;cancelled&quot;</span></div>
+              <div><span style={{ color: "#9ca3af" }}>tokens_refunded</span>: <span style={{ color: "#fbbf24" }}>number</span> <span style={{ color: "#71717a" }}>- tokens returned to user</span></div>
+              <div><span style={{ color: "#9ca3af" }}>user_balance</span>: <span style={{ color: "#fbbf24" }}>number</span> <span style={{ color: "#71717a" }}>- updated token balance</span></div>
+              <div><span style={{ color: "#9ca3af" }}>cancelled_at</span>: <span style={{ color: "#fbbf24" }}>string</span> <span style={{ color: "#71717a" }}>- ISO timestamp</span></div>
+            </div>
+
+            <h4 style={{ fontSize: "14px", fontWeight: "600", color: "#e4e4e7", marginTop: "16px", marginBottom: "12px" }}>
+              Error Responses
+            </h4>
+            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+              <div style={{ 
+                padding: "8px 12px", 
+                background: "rgba(239, 68, 68, 0.1)", 
+                borderRadius: "6px",
+                fontSize: "13px",
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+              }}>
+                <span style={{ color: "#f87171", fontWeight: "600" }}>403</span>
+                <span style={{ color: "#b8b8c8" }}>You can only cancel your own jobs</span>
+              </div>
+              <div style={{ 
+                padding: "8px 12px", 
+                background: "rgba(239, 68, 68, 0.1)", 
+                borderRadius: "6px",
+                fontSize: "13px",
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+              }}>
+                <span style={{ color: "#f87171", fontWeight: "600" }}>409</span>
+                <span style={{ color: "#b8b8c8" }}>Job is already running / completed / failed / cancelled</span>
+              </div>
+            </div>
+          </EndpointCard>
+
+          <TabbedCodeBlock
+            title="Cancel Job Example"
+            defaultOpen={false}
+            tabs={[
+              { language: "curl", label: "cURL", code: cancelJobExamples.curl },
+              { language: "swift", label: "Swift", code: cancelJobExamples.swift },
             ]}
           />
         </Section>
@@ -848,10 +976,10 @@ class GenerateViewController: UIViewController {
               borderRadius: "8px",
               fontSize: "13px",
               fontFamily: "monospace",
-              color: "#a1a1aa",
+              color: "#b8b8c8",
             }}>
-              <div><span style={{ color: "#71717a" }}>amount</span>: <span style={{ color: "#fbbf24" }}>number</span> <span style={{ color: "#f87171" }}>required</span></div>
-              <div><span style={{ color: "#71717a" }}>description</span>: <span style={{ color: "#fbbf24" }}>string</span> <span style={{ color: "#52525b" }}>optional</span></div>
+              <div><span style={{ color: "#9ca3af" }}>amount</span>: <span style={{ color: "#fbbf24" }}>number</span> <span style={{ color: "#f87171" }}>required</span></div>
+              <div><span style={{ color: "#9ca3af" }}>description</span>: <span style={{ color: "#fbbf24" }}>string</span> <span style={{ color: "#71717a" }}>optional</span></div>
             </div>
           </EndpointCard>
 
@@ -867,7 +995,7 @@ class GenerateViewController: UIViewController {
 
         {/* Full Swift Client */}
         <Section id="full-client" title="Full Swift Client">
-          <p style={{ color: "#a1a1aa", fontSize: "15px", lineHeight: "1.7", marginBottom: "20px" }}>
+          <p style={{ color: "#b8b8c8", fontSize: "15px", lineHeight: "1.7", marginBottom: "20px" }}>
             Copy this complete client class into your iOS project for easy API integration.
           </p>
 
@@ -890,7 +1018,7 @@ class GenerateViewController: UIViewController {
 
         {/* Error Handling */}
         <Section id="errors" title="Error Handling">
-          <p style={{ color: "#a1a1aa", fontSize: "15px", lineHeight: "1.7", marginBottom: "20px" }}>
+          <p style={{ color: "#b8b8c8", fontSize: "15px", lineHeight: "1.7", marginBottom: "20px" }}>
             The API returns standard HTTP status codes along with error details:
           </p>
 
@@ -926,7 +1054,7 @@ class GenerateViewController: UIViewController {
                   {err.code}
                 </span>
                 <span style={{ fontSize: "14px", color: "#fafafa" }}>{err.message}</span>
-                <span style={{ fontSize: "13px", color: "#71717a" }}>— {err.desc}</span>
+                <span style={{ fontSize: "13px", color: "#9ca3af" }}>— {err.desc}</span>
               </div>
             ))}
           </div>

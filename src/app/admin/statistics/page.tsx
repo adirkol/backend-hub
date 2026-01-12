@@ -249,7 +249,7 @@ export default async function StatisticsPage() {
         <h1 style={{ fontSize: "28px", fontWeight: "700", color: "#fafafa", letterSpacing: "-0.02em" }}>
           Statistics
         </h1>
-        <p style={{ color: "#71717a", marginTop: "6px", fontSize: "15px" }}>
+        <p style={{ color: "#9ca3af", marginTop: "6px", fontSize: "15px" }}>
           Analytics and insights for your platform
         </p>
       </div>

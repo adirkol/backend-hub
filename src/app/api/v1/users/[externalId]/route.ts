@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { validateApiRequest } from "@/lib/api-auth";
 import { prisma } from "@/lib/db";
+import { getEffectiveTokenBalance } from "@/lib/tokens";
 
 interface RouteParams {
   params: Promise<{ externalId: string }>;
@@ -30,8 +31,8 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    // Get job stats
-    const [totalJobs, successfulJobs] = await Promise.all([
+    // Get job stats and effective balance
+    const [totalJobs, successfulJobs, balanceInfo] = await Promise.all([
       prisma.generationJob.count({
         where: { appUserId: appUser.id },
       }),
@@ -41,11 +42,12 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
           status: "SUCCEEDED",
         },
       }),
+      getEffectiveTokenBalance(appUser.id),
     ]);
 
     return NextResponse.json({
       external_id: appUser.externalId,
-      token_balance: appUser.tokenBalance,
+      token_balance: balanceInfo.effectiveBalance,
       total_jobs: totalJobs,
       successful_jobs: successfulJobs,
       is_active: appUser.isActive,
@@ -101,9 +103,12 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
       data: updateData,
     });
 
+    // Get effective balance
+    const { effectiveBalance } = await getEffectiveTokenBalance(updatedUser.id);
+
     return NextResponse.json({
       external_id: updatedUser.externalId,
-      token_balance: updatedUser.tokenBalance,
+      token_balance: effectiveBalance,
       is_active: updatedUser.isActive,
       metadata: updatedUser.metadata,
       updated_at: updatedUser.updatedAt.toISOString(),

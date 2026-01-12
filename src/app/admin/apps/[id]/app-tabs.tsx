@@ -77,19 +77,19 @@ export function AppTabs({ app, users, jobs, userCount, jobCount }: AppTabsProps)
               width: "48px",
               height: "48px",
               borderRadius: "12px",
-              background: "linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(5, 150, 105, 0.3) 100%)",
-              border: "1px solid rgba(16, 185, 129, 0.3)",
+              background: "linear-gradient(135deg, rgba(0, 240, 255, 0.2) 0%, rgba(0, 184, 204, 0.3) 100%)",
+              border: "1px solid rgba(0, 240, 255, 0.3)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
             }}>
-              <Users style={{ width: "22px", height: "22px", color: "#34d399" }} />
+              <Users style={{ width: "22px", height: "22px", color: "#00f0ff" }} />
             </div>
             <div>
               <p style={{ fontSize: "28px", fontWeight: "700", color: "#fafafa" }}>
                 {app._count.users.toLocaleString()}
               </p>
-              <p style={{ fontSize: "14px", color: "#71717a" }}>Total Users</p>
+              <p style={{ fontSize: "14px", color: "#9ca3af" }}>Total Users</p>
             </div>
           </div>
         </div>
@@ -111,7 +111,7 @@ export function AppTabs({ app, users, jobs, userCount, jobCount }: AppTabsProps)
               <p style={{ fontSize: "28px", fontWeight: "700", color: "#fafafa" }}>
                 {app._count.jobs.toLocaleString()}
               </p>
-              <p style={{ fontSize: "14px", color: "#71717a" }}>Total Jobs</p>
+              <p style={{ fontSize: "14px", color: "#9ca3af" }}>Total Jobs</p>
             </div>
           </div>
         </div>
@@ -133,7 +133,7 @@ export function AppTabs({ app, users, jobs, userCount, jobCount }: AppTabsProps)
               <p style={{ fontSize: "28px", fontWeight: "700", color: "#fafafa" }}>
                 {app.defaultTokenGrant}
               </p>
-              <p style={{ fontSize: "14px", color: "#71717a" }}>Welcome Tokens</p>
+              <p style={{ fontSize: "14px", color: "#9ca3af" }}>Welcome Tokens</p>
             </div>
           </div>
         </div>
@@ -157,10 +157,10 @@ export function AppTabs({ app, users, jobs, userCount, jobCount }: AppTabsProps)
               padding: "14px 20px",
               fontSize: "14px",
               fontWeight: "500",
-              color: activeTab === tab.id ? "#fafafa" : "#71717a",
+              color: activeTab === tab.id ? "#fafafa" : "#9ca3af",
               background: activeTab === tab.id ? "rgba(39, 39, 42, 0.6)" : "transparent",
               border: "none",
-              borderBottom: activeTab === tab.id ? "2px solid #10b981" : "2px solid transparent",
+              borderBottom: activeTab === tab.id ? "2px solid #00f0ff" : "2px solid transparent",
               cursor: "pointer",
               transition: "all 0.15s ease",
               marginBottom: "-1px",
@@ -173,8 +173,8 @@ export function AppTabs({ app, users, jobs, userCount, jobCount }: AppTabsProps)
                 fontSize: "12px",
                 padding: "2px 8px",
                 borderRadius: "10px",
-                background: activeTab === tab.id ? "rgba(16, 185, 129, 0.2)" : "rgba(63, 63, 70, 0.5)",
-                color: activeTab === tab.id ? "#34d399" : "#a1a1aa",
+                background: activeTab === tab.id ? "rgba(0, 240, 255, 0.2)" : "rgba(63, 63, 70, 0.5)",
+                color: activeTab === tab.id ? "#00f0ff" : "#b8b8c8",
               }}>
                 {tab.count.toLocaleString()}
               </span>
@@ -199,7 +199,7 @@ export function AppTabs({ app, users, jobs, userCount, jobCount }: AppTabsProps)
                 gap: "10px",
               }}>
                 API Key
-                <span style={{ fontSize: "12px", color: "#71717a", fontWeight: "400" }}>(Keep this secret!)</span>
+                <span style={{ fontSize: "12px", color: "#9ca3af", fontWeight: "400" }}>(Keep this secret!)</span>
               </h2>
 
               <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
@@ -211,7 +211,7 @@ export function AppTabs({ app, users, jobs, userCount, jobCount }: AppTabsProps)
                     background: "rgba(39, 39, 42, 0.5)",
                     border: "1px solid rgba(63, 63, 70, 0.5)",
                     fontSize: "14px",
-                    color: "#a1a1aa",
+                    color: "#b8b8c8",
                     fontFamily: "monospace",
                     overflow: "hidden",
                     textOverflow: "ellipsis",
@@ -221,7 +221,7 @@ export function AppTabs({ app, users, jobs, userCount, jobCount }: AppTabsProps)
                       app.apiKey
                     ) : (
                       <>
-                        <span style={{ color: "#71717a" }}>{app.apiKeyPrefix || "key_"}...</span>
+                        <span style={{ color: "#9ca3af" }}>{app.apiKeyPrefix || "key_"}...</span>
                         <span style={{ filter: "blur(4px)" }}>{app.apiKey.slice(-12)}</span>
                       </>
                     )}
@@ -232,9 +232,9 @@ export function AppTabs({ app, users, jobs, userCount, jobCount }: AppTabsProps)
                       style={{
                         padding: "12px",
                         borderRadius: "10px",
-                        background: copied ? "rgba(16, 185, 129, 0.2)" : "rgba(39, 39, 42, 0.6)",
-                        border: copied ? "1px solid rgba(16, 185, 129, 0.4)" : "1px solid rgba(63, 63, 70, 0.5)",
-                        color: copied ? "#34d399" : "#a1a1aa",
+                        background: copied ? "rgba(0, 240, 255, 0.2)" : "rgba(39, 39, 42, 0.6)",
+                        border: copied ? "1px solid rgba(0, 240, 255, 0.4)" : "1px solid rgba(63, 63, 70, 0.5)",
+                        color: copied ? "#00f0ff" : "#b8b8c8",
                         cursor: "pointer",
                         transition: "all 0.15s ease",
                       }}
@@ -249,7 +249,7 @@ export function AppTabs({ app, users, jobs, userCount, jobCount }: AppTabsProps)
                         borderRadius: "10px",
                         background: showApiKey ? "rgba(59, 130, 246, 0.2)" : "rgba(39, 39, 42, 0.6)",
                         border: showApiKey ? "1px solid rgba(59, 130, 246, 0.4)" : "1px solid rgba(63, 63, 70, 0.5)",
-                        color: showApiKey ? "#60a5fa" : "#a1a1aa",
+                        color: showApiKey ? "#60a5fa" : "#b8b8c8",
                         cursor: "pointer",
                         transition: "all 0.15s ease",
                       }}
@@ -263,7 +263,7 @@ export function AppTabs({ app, users, jobs, userCount, jobCount }: AppTabsProps)
                         borderRadius: "10px",
                         background: "rgba(39, 39, 42, 0.6)",
                         border: "1px solid rgba(63, 63, 70, 0.5)",
-                        color: "#a1a1aa",
+                        color: "#b8b8c8",
                         cursor: "pointer",
                       }}
                       title="Regenerate Key"
@@ -273,8 +273,8 @@ export function AppTabs({ app, users, jobs, userCount, jobCount }: AppTabsProps)
                   </div>
                 </div>
 
-                <p style={{ fontSize: "13px", color: "#71717a" }}>
-                  Use this key in the <code style={{ color: "#10b981" }}>X-API-Key</code> header for API requests.
+                <p style={{ fontSize: "13px", color: "#9ca3af" }}>
+                  Use this key in the <code style={{ color: "#00f0ff" }}>X-API-Key</code> header for API requests.
                 </p>
               </div>
             </div>
@@ -287,18 +287,18 @@ export function AppTabs({ app, users, jobs, userCount, jobCount }: AppTabsProps)
 
               <div style={{ display: "flex", flexDirection: "column", gap: "18px" }}>
                 <div>
-                  <label style={{ fontSize: "12px", color: "#71717a", marginBottom: "8px", display: "block", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                  <label style={{ fontSize: "12px", color: "#9ca3af", marginBottom: "8px", display: "block", textTransform: "uppercase", letterSpacing: "0.05em" }}>
                     Webhook URL
                   </label>
-                  <p style={{ fontSize: "14px", color: app.webhookUrl ? "#e4e4e7" : "#71717a" }}>
+                  <p style={{ fontSize: "14px", color: app.webhookUrl ? "#e4e4e7" : "#9ca3af" }}>
                     {app.webhookUrl || "Not configured"}
                   </p>
                 </div>
                 <div>
-                  <label style={{ fontSize: "12px", color: "#71717a", marginBottom: "8px", display: "block", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                  <label style={{ fontSize: "12px", color: "#9ca3af", marginBottom: "8px", display: "block", textTransform: "uppercase", letterSpacing: "0.05em" }}>
                     Webhook Secret
                   </label>
-                  <p style={{ fontSize: "14px", color: app.webhookSecret ? "#e4e4e7" : "#71717a" }}>
+                  <p style={{ fontSize: "14px", color: app.webhookSecret ? "#e4e4e7" : "#9ca3af" }}>
                     {app.webhookSecret ? (
                       <span style={{ filter: "blur(4px)" }}>{app.webhookSecret}</span>
                     ) : (
@@ -327,7 +327,7 @@ export function AppTabs({ app, users, jobs, userCount, jobCount }: AppTabsProps)
                 transform: "translateY(-50%)", 
                 width: "18px", 
                 height: "18px", 
-                color: "#71717a" 
+                color: "#9ca3af" 
               }} />
               <input
                 type="text"
@@ -359,7 +359,7 @@ export function AppTabs({ app, users, jobs, userCount, jobCount }: AppTabsProps)
                         textAlign: "left", 
                         fontSize: "12px", 
                         fontWeight: "600",
-                        color: "#71717a",
+                        color: "#9ca3af",
                         textTransform: "uppercase",
                         letterSpacing: "0.05em",
                       }}
@@ -388,11 +388,11 @@ export function AppTabs({ app, users, jobs, userCount, jobCount }: AppTabsProps)
                           alignItems: "center",
                           justifyContent: "center",
                         }}>
-                          <User style={{ width: "18px", height: "18px", color: "#71717a" }} />
+                          <User style={{ width: "18px", height: "18px", color: "#9ca3af" }} />
                         </div>
                         <code style={{ 
                           fontSize: "12px", 
-                          color: "#a1a1aa", 
+                          color: "#b8b8c8", 
                           background: "rgba(39, 39, 42, 0.5)", 
                           padding: "6px 10px", 
                           borderRadius: "6px",
@@ -419,7 +419,7 @@ export function AppTabs({ app, users, jobs, userCount, jobCount }: AppTabsProps)
                       </div>
                     </td>
                     <td style={{ padding: "18px 20px" }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: "8px", color: "#a1a1aa", fontSize: "14px" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "8px", color: "#b8b8c8", fontSize: "14px" }}>
                         <Zap style={{ width: "16px", height: "16px" }} />
                         <span>{user._count.jobs}</span>
                       </div>
@@ -429,14 +429,14 @@ export function AppTabs({ app, users, jobs, userCount, jobCount }: AppTabsProps)
                         {user.isActive ? "Active" : "Inactive"}
                       </span>
                     </td>
-                    <td style={{ padding: "18px 20px", fontSize: "13px", color: "#71717a" }}>
+                    <td style={{ padding: "18px 20px", fontSize: "13px", color: "#9ca3af" }}>
                       {new Date(user.createdAt).toLocaleString([], { dateStyle: "short", timeStyle: "short" })}
                     </td>
                   </tr>
                 ))}
                 {users.length === 0 && (
                   <tr>
-                    <td colSpan={6} style={{ padding: "64px 20px", textAlign: "center", color: "#71717a" }}>
+                    <td colSpan={6} style={{ padding: "64px 20px", textAlign: "center", color: "#9ca3af" }}>
                       No users yet
                     </td>
                   </tr>
@@ -462,7 +462,7 @@ export function AppTabs({ app, users, jobs, userCount, jobCount }: AppTabsProps)
                         textAlign: "left", 
                         fontSize: "12px", 
                         fontWeight: "600",
-                        color: "#71717a",
+                        color: "#9ca3af",
                         textTransform: "uppercase",
                         letterSpacing: "0.05em",
                       }}
@@ -483,7 +483,7 @@ export function AppTabs({ app, users, jobs, userCount, jobCount }: AppTabsProps)
                     <td style={{ padding: "18px 20px" }}>
                       <code style={{ 
                         fontSize: "12px", 
-                        color: "#a1a1aa", 
+                        color: "#b8b8c8", 
                         background: "rgba(39, 39, 42, 0.5)", 
                         padding: "6px 10px", 
                         borderRadius: "6px",
@@ -495,7 +495,7 @@ export function AppTabs({ app, users, jobs, userCount, jobCount }: AppTabsProps)
                     <td style={{ padding: "18px 20px", fontSize: "14px", color: "#e4e4e7" }}>
                       {job.aiModel?.displayName || "-"}
                     </td>
-                    <td style={{ padding: "18px 20px", fontSize: "14px", color: "#a1a1aa", fontFamily: "monospace" }}>
+                    <td style={{ padding: "18px 20px", fontSize: "14px", color: "#b8b8c8", fontFamily: "monospace" }}>
                       {job.appUser?.externalId || "-"}
                     </td>
                     <td style={{ padding: "18px 20px" }}>
@@ -514,17 +514,17 @@ export function AppTabs({ app, users, jobs, userCount, jobCount }: AppTabsProps)
                           <span style={{ color: "#fafafa", fontSize: "14px" }}>{job.tokensCharged}</span>
                         </div>
                       ) : (
-                        <span style={{ color: "#71717a", fontSize: "14px" }}>-</span>
+                        <span style={{ color: "#9ca3af", fontSize: "14px" }}>-</span>
                       )}
                     </td>
-                    <td style={{ padding: "18px 20px", fontSize: "13px", color: "#71717a" }}>
+                    <td style={{ padding: "18px 20px", fontSize: "13px", color: "#9ca3af" }}>
                       {new Date(job.createdAt).toLocaleString()}
                     </td>
                   </tr>
                 ))}
                 {jobs.length === 0 && (
                   <tr>
-                    <td colSpan={6} style={{ padding: "64px 20px", textAlign: "center", color: "#71717a" }}>
+                    <td colSpan={6} style={{ padding: "64px 20px", textAlign: "center", color: "#9ca3af" }}>
                       No jobs yet
                     </td>
                   </tr>

@@ -189,7 +189,7 @@ export function UserTabs({
               <p style={{ fontSize: "24px", fontWeight: "700", color: "#fafafa" }}>
                 {effectiveBalance.effectiveBalance.toLocaleString()}
               </p>
-              <p style={{ fontSize: "13px", color: "#71717a" }}>
+              <p style={{ fontSize: "13px", color: "#9ca3af" }}>
                 Token Balance
                 {effectiveBalance.expiredTokens > 0 && (
                   <span style={{ color: "#f87171", marginLeft: "6px" }}>
@@ -207,19 +207,19 @@ export function UserTabs({
               width: "44px",
               height: "44px",
               borderRadius: "12px",
-              background: "linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(5, 150, 105, 0.3) 100%)",
-              border: "1px solid rgba(16, 185, 129, 0.3)",
+              background: "linear-gradient(135deg, rgba(0, 240, 255, 0.2) 0%, rgba(0, 184, 204, 0.3) 100%)",
+              border: "1px solid rgba(0, 240, 255, 0.3)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
             }}>
-              <DollarSign style={{ width: "20px", height: "20px", color: "#34d399" }} />
+              <DollarSign style={{ width: "20px", height: "20px", color: "#00f0ff" }} />
             </div>
             <div>
               <p style={{ fontSize: "24px", fontWeight: "700", color: "#fafafa" }}>
                 {formatCurrency(stats.totalRevenue)}
               </p>
-              <p style={{ fontSize: "13px", color: "#71717a" }}>Net Revenue</p>
+              <p style={{ fontSize: "13px", color: "#9ca3af" }}>Net Revenue</p>
             </div>
           </div>
         </div>
@@ -242,7 +242,7 @@ export function UserTabs({
               <p style={{ fontSize: "24px", fontWeight: "700", color: "#fafafa" }}>
                 {formatCurrency(stats.totalExpenses)}
               </p>
-              <p style={{ fontSize: "13px", color: "#71717a" }}>AI Expenses</p>
+              <p style={{ fontSize: "13px", color: "#9ca3af" }}>AI Expenses</p>
             </div>
           </div>
         </div>
@@ -265,7 +265,7 @@ export function UserTabs({
               <p style={{ fontSize: "24px", fontWeight: "700", color: "#fafafa" }}>
                 {roas}%
               </p>
-              <p style={{ fontSize: "13px", color: "#71717a" }}>ROAS</p>
+              <p style={{ fontSize: "13px", color: "#9ca3af" }}>ROAS</p>
             </div>
           </div>
         </div>
@@ -289,10 +289,10 @@ export function UserTabs({
               padding: "14px 20px",
               fontSize: "14px",
               fontWeight: "500",
-              color: activeTab === tab.id ? "#fafafa" : "#71717a",
+              color: activeTab === tab.id ? "#fafafa" : "#9ca3af",
               background: activeTab === tab.id ? "rgba(39, 39, 42, 0.6)" : "transparent",
               border: "none",
-              borderBottom: activeTab === tab.id ? "2px solid #10b981" : "2px solid transparent",
+              borderBottom: activeTab === tab.id ? "2px solid #00f0ff" : "2px solid transparent",
               cursor: "pointer",
               transition: "all 0.15s ease",
               marginBottom: "-1px",
@@ -305,8 +305,8 @@ export function UserTabs({
                 fontSize: "12px",
                 padding: "2px 8px",
                 borderRadius: "10px",
-                background: activeTab === tab.id ? "rgba(16, 185, 129, 0.2)" : "rgba(63, 63, 70, 0.5)",
-                color: activeTab === tab.id ? "#34d399" : "#a1a1aa",
+                background: activeTab === tab.id ? "rgba(0, 240, 255, 0.2)" : "rgba(63, 63, 70, 0.5)",
+                color: activeTab === tab.id ? "#00f0ff" : "#b8b8c8",
               }}>
                 {tab.count.toLocaleString()}
               </span>
@@ -330,7 +330,7 @@ export function UserTabs({
             </h2>
             <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
               <div>
-                <label style={{ fontSize: "12px", color: "#71717a", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                <label style={{ fontSize: "12px", color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.05em" }}>
                   Internal ID
                 </label>
                 <p style={{ fontSize: "14px", color: "#e4e4e7", fontFamily: "monospace", marginTop: "6px" }}>
@@ -338,7 +338,7 @@ export function UserTabs({
                 </p>
               </div>
               <div>
-                <label style={{ fontSize: "12px", color: "#71717a", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                <label style={{ fontSize: "12px", color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.05em" }}>
                   External ID
                 </label>
                 <p style={{ fontSize: "14px", color: "#e4e4e7", fontFamily: "monospace", marginTop: "6px" }}>
@@ -346,7 +346,7 @@ export function UserTabs({
                 </p>
               </div>
               <div>
-                <label style={{ fontSize: "12px", color: "#71717a", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                <label style={{ fontSize: "12px", color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.05em" }}>
                   Created
                 </label>
                 <p style={{ fontSize: "14px", color: "#e4e4e7", marginTop: "6px" }}>
@@ -354,7 +354,7 @@ export function UserTabs({
                 </p>
               </div>
               <div>
-                <label style={{ fontSize: "12px", color: "#71717a", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                <label style={{ fontSize: "12px", color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.05em" }}>
                   Last Updated
                 </label>
                 <p style={{ fontSize: "14px", color: "#e4e4e7", marginTop: "6px" }}>
@@ -376,14 +376,14 @@ export function UserTabs({
             </h2>
             <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <span style={{ fontSize: "14px", color: "#a1a1aa" }}>Total Granted</span>
+                <span style={{ fontSize: "14px", color: "#b8b8c8" }}>Total Granted</span>
                 <span style={{ fontSize: "16px", fontWeight: "600", color: "#34d399", display: "flex", alignItems: "center", gap: "6px" }}>
                   <ArrowUpRight style={{ width: "16px", height: "16px" }} />
                   {stats.totalTokensGranted.toLocaleString()}
                 </span>
               </div>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <span style={{ fontSize: "14px", color: "#a1a1aa" }}>Total Spent</span>
+                <span style={{ fontSize: "14px", color: "#b8b8c8" }}>Total Spent</span>
                 <span style={{ fontSize: "16px", fontWeight: "600", color: "#f87171", display: "flex", alignItems: "center", gap: "6px" }}>
                   <ArrowDownRight style={{ width: "16px", height: "16px" }} />
                   {stats.totalTokensSpent.toLocaleString()}
@@ -416,13 +416,13 @@ export function UserTabs({
             </h2>
             <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <span style={{ fontSize: "14px", color: "#a1a1aa" }}>Net Revenue</span>
+                <span style={{ fontSize: "14px", color: "#b8b8c8" }}>Net Revenue</span>
                 <span style={{ fontSize: "16px", fontWeight: "600", color: "#34d399" }}>
                   {formatCurrency(stats.totalRevenue)}
                 </span>
               </div>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <span style={{ fontSize: "14px", color: "#a1a1aa" }}>AI Expenses</span>
+                <span style={{ fontSize: "14px", color: "#b8b8c8" }}>AI Expenses</span>
                 <span style={{ fontSize: "16px", fontWeight: "600", color: "#f87171" }}>
                   {formatCurrency(stats.totalExpenses)}
                 </span>
@@ -483,7 +483,7 @@ export function UserTabs({
                 
                 if (allActivities.length === 0) {
                   return (
-                    <p style={{ fontSize: "14px", color: "#71717a", textAlign: "center", padding: "20px" }}>
+                    <p style={{ fontSize: "14px", color: "#9ca3af", textAlign: "center", padding: "20px" }}>
                       No activity yet
                     </p>
                   );
@@ -507,21 +507,21 @@ export function UserTabs({
                         height: "28px",
                         borderRadius: "6px",
                         background: activity.type === "revenue" 
-                          ? "rgba(16, 185, 129, 0.15)" 
+                          ? "rgba(0, 240, 255, 0.15)" 
                           : "rgba(251, 191, 36, 0.15)",
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
                       }}>
                         {activity.type === "revenue" ? (
-                          <DollarSign style={{ width: "14px", height: "14px", color: "#34d399" }} />
+                          <DollarSign style={{ width: "14px", height: "14px", color: "#00f0ff" }} />
                         ) : (
                           <Coins style={{ width: "14px", height: "14px", color: "#fbbf24" }} />
                         )}
                       </div>
                       <div>
                         <p style={{ fontSize: "13px", color: "#e4e4e7" }}>{activity.label}</p>
-                        <p style={{ fontSize: "11px", color: "#71717a", marginTop: "2px" }}>
+                        <p style={{ fontSize: "11px", color: "#9ca3af", marginTop: "2px" }}>
                           {formatDate(activity.date)}
                         </p>
                       </div>
@@ -564,7 +564,7 @@ export function UserTabs({
                       textAlign: "left", 
                       fontSize: "12px", 
                       fontWeight: "600",
-                      color: "#71717a",
+                      color: "#9ca3af",
                       textTransform: "uppercase",
                       letterSpacing: "0.05em",
                     }}
@@ -585,7 +585,7 @@ export function UserTabs({
                   <td style={{ padding: "18px 20px" }}>
                     <code style={{ 
                       fontSize: "12px", 
-                      color: "#a1a1aa", 
+                      color: "#b8b8c8", 
                       background: "rgba(39, 39, 42, 0.5)", 
                       padding: "6px 10px", 
                       borderRadius: "6px",
@@ -612,17 +612,17 @@ export function UserTabs({
                       <span style={{ color: "#fafafa", fontSize: "14px" }}>{job.tokenCost}</span>
                     </div>
                   </td>
-                  <td style={{ padding: "18px 20px", fontSize: "13px", color: "#71717a" }}>
+                  <td style={{ padding: "18px 20px", fontSize: "13px", color: "#9ca3af" }}>
                     {formatDate(job.createdAt)}
                   </td>
-                  <td style={{ padding: "18px 20px", fontSize: "13px", color: "#71717a" }}>
+                  <td style={{ padding: "18px 20px", fontSize: "13px", color: "#9ca3af" }}>
                     {job.completedAt ? formatDate(job.completedAt) : "-"}
                   </td>
                 </tr>
               ))}
               {jobs.length === 0 && (
                 <tr>
-                  <td colSpan={6} style={{ padding: "64px 20px", textAlign: "center", color: "#71717a" }}>
+                  <td colSpan={6} style={{ padding: "64px 20px", textAlign: "center", color: "#9ca3af" }}>
                     No jobs yet
                   </td>
                 </tr>
@@ -645,7 +645,7 @@ export function UserTabs({
                       textAlign: "left", 
                       fontSize: "12px", 
                       fontWeight: "600",
-                      color: "#71717a",
+                      color: "#9ca3af",
                       textTransform: "uppercase",
                       letterSpacing: "0.05em",
                     }}
@@ -677,7 +677,7 @@ export function UserTabs({
                         borderRadius: "6px",
                         background: entry.type.includes("REFUND") || entry.type.includes("DEBIT") 
                           ? "rgba(239, 68, 68, 0.15)" 
-                          : "rgba(16, 185, 129, 0.15)",
+                          : "rgba(0, 240, 255, 0.15)",
                         color: entry.type.includes("REFUND") || entry.type.includes("DEBIT")
                           ? "#f87171"
                           : "#34d399",
@@ -699,22 +699,22 @@ export function UserTabs({
                         {entry.amount > 0 ? "+" : ""}{entry.amount}
                       </span>
                     </td>
-                    <td style={{ padding: "18px 20px", fontSize: "14px", color: "#a1a1aa" }}>
+                    <td style={{ padding: "18px 20px", fontSize: "14px", color: "#b8b8c8" }}>
                       {entry.balanceAfter}
                     </td>
-                    <td style={{ padding: "18px 20px", fontSize: "13px", color: "#71717a" }}>
+                    <td style={{ padding: "18px 20px", fontSize: "13px", color: "#9ca3af" }}>
                       {formatDate(entry.createdAt)}
                     </td>
                     <td style={{ padding: "18px 20px", fontSize: "13px" }}>
                       {entry.expiresAt ? (
                         <span style={{ 
-                          color: isExpired ? "#f87171" : isExpiringSoon ? "#fbbf24" : "#71717a",
+                          color: isExpired ? "#f87171" : isExpiringSoon ? "#fbbf24" : "#9ca3af",
                           fontWeight: isExpired || isExpiringSoon ? "500" : "400",
                         }}>
                           {isExpired ? "Expired" : formatDate(entry.expiresAt)}
                         </span>
                       ) : (
-                        <span style={{ color: "#52525b" }}>Never</span>
+                        <span style={{ color: "#71717a" }}>Never</span>
                       )}
                     </td>
                   </tr>
@@ -722,7 +722,7 @@ export function UserTabs({
               })}
               {tokenLedger.length === 0 && (
                 <tr>
-                  <td colSpan={6} style={{ padding: "64px 20px", textAlign: "center", color: "#71717a" }}>
+                  <td colSpan={6} style={{ padding: "64px 20px", textAlign: "center", color: "#9ca3af" }}>
                     No token history
                   </td>
                 </tr>
@@ -745,7 +745,7 @@ export function UserTabs({
                       textAlign: "left", 
                       fontSize: "12px", 
                       fontWeight: "600",
-                      color: "#71717a",
+                      color: "#9ca3af",
                       textTransform: "uppercase",
                       letterSpacing: "0.05em",
                     }}
@@ -770,7 +770,7 @@ export function UserTabs({
                         borderRadius: "8px",
                         background: event.eventType === "CANCELLATION" 
                           ? "rgba(239, 68, 68, 0.15)" 
-                          : "rgba(16, 185, 129, 0.15)",
+                          : "rgba(0, 240, 255, 0.15)",
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
@@ -783,7 +783,7 @@ export function UserTabs({
                           {getEventLabel(event.eventType)}
                         </p>
                         {event.renewalNumber && event.renewalNumber > 1 && (
-                          <p style={{ fontSize: "11px", color: "#71717a" }}>
+                          <p style={{ fontSize: "11px", color: "#9ca3af" }}>
                             Renewal #{event.renewalNumber}
                           </p>
                         )}
@@ -800,7 +800,7 @@ export function UserTabs({
                       {event.transactionId && (
                         <code style={{ 
                           fontSize: "11px", 
-                          color: "#a1a1aa", 
+                          color: "#b8b8c8", 
                           fontFamily: "monospace",
                         }}>
                           {event.transactionId}
@@ -808,14 +808,14 @@ export function UserTabs({
                       )}
                       <code style={{ 
                         fontSize: "10px", 
-                        color: "#71717a", 
+                        color: "#9ca3af", 
                         fontFamily: "monospace",
                       }}>
                         {event.revenueCatEventId}
                       </code>
                     </div>
                   </td>
-                  <td style={{ padding: "18px 20px", fontSize: "13px", color: "#a1a1aa", fontFamily: "monospace" }}>
+                  <td style={{ padding: "18px 20px", fontSize: "13px", color: "#b8b8c8", fontFamily: "monospace" }}>
                     {event.productId || "-"}
                   </td>
                   <td style={{ padding: "18px 20px" }}>
@@ -824,7 +824,7 @@ export function UserTabs({
                       padding: "4px 8px",
                       borderRadius: "4px",
                       background: "rgba(39, 39, 42, 0.6)",
-                      color: "#a1a1aa",
+                      color: "#b8b8c8",
                     }}>
                       {event.store || "-"}
                     </span>
@@ -843,14 +843,14 @@ export function UserTabs({
                       </span>
                     ) : "-"}
                   </td>
-                  <td style={{ padding: "18px 20px", fontSize: "13px", color: "#71717a" }}>
+                  <td style={{ padding: "18px 20px", fontSize: "13px", color: "#9ca3af" }}>
                     {formatEventTimestamp(event.eventTimestampMs)}
                   </td>
                 </tr>
               ))}
               {revenueEvents.length === 0 && (
                 <tr>
-                  <td colSpan={7} style={{ padding: "64px 20px", textAlign: "center", color: "#71717a" }}>
+                  <td colSpan={7} style={{ padding: "64px 20px", textAlign: "center", color: "#9ca3af" }}>
                     No revenue events. Connect RevenueCat to track purchases and subscriptions.
                   </td>
                 </tr>

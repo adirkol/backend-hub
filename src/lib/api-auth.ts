@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
-import { calculateExpirationDate } from "@/lib/tokens";
+import { calculateExpirationDate, getEffectiveTokenBalance } from "@/lib/tokens";
 
 export interface ApiAuthResult {
   success: boolean;
@@ -109,6 +109,9 @@ export async function validateApiRequest(
       return { success: false, error: "User is deactivated" };
     }
 
+    // Get effective balance (excludes expired tokens)
+    const { effectiveBalance } = await getEffectiveTokenBalance(appUser.id);
+
     return {
       success: true,
       app: {
@@ -125,7 +128,7 @@ export async function validateApiRequest(
       appUser: {
         id: appUser.id,
         externalId: appUser.externalId,
-        tokenBalance: appUser.tokenBalance,
+        tokenBalance: effectiveBalance,
       },
     };
   }

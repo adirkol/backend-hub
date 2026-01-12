@@ -52,9 +52,9 @@ export function TabbedCodeBlock({
           }}
         >
           {isOpen ? (
-            <ChevronDown style={{ width: "16px", height: "16px", color: "#71717a" }} />
+            <ChevronDown style={{ width: "16px", height: "16px", color: "#9ca3af" }} />
           ) : (
-            <ChevronRight style={{ width: "16px", height: "16px", color: "#71717a" }} />
+            <ChevronRight style={{ width: "16px", height: "16px", color: "#9ca3af" }} />
           )}
           <span style={{ fontSize: "14px", color: "#e4e4e7", fontWeight: "500" }}>
             {title}
@@ -92,19 +92,19 @@ export function TabbedCodeBlock({
                   <Terminal style={{ 
                     width: "14px", 
                     height: "14px", 
-                    color: activeTab === index ? "#818cf8" : "#71717a" 
+                    color: activeTab === index ? "#818cf8" : "#9ca3af" 
                   }} />
                 ) : (
                   <Code2 style={{ 
                     width: "14px", 
                     height: "14px", 
-                    color: activeTab === index ? "#818cf8" : "#71717a" 
+                    color: activeTab === index ? "#818cf8" : "#9ca3af" 
                   }} />
                 )}
                 <span style={{ 
                   fontSize: "13px", 
                   fontWeight: "500",
-                  color: activeTab === index ? "#e4e4e7" : "#71717a",
+                  color: activeTab === index ? "#e4e4e7" : "#9ca3af",
                 }}>
                   {tab.label}
                 </span>
