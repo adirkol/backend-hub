@@ -34,6 +34,7 @@ interface AppData {
   webhookSecret: string | null;
   isEnabled: boolean;
   defaultTokenGrant: number;
+  tokenExpirationDays: number | null;
   rateLimitPerUser: number;
   rateLimitPerApp: number;
   revenueCatAppId: string | null;
