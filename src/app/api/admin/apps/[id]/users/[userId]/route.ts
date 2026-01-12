@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { Prisma } from "@prisma/client";
 import { z } from "zod";
 import { auditAdminAction } from "@/lib/audit";
 import { getEffectiveTokenBalance } from "@/lib/tokens";
@@ -114,9 +115,9 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
     const { isActive, metadata } = validation.data;
 
     // Build update data
-    const updateData: { isActive?: boolean; metadata?: unknown } = {};
+    const updateData: Prisma.AppUserUpdateInput = {};
     if (isActive !== undefined) updateData.isActive = isActive;
-    if (metadata !== undefined) updateData.metadata = metadata;
+    if (metadata !== undefined) updateData.metadata = metadata as Prisma.InputJsonValue;
 
     // Update user
     const updatedUser = await prisma.appUser.update({

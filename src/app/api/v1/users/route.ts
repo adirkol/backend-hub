@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { validateApiRequest } from "@/lib/api-auth";
 import { prisma } from "@/lib/db";
 import { z } from "zod";
-import { TokenEntryType } from "@prisma/client";
+import { TokenEntryType, Prisma } from "@prisma/client";
 import { calculateExpirationDate } from "@/lib/tokens";
 
 const CreateUserSchema = z.object({
@@ -60,13 +60,13 @@ export async function POST(req: NextRequest) {
             data: {
               tokenBalance: syncedBalance,
               needsTokenSync: false,
-              metadata: metadata || existingUser.metadata,
+              metadata: metadata ? (metadata as Prisma.InputJsonValue) : undefined,
             },
           });
 
           // Log the token sync
           if (initial_tokens > 0) {
-            const expiresAt = calculateExpirationDate(auth.app.tokenExpirationDays);
+            const expiresAt = calculateExpirationDate(auth.app!.tokenExpirationDays);
             await tx.tokenLedgerEntry.create({
               data: {
                 appUserId: existingUser.id,
@@ -123,7 +123,7 @@ export async function POST(req: NextRequest) {
         appId: auth.app.id,
         externalId: external_id,
         tokenBalance: totalTokens,
-        metadata: metadata || null,
+        metadata: metadata ? (metadata as Prisma.InputJsonValue) : undefined,
         needsTokenSync: false,
       },
     });

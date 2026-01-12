@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { validateApiRequest } from "@/lib/api-auth";
 import { prisma } from "@/lib/db";
+import { Prisma } from "@prisma/client";
 import { getEffectiveTokenBalance } from "@/lib/tokens";
 
 interface RouteParams {
@@ -89,10 +90,10 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
     }
 
     // Update allowed fields
-    const updateData: { metadata?: unknown; isActive?: boolean } = {};
+    const updateData: Prisma.AppUserUpdateInput = {};
 
     if (body.metadata !== undefined) {
-      updateData.metadata = body.metadata;
+      updateData.metadata = body.metadata as Prisma.InputJsonValue;
     }
     if (typeof body.is_active === "boolean") {
       updateData.isActive = body.is_active;
