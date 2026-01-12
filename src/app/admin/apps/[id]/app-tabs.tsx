@@ -16,7 +16,8 @@ interface AppUser {
 interface Job {
   id: string;
   status: string;
-  tokensCharged: number | null;
+  tokensCharged: boolean;
+  tokenCost: number;
   createdAt: string;
   completedAt: string | null;
   appUser: { externalId: string } | null;
@@ -509,10 +510,10 @@ export function AppTabs({ app, users, jobs, userCount, jobCount }: AppTabsProps)
                       </span>
                     </td>
                     <td style={{ padding: "18px 20px" }}>
-                      {job.tokensCharged !== null ? (
+                      {job.tokensCharged ? (
                         <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                           <Coins style={{ width: "14px", height: "14px", color: "#facc15" }} />
-                          <span style={{ color: "#fafafa", fontSize: "14px" }}>{job.tokensCharged}</span>
+                          <span style={{ color: "#fafafa", fontSize: "14px" }}>{job.tokenCost}</span>
                         </div>
                       ) : (
                         <span style={{ color: "#9ca3af", fontSize: "14px" }}>-</span>

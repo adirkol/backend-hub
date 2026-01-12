@@ -54,9 +54,14 @@ export class ReplicateAdapter implements ProviderAdapter {
       const completedPrediction = await this.client.wait(prediction);
 
       if (completedPrediction.status === "failed" || completedPrediction.status === "canceled") {
+        const errorMsg = completedPrediction.error 
+          ? (typeof completedPrediction.error === 'string' 
+              ? completedPrediction.error 
+              : JSON.stringify(completedPrediction.error))
+          : `Prediction ${completedPrediction.status}`;
         return {
           success: false,
-          error: completedPrediction.error || `Prediction ${completedPrediction.status}`,
+          error: errorMsg,
         };
       }
 
