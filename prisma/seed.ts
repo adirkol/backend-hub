@@ -4,27 +4,33 @@ import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
 async function main() {
-  const adminEmail = process.env.ADMIN_EMAIL;
+  const adminEmails = process.env.ADMIN_EMAILS;
 
-  if (!adminEmail) {
-    console.error("❌ ADMIN_EMAIL environment variable is required");
+  if (!adminEmails) {
+    console.error("❌ ADMIN_EMAILS environment variable is required (comma-separated list)");
     process.exit(1);
   }
 
   console.log("🌱 Seeding database...\n");
 
-  // Create admin user
-  const adminUser = await prisma.user.upsert({
-    where: { email: adminEmail },
-    update: {},
-    create: {
-      email: adminEmail,
-      name: "Admin",
-      role: "SUPER_ADMIN",
-    },
-  });
+  // Parse comma-separated emails and create admin users
+  const emails = adminEmails.split(",").map((e) => e.trim()).filter(Boolean);
+  const createdAdmins: string[] = [];
 
-  console.log(`✅ Admin user created/verified: ${adminUser.email}`);
+  for (const email of emails) {
+    const adminUser = await prisma.user.upsert({
+      where: { email },
+      update: {},
+      create: {
+        email,
+        name: "Admin",
+        role: "SUPER_ADMIN",
+      },
+    });
+    createdAdmins.push(adminUser.email);
+  }
+
+  console.log(`✅ Admin users created/verified: ${createdAdmins.join(", ")}`);
 
   // Create sample AI providers
   const defapi = await prisma.aIProvider.upsert({
@@ -277,7 +283,7 @@ async function main() {
   console.log("✅ Model provider configurations created");
 
   console.log("\n🎉 Seeding complete!");
-  console.log(`\n📧 You can now login at /admin/login with: ${adminEmail}`);
+  console.log(`\n📧 You can now login at /admin/login with: ${createdAdmins.join(" or ")}`);
 }
 
 main()
