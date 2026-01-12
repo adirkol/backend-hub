@@ -7,7 +7,7 @@ import { calculateExpirationDate } from "@/lib/tokens";
 
 const CreateUserSchema = z.object({
   external_id: z.string().min(1).max(255),
-  metadata: z.record(z.unknown()).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
   // Optional: Initial tokens from the client-side system
   // Used when syncing tokens for users created via RevenueCat webhook
   initial_tokens: z.number().int().min(0).optional(),

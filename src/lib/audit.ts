@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { Prisma } from "@prisma/client";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { NextRequest } from "next/server";
@@ -79,7 +80,7 @@ export async function createAuditLog(input: AuditLogInput): Promise<void> {
         entityId: input.entityId,
         actorType: input.actorType,
         actorId: input.actorId ?? null,
-        metadata: input.metadata ?? null,
+        metadata: input.metadata ? (input.metadata as Prisma.InputJsonValue) : undefined,
         ipAddress: input.ipAddress ?? null,
       },
     });

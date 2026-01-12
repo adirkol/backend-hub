@@ -3,7 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { auditAdminAction } from "@/lib/audit";
-import { Prisma } from "@prisma/client";
+import { Prisma, TokenEntryType } from "@prisma/client";
 
 interface ImportOptions {
   mode: "merge" | "replace"; // merge = skip existing, replace = overwrite
@@ -208,11 +208,11 @@ async function importProviders(
           await prisma.aIProvider.update({
             where: { id: provider.id as string },
             data: {
-              name: provider.name,
-              slug: provider.slug,
-              baseUrl: provider.baseUrl,
-              apiKeyEnvVar: provider.apiKeyEnvVar,
-              isEnabled: provider.isEnabled,
+              name: provider.name as string,
+              displayName: provider.displayName as string,
+              baseUrl: provider.baseUrl as string | null,
+              apiKeyEnvVar: provider.apiKeyEnvVar as string,
+              isEnabled: provider.isEnabled as boolean,
             },
           });
           result.updated++;
@@ -224,11 +224,11 @@ async function importProviders(
           await prisma.aIProvider.create({
             data: {
               id: provider.id as string,
-              name: provider.name,
-              slug: provider.slug,
-              baseUrl: provider.baseUrl,
-              apiKeyEnvVar: provider.apiKeyEnvVar,
-              isEnabled: provider.isEnabled ?? true,
+              name: provider.name as string,
+              displayName: provider.displayName as string,
+              baseUrl: provider.baseUrl as string | null,
+              apiKeyEnvVar: provider.apiKeyEnvVar as string,
+              isEnabled: (provider.isEnabled as boolean) ?? true,
             },
           });
         }
@@ -340,10 +340,13 @@ async function importModels(
               name: model.name as string,
               displayName: model.displayName as string,
               description: model.description as string | null,
-              category: model.category as string,
-              capabilities: model.capabilities as string[],
+              modelFamily: model.modelFamily as string | null,
               isEnabled: model.isEnabled as boolean,
               tokenCost: model.tokenCost as number,
+              supportsImages: model.supportsImages as boolean ?? true,
+              supportsPrompt: model.supportsPrompt as boolean ?? true,
+              maxInputImages: model.maxInputImages as number ?? 1,
+              supportedAspectRatios: model.supportedAspectRatios as string[] ?? ["1:1"],
             },
           });
 
@@ -376,10 +379,13 @@ async function importModels(
               name: model.name as string,
               displayName: model.displayName as string,
               description: model.description as string | null,
-              category: model.category as string ?? "general",
-              capabilities: model.capabilities as string[] ?? [],
+              modelFamily: model.modelFamily as string | null,
               isEnabled: model.isEnabled as boolean ?? true,
               tokenCost: model.tokenCost as number ?? 1,
+              supportsImages: model.supportsImages as boolean ?? true,
+              supportsPrompt: model.supportsPrompt as boolean ?? true,
+              maxInputImages: model.maxInputImages as number ?? 1,
+              supportedAspectRatios: model.supportedAspectRatios as string[] ?? ["1:1"],
             },
           });
 
@@ -506,7 +512,7 @@ async function importTokenLedger(
               appUserId: entry.appUserId as string,
               amount: entry.amount as number,
               balanceAfter: entry.balanceAfter as number,
-              type: entry.type as string,
+              type: entry.type as TokenEntryType,
               description: entry.description as string | null,
               idempotencyKey: entry.idempotencyKey as string | null,
               jobId: entry.jobId as string | null,
