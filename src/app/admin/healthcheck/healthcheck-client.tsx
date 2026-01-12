@@ -44,7 +44,7 @@ interface TestResult {
   status: "success" | "error" | "pending" | "running";
   message: string;
   latencyMs?: number;
-  response?: unknown;
+  response?: Record<string, unknown> | null;
   timestamp: Date;
   jobId?: string;
   taskId?: string;
@@ -1060,7 +1060,7 @@ export function HealthcheckClient({ models }: Props) {
                                       }}>
                                         {createResult.message}
                                       </div>
-                                      {createResult.response && (
+                                      {!!createResult.response && (
                                         <pre style={{
                                           padding: "10px",
                                           background: "rgba(9, 9, 11, 0.6)",
@@ -1114,7 +1114,7 @@ export function HealthcheckClient({ models }: Props) {
                                           ))}
                                         </div>
                                       )}
-                                      {pollResult.response && (
+                                      {!!pollResult.response && (
                                         <pre style={{
                                           padding: "10px",
                                           background: "rgba(9, 9, 11, 0.6)",
