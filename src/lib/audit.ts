@@ -32,8 +32,18 @@ export type AuditAction =
   // Job actions
   | "job.cancelled"
   | "job.retried"
+  // RevenueCat webhook events
+  | "revenuecat.initial_purchase"
+  | "revenuecat.renewal"
+  | "revenuecat.non_renewing_purchase"
+  | "revenuecat.cancellation"
+  | "revenuecat.token_grant"
+  | "revenuecat.token_deduction"
+  | "revenuecat.user_created"
   // System actions
-  | "system.settings_updated";
+  | "system.settings_updated"
+  | "system.backup_exported"
+  | "system.backup_imported";
 
 export type EntityType =
   | "App"
@@ -42,9 +52,10 @@ export type EntityType =
   | "AppUser"
   | "GenerationJob"
   | "ModelProviderConfig"
+  | "RevenueCatEvent"
   | "System";
 
-export type ActorType = "admin" | "api" | "system";
+export type ActorType = "admin" | "api" | "system" | "revenuecat";
 
 export interface AuditLogInput {
   action: AuditAction;
@@ -163,6 +174,77 @@ export async function auditSystemAction(
     entityId,
     actorType: "system",
     metadata,
+  });
+}
+
+/**
+ * Helper to create audit log for RevenueCat webhook events.
+ * Captures comprehensive event details for monitoring and debugging.
+ */
+export async function auditRevenueCatEvent(
+  action: AuditAction,
+  entityId: string,
+  metadata: {
+    // Event identification
+    revenueCatEventId: string;
+    eventType: string;
+    eventCategory: string;
+    eventTimestamp: Date;
+    
+    // App info
+    appId: string;
+    appName: string;
+    revenueCatAppId: string;
+    
+    // User info
+    appUserId: string;
+    userExternalId: string;
+    userCreatedByWebhook?: boolean;
+    
+    // Transaction details
+    transactionId?: string | null;
+    originalTransactionId?: string | null;
+    productId?: string | null;
+    store?: string | null;
+    environment?: string;
+    
+    // Token details (for virtual currency events)
+    tokenAmount?: number | null;
+    tokenCurrencyCode?: string | null;
+    tokenSource?: string | null;
+    newTokenBalance?: number;
+    
+    // Revenue details (for purchase events)
+    priceUsd?: number | null;
+    currency?: string | null;
+    taxPercentage?: number | null;
+    commissionPercentage?: number | null;
+    netRevenueUsd?: number | null;
+    
+    // Subscription details
+    renewalNumber?: number | null;
+    isTrialConversion?: boolean | null;
+    offerCode?: string | null;
+    countryCode?: string | null;
+    purchasedAt?: Date | null;
+    expiresAt?: Date | null;
+    
+    // Cancellation details
+    cancelReason?: string | null;
+  }
+): Promise<void> {
+  await createAuditLog({
+    action,
+    entityType: "RevenueCatEvent",
+    entityId,
+    actorType: "revenuecat",
+    actorId: metadata.revenueCatAppId,
+    metadata: {
+      // Clean up null values for cleaner logs
+      ...Object.fromEntries(
+        Object.entries(metadata).filter(([, v]) => v !== null && v !== undefined)
+      ),
+    },
   });
 }
 

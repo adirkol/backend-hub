@@ -3,6 +3,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { TokenEntryType, RevenueCatEventType, EventCategory } from "@prisma/client";
 import { calculateExpirationDate } from "@/lib/tokens";
+import { auditRevenueCatEvent, AuditAction } from "@/lib/audit";
 
 interface RouteParams {
   params: Promise<{ appId: string }>;
@@ -160,6 +161,7 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
 
     // Get or create user
     const revenueCatUserId = event.app_user_id as string;
+    let userWasCreated = false;
     let appUser = await prisma.appUser.findUnique({
       where: {
         appId_externalId: {
@@ -182,8 +184,23 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
           needsTokenSync: true, // Flag for token sync when app calls POST /api/v1/users
         },
       });
+      userWasCreated = true;
 
       console.log(`RevenueCat webhook: Created user ${revenueCatUserId} with needsTokenSync=true (old user)`);
+      
+      // Audit log for user creation via RevenueCat
+      await auditRevenueCatEvent("revenuecat.user_created", appUser.id, {
+        revenueCatEventId: event.id as string,
+        eventType: eventType,
+        eventCategory: EVENT_CATEGORY_MAP[eventType],
+        eventTimestamp: new Date(event.event_timestamp_ms as number),
+        appId: app.id,
+        appName: app.name,
+        revenueCatAppId: appId,
+        appUserId: appUser.id,
+        userExternalId: revenueCatUserId,
+        userCreatedByWebhook: true,
+      });
     }
 
     // Process based on event type
@@ -304,7 +321,7 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
     }
 
     // Store the event
-    await prisma.revenueCatEvent.create({
+    const storedEvent = await prisma.revenueCatEvent.create({
       data: {
         appId: app.id,
         appUserId: appUser.id,
@@ -335,6 +352,79 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
         rawPayload: body,
         processed: true,
       },
+    });
+
+    // Determine the audit action based on event type
+    let auditAction: AuditAction;
+    switch (eventType) {
+      case "INITIAL_PURCHASE":
+        auditAction = "revenuecat.initial_purchase";
+        break;
+      case "RENEWAL":
+        auditAction = "revenuecat.renewal";
+        break;
+      case "NON_RENEWING_PURCHASE":
+        auditAction = "revenuecat.non_renewing_purchase";
+        break;
+      case "CANCELLATION":
+        auditAction = "revenuecat.cancellation";
+        break;
+      case "VIRTUAL_CURRENCY_TRANSACTION":
+        auditAction = tokenAmount && tokenAmount > 0 
+          ? "revenuecat.token_grant" 
+          : "revenuecat.token_deduction";
+        break;
+      default:
+        auditAction = "revenuecat.initial_purchase"; // Fallback
+    }
+
+    // Create comprehensive audit log
+    await auditRevenueCatEvent(auditAction, storedEvent.id, {
+      // Event identification
+      revenueCatEventId: eventId,
+      eventType,
+      eventCategory: EVENT_CATEGORY_MAP[eventType],
+      eventTimestamp: new Date(event.event_timestamp_ms as number),
+      
+      // App info
+      appId: app.id,
+      appName: app.name,
+      revenueCatAppId: appId,
+      
+      // User info
+      appUserId: appUser.id,
+      userExternalId: revenueCatUserId,
+      userCreatedByWebhook: userWasCreated,
+      
+      // Transaction details
+      transactionId,
+      originalTransactionId,
+      productId: (event.product_id as string) || null,
+      store: (event.store as string) || null,
+      environment: (event.environment as string) || "PRODUCTION",
+      
+      // Token details
+      tokenAmount,
+      tokenCurrencyCode,
+      tokenSource: source,
+      newTokenBalance: appUser.tokenBalance,
+      
+      // Revenue details
+      priceUsd,
+      taxPercentage,
+      commissionPercentage,
+      netRevenueUsd,
+      
+      // Subscription details
+      renewalNumber,
+      isTrialConversion,
+      offerCode,
+      countryCode,
+      purchasedAt: purchasedAtMs ? new Date(purchasedAtMs) : null,
+      expiresAt: expirationAtMs ? new Date(expirationAtMs) : null,
+      
+      // Cancellation details
+      cancelReason,
     });
 
     console.log(`RevenueCat webhook: Processed ${eventType} for user ${revenueCatUserId} in app ${app.name}`);

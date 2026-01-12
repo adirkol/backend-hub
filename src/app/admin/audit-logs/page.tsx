@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { Shield, Filter, ChevronDown, ChevronRight, RefreshCw, Clock, User, Server, FileText } from "lucide-react";
+import { useState, useEffect, useCallback, Fragment } from "react";
+import { Shield, Filter, RefreshCw, User, Server, Webhook } from "lucide-react";
 
 interface AuditLog {
   id: string;
@@ -22,7 +22,7 @@ interface AuditLogsResponse {
   offset: number;
 }
 
-const entityTypes = ["App", "AIModel", "AppUser", "ModelProviderConfig"];
+const entityTypes = ["App", "AIModel", "AppUser", "ModelProviderConfig", "RevenueCatEvent"];
 const actionTypes = [
   "app.created",
   "app.updated",
@@ -34,10 +34,67 @@ const actionTypes = [
   "user.tokens_adjusted",
   "user.status_changed",
   "user.deleted",
+  "revenuecat.initial_purchase",
+  "revenuecat.renewal",
+  "revenuecat.non_renewing_purchase",
+  "revenuecat.cancellation",
+  "revenuecat.token_grant",
+  "revenuecat.token_deduction",
+  "revenuecat.user_created",
 ];
+
+// Extract user identifier from audit log metadata
+function getUserIdentifier(log: AuditLog): string | null {
+  const metadata = log.metadata;
+  
+  // Check various possible user ID fields in metadata
+  if (metadata) {
+    // RevenueCat events - prefer external user ID
+    if (metadata.userExternalId) return String(metadata.userExternalId);
+    if (metadata.revenueCatUserId) return String(metadata.revenueCatUserId);
+    
+    // Admin actions on users
+    if (metadata.userId) return String(metadata.userId);
+    if (metadata.externalId) return String(metadata.externalId);
+  }
+  
+  // If entity type is AppUser, the entity_id is the user
+  if (log.entity_type === "AppUser") {
+    return log.entity_id;
+  }
+  
+  return null;
+}
 
 function ActionBadge({ action }: { action: string }) {
   const getStyle = () => {
+    // RevenueCat events - special styling
+    if (action.startsWith("revenuecat.")) {
+      if (action.includes("purchase") || action.includes("renewal")) {
+        // Revenue events - green (money coming in)
+        return { bg: "rgba(16, 185, 129, 0.15)", color: "#34d399", border: "rgba(16, 185, 129, 0.3)" };
+      }
+      if (action.includes("cancellation")) {
+        // Cancellation - red
+        return { bg: "rgba(239, 68, 68, 0.15)", color: "#f87171", border: "rgba(239, 68, 68, 0.3)" };
+      }
+      if (action.includes("token_grant")) {
+        // Token grant - cyan
+        return { bg: "rgba(0, 240, 255, 0.15)", color: "#00f0ff", border: "rgba(0, 240, 255, 0.3)" };
+      }
+      if (action.includes("token_deduction")) {
+        // Token deduction - orange
+        return { bg: "rgba(245, 158, 11, 0.15)", color: "#fbbf24", border: "rgba(245, 158, 11, 0.3)" };
+      }
+      if (action.includes("user_created")) {
+        // User created via RC - purple
+        return { bg: "rgba(139, 92, 246, 0.15)", color: "#a78bfa", border: "rgba(139, 92, 246, 0.3)" };
+      }
+      // Default RevenueCat - purple
+      return { bg: "rgba(139, 92, 246, 0.15)", color: "#a78bfa", border: "rgba(139, 92, 246, 0.3)" };
+    }
+    
+    // Standard admin actions
     if (action.includes("created")) {
       return { bg: "rgba(16, 185, 129, 0.15)", color: "#34d399", border: "rgba(16, 185, 129, 0.3)" };
     }
@@ -51,13 +108,19 @@ function ActionBadge({ action }: { action: string }) {
   };
 
   const style = getStyle();
+  
+  // Format action name for display
+  const displayAction = action.startsWith("revenuecat.") 
+    ? action.replace("revenuecat.", "RC: ").replace(/_/g, " ")
+    : action;
 
   return (
     <span
       style={{
-        padding: "5px 12px",
+        display: "inline-block",
+        padding: "4px 10px",
         borderRadius: "9999px",
-        fontSize: "12px",
+        fontSize: "11px",
         fontWeight: "500",
         background: style.bg,
         color: style.color,
@@ -65,7 +128,7 @@ function ActionBadge({ action }: { action: string }) {
         whiteSpace: "nowrap",
       }}
     >
-      {action}
+      {displayAction}
     </span>
   );
 }
@@ -76,6 +139,7 @@ function EntityTypeBadge({ type }: { type: string }) {
     AIModel: { bg: "rgba(59, 130, 246, 0.15)", color: "#60a5fa", border: "rgba(59, 130, 246, 0.3)" },
     AppUser: { bg: "rgba(236, 72, 153, 0.15)", color: "#f472b6", border: "rgba(236, 72, 153, 0.3)" },
     ModelProviderConfig: { bg: "rgba(34, 197, 94, 0.15)", color: "#4ade80", border: "rgba(34, 197, 94, 0.3)" },
+    RevenueCatEvent: { bg: "rgba(251, 146, 60, 0.15)", color: "#fb923c", border: "rgba(251, 146, 60, 0.3)" },
   };
 
   const style = colors[type] || { bg: "rgba(113, 113, 122, 0.2)", color: "#b8b8c8", border: "rgba(113, 113, 122, 0.3)" };
@@ -83,13 +147,15 @@ function EntityTypeBadge({ type }: { type: string }) {
   return (
     <span
       style={{
-        padding: "4px 10px",
+        display: "inline-block",
+        padding: "4px 8px",
         borderRadius: "6px",
-        fontSize: "12px",
+        fontSize: "11px",
         fontWeight: "500",
         background: style.bg,
         color: style.color,
         border: `1px solid ${style.border}`,
+        whiteSpace: "nowrap",
       }}
     >
       {type}
@@ -97,62 +163,6 @@ function EntityTypeBadge({ type }: { type: string }) {
   );
 }
 
-function MetadataViewer({ metadata, isOpen, onToggle }: { metadata: Record<string, unknown> | null; isOpen: boolean; onToggle: () => void }) {
-  if (!metadata || Object.keys(metadata).length === 0) {
-    return <span style={{ color: "#71717a", fontSize: "13px" }}>—</span>;
-  }
-
-  return (
-    <div>
-      <button
-        onClick={onToggle}
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "6px",
-          padding: "6px 12px",
-          borderRadius: "8px",
-          fontSize: "12px",
-          fontWeight: "500",
-          color: "#00f0ff",
-          background: "rgba(0, 240, 255, 0.08)",
-          border: "1px solid rgba(0, 240, 255, 0.2)",
-          cursor: "pointer",
-          transition: "all 0.15s ease",
-        }}
-      >
-        {isOpen ? <ChevronDown style={{ width: "14px", height: "14px" }} /> : <ChevronRight style={{ width: "14px", height: "14px" }} />}
-        View Details
-      </button>
-      {isOpen && (
-        <div
-          style={{
-            marginTop: "12px",
-            padding: "14px",
-            borderRadius: "10px",
-            background: "rgba(0, 0, 0, 0.4)",
-            border: "1px solid rgba(60, 60, 80, 0.3)",
-            maxWidth: "400px",
-            overflow: "auto",
-          }}
-        >
-          <pre
-            style={{
-              fontSize: "11px",
-              color: "#b8b8c8",
-              whiteSpace: "pre-wrap",
-              wordBreak: "break-all",
-              fontFamily: "ui-monospace, SFMono-Regular, monospace",
-              margin: 0,
-            }}
-          >
-            {JSON.stringify(metadata, null, 2)}
-          </pre>
-        </div>
-      )}
-    </div>
-  );
-}
 
 export default function AuditLogsPage() {
   const [logs, setLogs] = useState<AuditLog[]>([]);
@@ -374,15 +384,15 @@ export default function AuditLogsPage() {
           <table style={{ width: "100%", borderCollapse: "collapse" }}>
             <thead>
               <tr style={{ borderBottom: "1px solid rgba(63, 63, 70, 0.4)" }}>
-                {["Time", "Action", "Entity", "Entity ID", "Actor", "IP Address", "Metadata"].map((header) => (
+                {["Time", "Action", "User", "Entity", "Actor", "IP"].map((header) => (
                   <th
                     key={header}
                     style={{
-                      padding: "16px 20px",
+                      padding: "14px 12px",
                       textAlign: "left",
-                      fontSize: "12px",
+                      fontSize: "11px",
                       fontWeight: "600",
-                      color: "#9ca3af",
+                      color: "#71717a",
                       textTransform: "uppercase",
                       letterSpacing: "0.05em",
                     }}
@@ -395,7 +405,7 @@ export default function AuditLogsPage() {
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={7} style={{ padding: "64px 20px", textAlign: "center" }}>
+                  <td colSpan={6} style={{ padding: "64px 20px", textAlign: "center" }}>
                     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "12px" }}>
                       <RefreshCw style={{ width: "24px", height: "24px", color: "#00f0ff", animation: "spin 1s linear infinite" }} />
                       <span style={{ color: "#9ca3af" }}>Loading audit logs...</span>
@@ -404,7 +414,7 @@ export default function AuditLogsPage() {
                 </tr>
               ) : logs.length === 0 ? (
                 <tr>
-                  <td colSpan={7} style={{ padding: "64px 20px", textAlign: "center" }}>
+                  <td colSpan={6} style={{ padding: "64px 20px", textAlign: "center" }}>
                     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "12px" }}>
                       <Shield style={{ width: "48px", height: "48px", color: "#3f3f46" }} />
                       <span style={{ color: "#9ca3af", fontSize: "15px" }}>No audit logs found</span>
@@ -415,87 +425,148 @@ export default function AuditLogsPage() {
                   </td>
                 </tr>
               ) : (
-                logs.map((log) => (
-                  <tr
-                    key={log.id}
-                    className="table-row-hover"
-                    style={{ borderBottom: "1px solid rgba(63, 63, 70, 0.25)" }}
-                  >
-                    <td style={{ padding: "16px 20px", minWidth: "160px" }}>
-                      <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                          <Clock style={{ width: "14px", height: "14px", color: "#71717a" }} />
-                          <span style={{ fontSize: "13px", color: "#00f0ff", fontWeight: "500" }}>
-                            {formatTimeAgo(log.created_at)}
-                          </span>
-                        </div>
-                        <span style={{ fontSize: "11px", color: "#71717a" }}>{formatDate(log.created_at)}</span>
-                      </div>
-                    </td>
-                    <td style={{ padding: "16px 20px" }}>
-                      <ActionBadge action={log.action} />
-                    </td>
-                    <td style={{ padding: "16px 20px" }}>
-                      <EntityTypeBadge type={log.entity_type} />
-                    </td>
-                    <td style={{ padding: "16px 20px" }}>
-                      <code
-                        style={{
-                          fontSize: "12px",
-                          color: "#b8b8c8",
-                          background: "rgba(39, 39, 42, 0.6)",
-                          padding: "6px 10px",
-                          borderRadius: "6px",
-                          fontFamily: "monospace",
-                          border: "1px solid rgba(63, 63, 70, 0.3)",
+                logs.map((log) => {
+                  const isExpanded = expandedMetadata.has(log.id);
+                  const hasMetadata = log.metadata && Object.keys(log.metadata).length > 0;
+                  const userId = getUserIdentifier(log);
+                  
+                  return (
+                    <Fragment key={log.id}>
+                      {/* Main Data Row - Clickable to expand */}
+                      <tr
+                        className="table-row-hover"
+                        onClick={() => hasMetadata && toggleMetadata(log.id)}
+                        style={{ 
+                          borderBottom: isExpanded ? "none" : "1px solid rgba(63, 63, 70, 0.25)",
+                          background: isExpanded ? "rgba(0, 240, 255, 0.02)" : "transparent",
+                          cursor: hasMetadata ? "pointer" : "default",
                         }}
                       >
-                        {log.entity_id.slice(0, 12)}...
-                      </code>
-                    </td>
-                    <td style={{ padding: "16px 20px" }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                        {log.actor_type === "admin" ? (
-                          <User style={{ width: "14px", height: "14px", color: "#a78bfa" }} />
-                        ) : (
-                          <Server style={{ width: "14px", height: "14px", color: "#9ca3af" }} />
-                        )}
-                        <span
-                          style={{
-                            fontSize: "13px",
-                            color: log.actor_type === "admin" ? "#a78bfa" : "#9ca3af",
-                            fontWeight: "500",
-                          }}
-                        >
-                          {log.actor_type}
-                        </span>
-                      </div>
-                      {log.actor_id && (
-                        <code
-                          style={{
-                            display: "block",
-                            marginTop: "4px",
-                            fontSize: "11px",
-                            color: "#71717a",
-                            fontFamily: "monospace",
-                          }}
-                        >
-                          {log.actor_id.slice(0, 10)}...
-                        </code>
+                        {/* Time */}
+                        <td style={{ padding: "12px", whiteSpace: "nowrap" }}>
+                          <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+                            <span style={{ fontSize: "12px", color: "#00f0ff", fontWeight: "500" }}>
+                              {formatTimeAgo(log.created_at)}
+                            </span>
+                            <span style={{ fontSize: "10px", color: "#52525b" }}>
+                              {formatDate(log.created_at)}
+                            </span>
+                          </div>
+                        </td>
+                        {/* Action */}
+                        <td style={{ padding: "12px" }}>
+                          <ActionBadge action={log.action} />
+                        </td>
+                        {/* User */}
+                        <td style={{ padding: "12px" }}>
+                          {userId ? (
+                            <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                              <User style={{ width: "12px", height: "12px", color: "#71717a", flexShrink: 0 }} />
+                              <code
+                                style={{
+                                  fontSize: "11px",
+                                  color: "#9ca3af",
+                                  fontFamily: "ui-monospace, monospace",
+                                }}
+                              >
+                                {userId}
+                              </code>
+                            </div>
+                          ) : (
+                            <span style={{ fontSize: "11px", color: "#52525b" }}>—</span>
+                          )}
+                        </td>
+                        {/* Entity */}
+                        <td style={{ padding: "12px" }}>
+                          <div style={{ display: "flex", flexDirection: "column", gap: "4px", alignItems: "flex-start" }}>
+                            <EntityTypeBadge type={log.entity_type} />
+                            <code
+                              style={{
+                                fontSize: "10px",
+                                color: "#71717a",
+                                fontFamily: "ui-monospace, monospace",
+                              }}
+                              title={log.entity_id}
+                            >
+                              {log.entity_id}
+                            </code>
+                          </div>
+                        </td>
+                        {/* Actor */}
+                        <td style={{ padding: "12px" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+                            {log.actor_type === "admin" ? (
+                              <User style={{ width: "12px", height: "12px", color: "#a78bfa", flexShrink: 0 }} />
+                            ) : log.actor_type === "webhook" ? (
+                              <Webhook style={{ width: "12px", height: "12px", color: "#fb923c", flexShrink: 0 }} />
+                            ) : (
+                              <Server style={{ width: "12px", height: "12px", color: "#9ca3af", flexShrink: 0 }} />
+                            )}
+                            <span
+                              style={{
+                                fontSize: "11px",
+                                color: log.actor_type === "admin" ? "#a78bfa" : log.actor_type === "webhook" ? "#fb923c" : "#9ca3af",
+                                fontWeight: "500",
+                              }}
+                            >
+                              {log.actor_type}
+                            </span>
+                          </div>
+                        </td>
+                        {/* IP */}
+                        <td style={{ padding: "12px", fontSize: "10px", color: "#52525b", fontFamily: "ui-monospace, monospace" }}>
+                          {log.ip_address || "—"}
+                        </td>
+                      </tr>
+                      
+                      {/* Collapsible Detail Row */}
+                      {isExpanded && hasMetadata && (
+                        <tr style={{ borderBottom: "1px solid rgba(63, 63, 70, 0.25)" }}>
+                          <td
+                            colSpan={6}
+                            style={{
+                              padding: "0 12px 16px 12px",
+                              background: "linear-gradient(180deg, rgba(0, 240, 255, 0.03) 0%, rgba(0, 0, 0, 0.15) 100%)",
+                            }}
+                          >
+                            <div
+                              style={{
+                                padding: "14px 16px",
+                                borderRadius: "10px",
+                                background: "rgba(0, 0, 0, 0.3)",
+                                border: "1px solid rgba(0, 240, 255, 0.15)",
+                              }}
+                            >
+                              <div style={{ 
+                                fontSize: "10px", 
+                                fontWeight: "600", 
+                                color: "#52525b", 
+                                textTransform: "uppercase", 
+                                letterSpacing: "0.05em",
+                                marginBottom: "10px",
+                              }}>
+                                Event Details
+                              </div>
+                              <pre
+                                style={{
+                                  fontSize: "11px",
+                                  color: "#a1a1aa",
+                                  whiteSpace: "pre-wrap",
+                                  wordBreak: "break-word",
+                                  fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, monospace",
+                                  margin: 0,
+                                  lineHeight: "1.5",
+                                }}
+                              >
+                                {JSON.stringify(log.metadata, null, 2)}
+                              </pre>
+                            </div>
+                          </td>
+                        </tr>
                       )}
-                    </td>
-                    <td style={{ padding: "16px 20px", fontSize: "13px", color: "#9ca3af", fontFamily: "monospace" }}>
-                      {log.ip_address || "—"}
-                    </td>
-                    <td style={{ padding: "16px 20px" }}>
-                      <MetadataViewer
-                        metadata={log.metadata}
-                        isOpen={expandedMetadata.has(log.id)}
-                        onToggle={() => toggleMetadata(log.id)}
-                      />
-                    </td>
-                  </tr>
-                ))
+                    </Fragment>
+                  );
+                })
               )}
             </tbody>
           </table>

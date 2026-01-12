@@ -17,6 +17,7 @@ import {
   HeartPulse,
   BookOpen,
   Shield,
+  HardDrive,
 } from "lucide-react";
 
 interface User {
@@ -33,6 +34,7 @@ const navItems = [
   { href: "/admin/jobs", label: "Jobs", icon: Activity },
   { href: "/admin/users", label: "Users", icon: Users },
   { href: "/admin/audit-logs", label: "Audit Logs", icon: Shield },
+  { href: "/admin/backups", label: "Backups", icon: HardDrive },
   { href: "/admin/statistics", label: "Statistics", icon: BarChart3 },
   { href: "/admin/docs", label: "Documentation", icon: BookOpen },
 ];
