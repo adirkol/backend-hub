@@ -39,9 +39,18 @@ export type AuditAction =
   | "revenuecat.renewal"
   | "revenuecat.non_renewing_purchase"
   | "revenuecat.cancellation"
+  | "revenuecat.refund"
   | "revenuecat.token_grant"
   | "revenuecat.token_deduction"
   | "revenuecat.user_created"
+  | "revenuecat.expiration"
+  | "revenuecat.billing_issue"
+  | "revenuecat.product_change"
+  | "revenuecat.uncancellation"
+  | "revenuecat.subscription_paused"
+  | "revenuecat.subscription_extended"
+  | "revenuecat.transfer"
+  | "revenuecat.other"
   // System actions
   | "system.settings_updated"
   | "system.backup_exported"
@@ -231,8 +240,21 @@ export async function auditRevenueCatEvent(
     purchasedAt?: Date | null;
     expiresAt?: Date | null;
     
-    // Cancellation details
+    // Cancellation/Expiration details
     cancelReason?: string | null;
+    expirationReason?: string | null;
+    isRefund?: boolean | null;
+    
+    // Product change
+    newProductId?: string | null;
+    
+    // Transfer details
+    transferredFrom?: string[] | null;
+    transferredTo?: string[] | null;
+    
+    // Experiment details
+    experimentId?: string | null;
+    experimentVariant?: string | null;
   }
 ): Promise<void> {
   await createAuditLog({

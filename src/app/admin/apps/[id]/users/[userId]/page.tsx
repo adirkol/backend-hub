@@ -53,25 +53,18 @@ async function getUserData(appId: string, userId: string) {
     take: 100,
   });
 
-  // Get RevenueCat token events
-  const tokenEvents = await prisma.revenueCatEvent.findMany({
-    where: { 
-      appUserId: userId,
-      eventCategory: "TOKEN",
-    },
-    orderBy: { createdAt: "desc" },
-    take: 100,
+  // Get ALL RevenueCat events for this user (for timeline)
+  const allRevenueCatEvents = await prisma.revenueCatEvent.findMany({
+    where: { appUserId: userId },
+    orderBy: { eventTimestampMs: "desc" },
+    take: 200,
   });
 
-  // Get RevenueCat revenue events
-  const revenueEvents = await prisma.revenueCatEvent.findMany({
-    where: { 
-      appUserId: userId,
-      eventCategory: "REVENUE",
-    },
-    orderBy: { createdAt: "desc" },
-    take: 100,
-  });
+  // Filter token events
+  const tokenEvents = allRevenueCatEvents.filter(e => e.eventCategory === "TOKEN");
+  
+  // Filter revenue events (purchases, renewals)
+  const revenueEvents = allRevenueCatEvents.filter(e => e.eventCategory === "REVENUE");
 
   // Get user's most recent country code from RevenueCat events
   const countryEvent = await prisma.revenueCatEvent.findFirst({
@@ -132,6 +125,7 @@ async function getUserData(appId: string, userId: string) {
     tokenLedger,
     tokenEvents,
     revenueEvents,
+    allRevenueCatEvents,
     stats: {
       totalTokensGranted: totalTokensGranted._sum.amount || 0,
       totalTokensSpent: Math.abs(totalTokensSpent._sum.amount || 0),
@@ -151,7 +145,7 @@ export default async function UserDetailPage({ params }: PageProps) {
     notFound();
   }
 
-  const { user, jobs, tokenLedger, tokenEvents, revenueEvents, stats, effectiveBalance, countryCode } = data;
+  const { user, jobs, tokenLedger, tokenEvents, revenueEvents, allRevenueCatEvents, stats, effectiveBalance, countryCode } = data;
 
   // Serialize for client component
   const serializedJobs = jobs.map((j) => ({
@@ -185,6 +179,21 @@ export default async function UserDetailPage({ params }: PageProps) {
     eventTimestampMs: e.eventTimestampMs.toString(),
     purchasedAtMs: e.purchasedAtMs?.toString() || null,
     expirationAtMs: e.expirationAtMs?.toString() || null,
+    priceUsd: e.priceUsd?.toNumber() || null,
+    taxPercentage: e.taxPercentage?.toNumber() || null,
+    commissionPercentage: e.commissionPercentage?.toNumber() || null,
+    netRevenueUsd: e.netRevenueUsd?.toNumber() || null,
+    createdAt: e.createdAt.toISOString(),
+    countryCode: e.countryCode,
+  }));
+
+  // Serialize ALL events for timeline
+  const serializedAllEvents = allRevenueCatEvents.map((e) => ({
+    ...e,
+    eventTimestampMs: e.eventTimestampMs.toString(),
+    purchasedAtMs: e.purchasedAtMs?.toString() || null,
+    expirationAtMs: e.expirationAtMs?.toString() || null,
+    enrolledAtMs: e.enrolledAtMs?.toString() || null,
     priceUsd: e.priceUsd?.toNumber() || null,
     taxPercentage: e.taxPercentage?.toNumber() || null,
     commissionPercentage: e.commissionPercentage?.toNumber() || null,
@@ -265,12 +274,22 @@ export default async function UserDetailPage({ params }: PageProps) {
           metadata: user.metadata,
           createdAt: user.createdAt.toISOString(),
           updatedAt: user.updatedAt.toISOString(),
+          // Subscription status
+          isPremium: user.isPremium,
+          subscriptionStatus: user.subscriptionStatus,
+          subscriptionProductId: user.subscriptionProductId,
+          subscriptionStore: user.subscriptionStore,
+          subscriptionExpiresAt: user.subscriptionExpiresAt?.toISOString() || null,
+          subscriptionStartedAt: user.subscriptionStartedAt?.toISOString() || null,
+          lastBillingIssueAt: user.lastBillingIssueAt?.toISOString() || null,
+          lastRefundAt: user.lastRefundAt?.toISOString() || null,
         }}
         appId={appId}
         jobs={serializedJobs}
         tokenLedger={serializedTokenLedger}
         tokenEvents={serializedTokenEvents}
         revenueEvents={serializedRevenueEvents}
+        allEvents={serializedAllEvents}
         stats={stats}
         counts={user._count}
         effectiveBalance={effectiveBalance}

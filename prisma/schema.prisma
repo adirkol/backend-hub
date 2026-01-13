@@ -167,6 +167,16 @@ model AppUser {
   
   // Status
   isActive      Boolean  @default(true)
+  
+  // Subscription status (derived from RevenueCat events)
+  isPremium              Boolean   @default(false)  // Has active paid subscription
+  subscriptionStatus     String?   // ACTIVE, EXPIRED, CANCELLED, PAUSED, BILLING_ISSUE, REFUNDED
+  subscriptionProductId  String?   // Current/last product ID (e.g., "weekly_premium")
+  subscriptionStore      String?   // APP_STORE, PLAY_STORE, etc.
+  subscriptionExpiresAt  DateTime? // When current subscription period ends
+  subscriptionStartedAt  DateTime? // When subscription first started
+  lastBillingIssueAt     DateTime? // Track billing problems
+  lastRefundAt           DateTime? // Track refunds (CUSTOMER_SUPPORT cancellation)
 
   app              App               @relation(fields: [appId], references: [id], onDelete: Cascade)
   tokenLedger      TokenLedgerEntry[]
@@ -446,14 +456,26 @@ model RevenueCatEvent {
   commissionPercentage Decimal?            @db.Decimal(5, 4)  // commission_percentage
   netRevenueUsd        Decimal?            @db.Decimal(10, 2) // Calculated net revenue
   
-  // Cancellation data
-  cancelReason         String?             // CUSTOMER_SUPPORT, BILLING_ERROR, etc.
+  // Cancellation/Expiration data
+  cancelReason         String?             // CUSTOMER_SUPPORT, BILLING_ERROR, UNSUBSCRIBE, etc.
+  expirationReason     String?             // Reason for expiration event
+  isRefund             Boolean?            // True if cancel_reason is CUSTOMER_SUPPORT (refund)
   
   // Subscription info
   renewalNumber        Int?                // renewal_number
   isTrialConversion    Boolean?            // is_trial_conversion
   offerCode            String?             // offer_code if used
   countryCode          String?             // country_code
+  newProductId         String?             // For PRODUCT_CHANGE events
+  
+  // Transfer data (for TRANSFER events)
+  transferredFrom      Json?               // Array of user IDs transferred from
+  transferredTo        Json?               // Array of user IDs transferred to
+  
+  // Experiment data (for EXPERIMENT_ENROLLMENT events)
+  experimentId         String?             // experiment_id
+  experimentVariant    String?             // experiment_variant
+  enrolledAtMs         BigInt?             // enrolled_at_ms
   
   // Raw payload for debugging
   rawPayload           Json                // Full webhook payload
@@ -477,12 +499,16 @@ model RevenueCatEvent {
 }
 
 enum RevenueCatEventType {
+  // Token events
   VIRTUAL_CURRENCY_TRANSACTION
+  
+  // Purchase/Revenue events
   INITIAL_PURCHASE
   RENEWAL
   NON_RENEWING_PURCHASE
+  
+  // Subscription lifecycle events
   CANCELLATION
-  // Other types we track but don't process
   EXPIRATION
   BILLING_ISSUE
   PRODUCT_CHANGE
@@ -490,10 +516,18 @@ enum RevenueCatEventType {
   SUBSCRIPTION_PAUSED
   SUBSCRIPTION_EXTENDED
   TRANSFER
+  
+  // Other events
+  INVOICE_ISSUANCE
+  TEMPORARY_ENTITLEMENT_GRANT
+  EXPERIMENT_ENROLLMENT
   TEST
 }
 
 enum EventCategory {
-  TOKEN    // Token adjustment events
-  REVENUE  // Purchase/subscription events
+  TOKEN       // Token adjustment events (VIRTUAL_CURRENCY_TRANSACTION)
+  REVENUE     // Purchase/subscription events (INITIAL_PURCHASE, RENEWAL, NON_RENEWING_PURCHASE)
+  STATUS      // Subscription status changes (CANCELLATION, EXPIRATION, BILLING_ISSUE, etc.)
+  EXPERIMENT  // A/B test enrollment (EXPERIMENT_ENROLLMENT)
+  OTHER       // Other events (TEST, INVOICE_ISSUANCE, etc.)
 }

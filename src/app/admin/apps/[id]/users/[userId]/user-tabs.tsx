@@ -14,6 +14,17 @@ import {
   CreditCard,
   XCircle,
   Globe,
+  Crown,
+  AlertTriangle,
+  Clock,
+  Pause,
+  Play,
+  ArrowRightLeft,
+  FlaskConical,
+  FileText,
+  Gift,
+  CheckCircle,
+  Calendar,
 } from "lucide-react";
 import { countryCodeToFlag, getCountryName } from "@/lib/countries";
 
@@ -52,7 +63,12 @@ interface RevenueCatEvent {
   priceUsd: number | null;
   netRevenueUsd: number | null;
   cancelReason: string | null;
+  expirationReason: string | null;
+  isRefund: boolean | null;
   renewalNumber: number | null;
+  newProductId: string | null;
+  experimentId: string | null;
+  experimentVariant: string | null;
   eventTimestampMs: string;
   createdAt: string;
   countryCode: string | null;
@@ -66,6 +82,15 @@ interface UserData {
   metadata: unknown;
   createdAt: string;
   updatedAt: string;
+  // Subscription status
+  isPremium: boolean;
+  subscriptionStatus: string | null;
+  subscriptionProductId: string | null;
+  subscriptionStore: string | null;
+  subscriptionExpiresAt: string | null;
+  subscriptionStartedAt: string | null;
+  lastBillingIssueAt: string | null;
+  lastRefundAt: string | null;
 }
 
 interface Stats {
@@ -88,6 +113,7 @@ interface UserTabsProps {
   tokenLedger: TokenLedgerEntry[];
   tokenEvents: RevenueCatEvent[];
   revenueEvents: RevenueCatEvent[];
+  allEvents: RevenueCatEvent[];
   stats: Stats;
   counts: {
     jobs: number;
@@ -97,7 +123,7 @@ interface UserTabsProps {
   effectiveBalance: EffectiveBalance;
 }
 
-type TabType = "overview" | "jobs" | "tokens" | "revenue";
+type TabType = "overview" | "timeline" | "jobs" | "tokens" | "revenue";
 
 function formatCurrency(amount: number): string {
   return new Intl.NumberFormat("en-US", {
@@ -114,7 +140,7 @@ function formatEventTimestamp(timestampMs: string): string {
   return new Date(parseInt(timestampMs)).toLocaleString();
 }
 
-function getEventIcon(eventType: string) {
+function getEventIcon(eventType: string, isRefund?: boolean | null) {
   switch (eventType) {
     case "INITIAL_PURCHASE":
       return <CreditCard style={{ width: "16px", height: "16px" }} />;
@@ -123,13 +149,37 @@ function getEventIcon(eventType: string) {
     case "NON_RENEWING_PURCHASE":
       return <Package style={{ width: "16px", height: "16px" }} />;
     case "CANCELLATION":
-      return <XCircle style={{ width: "16px", height: "16px" }} />;
+      return isRefund 
+        ? <ArrowDownRight style={{ width: "16px", height: "16px" }} />
+        : <XCircle style={{ width: "16px", height: "16px" }} />;
+    case "EXPIRATION":
+      return <Clock style={{ width: "16px", height: "16px" }} />;
+    case "BILLING_ISSUE":
+      return <AlertTriangle style={{ width: "16px", height: "16px" }} />;
+    case "PRODUCT_CHANGE":
+      return <ArrowRightLeft style={{ width: "16px", height: "16px" }} />;
+    case "UNCANCELLATION":
+      return <Play style={{ width: "16px", height: "16px" }} />;
+    case "SUBSCRIPTION_PAUSED":
+      return <Pause style={{ width: "16px", height: "16px" }} />;
+    case "SUBSCRIPTION_EXTENDED":
+      return <Calendar style={{ width: "16px", height: "16px" }} />;
+    case "TRANSFER":
+      return <ArrowRightLeft style={{ width: "16px", height: "16px" }} />;
+    case "VIRTUAL_CURRENCY_TRANSACTION":
+      return <Coins style={{ width: "16px", height: "16px" }} />;
+    case "EXPERIMENT_ENROLLMENT":
+      return <FlaskConical style={{ width: "16px", height: "16px" }} />;
+    case "INVOICE_ISSUANCE":
+      return <FileText style={{ width: "16px", height: "16px" }} />;
+    case "TEMPORARY_ENTITLEMENT_GRANT":
+      return <Gift style={{ width: "16px", height: "16px" }} />;
     default:
       return <DollarSign style={{ width: "16px", height: "16px" }} />;
   }
 }
 
-function getEventLabel(eventType: string): string {
+function getEventLabel(eventType: string, isRefund?: boolean | null): string {
   switch (eventType) {
     case "INITIAL_PURCHASE":
       return "Initial Purchase";
@@ -138,11 +188,61 @@ function getEventLabel(eventType: string): string {
     case "NON_RENEWING_PURCHASE":
       return "One-time Purchase";
     case "CANCELLATION":
-      return "Cancellation";
+      return isRefund ? "Refund" : "Cancellation";
+    case "EXPIRATION":
+      return "Subscription Expired";
+    case "BILLING_ISSUE":
+      return "Billing Issue";
+    case "PRODUCT_CHANGE":
+      return "Product Change";
+    case "UNCANCELLATION":
+      return "Resubscribed";
+    case "SUBSCRIPTION_PAUSED":
+      return "Subscription Paused";
+    case "SUBSCRIPTION_EXTENDED":
+      return "Subscription Extended";
+    case "TRANSFER":
+      return "Account Transfer";
     case "VIRTUAL_CURRENCY_TRANSACTION":
       return "Token Transaction";
+    case "EXPERIMENT_ENROLLMENT":
+      return "Experiment Enrollment";
+    case "INVOICE_ISSUANCE":
+      return "Invoice Issued";
+    case "TEMPORARY_ENTITLEMENT_GRANT":
+      return "Temporary Access";
+    case "TEST":
+      return "Test Event";
     default:
-      return eventType;
+      return eventType.replace(/_/g, " ");
+  }
+}
+
+function getEventColor(eventType: string, isRefund?: boolean | null): string {
+  switch (eventType) {
+    case "INITIAL_PURCHASE":
+    case "RENEWAL":
+    case "UNCANCELLATION":
+    case "SUBSCRIPTION_EXTENDED":
+      return "#34d399"; // Green
+    case "NON_RENEWING_PURCHASE":
+    case "VIRTUAL_CURRENCY_TRANSACTION":
+      return "#fbbf24"; // Yellow
+    case "CANCELLATION":
+      return isRefund ? "#f87171" : "#f97316"; // Red for refund, orange for cancel
+    case "EXPIRATION":
+      return "#9ca3af"; // Gray
+    case "BILLING_ISSUE":
+      return "#f87171"; // Red
+    case "SUBSCRIPTION_PAUSED":
+      return "#60a5fa"; // Blue
+    case "PRODUCT_CHANGE":
+    case "TRANSFER":
+      return "#a78bfa"; // Purple
+    case "EXPERIMENT_ENROLLMENT":
+      return "#00f0ff"; // Cyan
+    default:
+      return "#9ca3af"; // Gray
   }
 }
 
@@ -153,6 +253,7 @@ export function UserTabs({
   tokenLedger, 
   tokenEvents,
   revenueEvents,
+  allEvents,
   stats,
   counts,
   effectiveBalance,
@@ -165,6 +266,7 @@ export function UserTabs({
 
   const tabs: { id: TabType; label: string; icon: React.ReactNode; count?: number }[] = [
     { id: "overview", label: "Overview", icon: <User style={{ width: "16px", height: "16px" }} /> },
+    { id: "timeline", label: "Timeline", icon: <Clock style={{ width: "16px", height: "16px" }} />, count: allEvents.length },
     { id: "jobs", label: "Jobs", icon: <Zap style={{ width: "16px", height: "16px" }} />, count: counts.jobs },
     { id: "tokens", label: "Tokens", icon: <Coins style={{ width: "16px", height: "16px" }} />, count: counts.tokenLedger },
     { id: "revenue", label: "Revenue", icon: <DollarSign style={{ width: "16px", height: "16px" }} />, count: revenueEvents.length },
@@ -367,6 +469,117 @@ export function UserTabs({
             </div>
           </div>
 
+          {/* Subscription Status */}
+          <div className="glass" style={{ padding: "28px" }}>
+            <h2 style={{ 
+              fontWeight: "600", 
+              color: "#e4e4e7", 
+              marginBottom: "20px", 
+              fontSize: "16px",
+              display: "flex",
+              alignItems: "center",
+              gap: "10px",
+            }}>
+              <Crown style={{ width: "18px", height: "18px", color: user.isPremium ? "#fbbf24" : "#71717a" }} />
+              Subscription Status
+            </h2>
+            <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <span style={{ fontSize: "14px", color: "#b8b8c8" }}>Status</span>
+                <span style={{
+                  fontSize: "13px",
+                  padding: "4px 12px",
+                  borderRadius: "6px",
+                  fontWeight: "500",
+                  background: user.isPremium 
+                    ? "rgba(34, 197, 94, 0.15)"
+                    : user.subscriptionStatus === "BILLING_ISSUE"
+                    ? "rgba(239, 68, 68, 0.15)"
+                    : user.subscriptionStatus === "CANCELLED" || user.subscriptionStatus === "REFUNDED"
+                    ? "rgba(249, 115, 22, 0.15)"
+                    : "rgba(113, 113, 122, 0.15)",
+                  color: user.isPremium
+                    ? "#34d399"
+                    : user.subscriptionStatus === "BILLING_ISSUE"
+                    ? "#f87171"
+                    : user.subscriptionStatus === "CANCELLED" || user.subscriptionStatus === "REFUNDED"
+                    ? "#f97316"
+                    : "#9ca3af",
+                }}>
+                  {user.isPremium ? "👑 Premium" : user.subscriptionStatus || "Free"}
+                </span>
+              </div>
+              {user.subscriptionProductId && (
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span style={{ fontSize: "14px", color: "#b8b8c8" }}>Product</span>
+                  <span style={{ fontSize: "13px", color: "#e4e4e7", fontFamily: "monospace" }}>
+                    {user.subscriptionProductId}
+                  </span>
+                </div>
+              )}
+              {user.subscriptionStore && (
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span style={{ fontSize: "14px", color: "#b8b8c8" }}>Store</span>
+                  <span style={{ fontSize: "13px", color: "#b8b8c8" }}>
+                    {user.subscriptionStore === "APP_STORE" ? "🍎 App Store" : 
+                     user.subscriptionStore === "PLAY_STORE" ? "🤖 Play Store" : 
+                     user.subscriptionStore}
+                  </span>
+                </div>
+              )}
+              {user.subscriptionExpiresAt && (
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span style={{ fontSize: "14px", color: "#b8b8c8" }}>
+                    {new Date(user.subscriptionExpiresAt) > new Date() ? "Renews" : "Expired"}
+                  </span>
+                  <span style={{ 
+                    fontSize: "13px", 
+                    color: new Date(user.subscriptionExpiresAt) > new Date() ? "#e4e4e7" : "#f87171",
+                  }}>
+                    {formatDate(user.subscriptionExpiresAt)}
+                  </span>
+                </div>
+              )}
+              {user.lastBillingIssueAt && (
+                <div style={{ 
+                  display: "flex", 
+                  alignItems: "center", 
+                  gap: "8px",
+                  padding: "10px 12px",
+                  borderRadius: "8px",
+                  background: "rgba(239, 68, 68, 0.1)",
+                  border: "1px solid rgba(239, 68, 68, 0.2)",
+                }}>
+                  <AlertTriangle style={{ width: "16px", height: "16px", color: "#f87171" }} />
+                  <span style={{ fontSize: "13px", color: "#f87171" }}>
+                    Billing issue since {formatDate(user.lastBillingIssueAt)}
+                  </span>
+                </div>
+              )}
+              {user.lastRefundAt && (
+                <div style={{ 
+                  display: "flex", 
+                  alignItems: "center", 
+                  gap: "8px",
+                  padding: "10px 12px",
+                  borderRadius: "8px",
+                  background: "rgba(249, 115, 22, 0.1)",
+                  border: "1px solid rgba(249, 115, 22, 0.2)",
+                }}>
+                  <ArrowDownRight style={{ width: "16px", height: "16px", color: "#f97316" }} />
+                  <span style={{ fontSize: "13px", color: "#f97316" }}>
+                    Refunded on {formatDate(user.lastRefundAt)}
+                  </span>
+                </div>
+              )}
+              {!user.subscriptionStatus && !user.isPremium && (
+                <p style={{ fontSize: "13px", color: "#71717a", textAlign: "center", padding: "12px 0" }}>
+                  No subscription history
+                </p>
+              )}
+            </div>
+          </div>
+
           {/* Token Summary */}
           <div className="glass" style={{ padding: "28px" }}>
             <h2 style={{ 
@@ -551,6 +764,249 @@ export function UserTabs({
               })()}
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Timeline Tab */}
+      {activeTab === "timeline" && (
+        <div className="glass" style={{ padding: "28px" }}>
+          <h2 style={{ 
+            fontWeight: "600", 
+            color: "#e4e4e7", 
+            marginBottom: "24px", 
+            fontSize: "16px",
+            display: "flex",
+            alignItems: "center",
+            gap: "10px",
+          }}>
+            <Clock style={{ width: "18px", height: "18px", color: "#00f0ff" }} />
+            Event Timeline
+            <span style={{ 
+              fontSize: "12px", 
+              color: "#9ca3af", 
+              fontWeight: "400",
+              marginLeft: "auto",
+            }}>
+              {allEvents.length} events
+            </span>
+          </h2>
+          
+          {allEvents.length > 0 ? (
+            <div style={{ display: "flex", flexDirection: "column", gap: "0" }}>
+              {allEvents.map((event, index) => {
+                const eventColor = getEventColor(event.eventType, event.isRefund);
+                const isLast = index === allEvents.length - 1;
+                
+                return (
+                  <div key={event.id} style={{ display: "flex", gap: "16px" }}>
+                    {/* Timeline line and dot */}
+                    <div style={{ 
+                      display: "flex", 
+                      flexDirection: "column", 
+                      alignItems: "center",
+                      width: "24px",
+                    }}>
+                      <div style={{
+                        width: "12px",
+                        height: "12px",
+                        borderRadius: "50%",
+                        background: eventColor,
+                        border: `2px solid ${eventColor}`,
+                        flexShrink: 0,
+                        marginTop: "4px",
+                      }} />
+                      {!isLast && (
+                        <div style={{
+                          width: "2px",
+                          flex: 1,
+                          minHeight: "40px",
+                          background: "rgba(63, 63, 70, 0.5)",
+                        }} />
+                      )}
+                    </div>
+                    
+                    {/* Event content */}
+                    <div style={{ 
+                      flex: 1, 
+                      paddingBottom: isLast ? "0" : "20px",
+                    }}>
+                      <div style={{ 
+                        display: "flex", 
+                        alignItems: "flex-start", 
+                        justifyContent: "space-between",
+                        gap: "12px",
+                      }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                          <div style={{
+                            width: "32px",
+                            height: "32px",
+                            borderRadius: "8px",
+                            background: `${eventColor}20`,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            color: eventColor,
+                          }}>
+                            {getEventIcon(event.eventType, event.isRefund)}
+                          </div>
+                          <div>
+                            <p style={{ fontSize: "14px", fontWeight: "500", color: "#e4e4e7" }}>
+                              {getEventLabel(event.eventType, event.isRefund)}
+                            </p>
+                            <p style={{ fontSize: "12px", color: "#9ca3af", marginTop: "2px" }}>
+                              {formatEventTimestamp(event.eventTimestampMs)}
+                            </p>
+                          </div>
+                        </div>
+                        
+                        {/* Event details based on type */}
+                        <div style={{ textAlign: "right" }}>
+                          {event.netRevenueUsd !== null && (
+                            <p style={{ 
+                              fontSize: "14px", 
+                              fontWeight: "600", 
+                              color: event.netRevenueUsd >= 0 ? "#34d399" : "#f87171",
+                            }}>
+                              {event.netRevenueUsd >= 0 ? "+" : ""}{formatCurrency(event.netRevenueUsd)}
+                            </p>
+                          )}
+                          {event.tokenAmount !== null && event.tokenAmount !== 0 && (
+                            <p style={{ 
+                              fontSize: "14px", 
+                              fontWeight: "600", 
+                              color: event.tokenAmount > 0 ? "#fbbf24" : "#f87171",
+                            }}>
+                              {event.tokenAmount > 0 ? "+" : ""}{event.tokenAmount} tokens
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                      
+                      {/* Additional info row */}
+                      <div style={{ 
+                        display: "flex", 
+                        flexWrap: "wrap",
+                        gap: "8px", 
+                        marginTop: "8px",
+                        marginLeft: "42px",
+                      }}>
+                        {event.productId && (
+                          <span style={{
+                            fontSize: "11px",
+                            padding: "2px 8px",
+                            borderRadius: "4px",
+                            background: "rgba(39, 39, 42, 0.6)",
+                            color: "#b8b8c8",
+                            fontFamily: "monospace",
+                          }}>
+                            {event.productId}
+                          </span>
+                        )}
+                        {event.store && (
+                          <span style={{
+                            fontSize: "11px",
+                            padding: "2px 8px",
+                            borderRadius: "4px",
+                            background: "rgba(39, 39, 42, 0.6)",
+                            color: "#b8b8c8",
+                          }}>
+                            {event.store === "APP_STORE" ? "🍎 App Store" : 
+                             event.store === "PLAY_STORE" ? "🤖 Play Store" : 
+                             event.store}
+                          </span>
+                        )}
+                        {event.countryCode && (
+                          <span 
+                            title={getCountryName(event.countryCode)}
+                            style={{
+                              fontSize: "11px",
+                              padding: "2px 8px",
+                              borderRadius: "4px",
+                              background: "rgba(39, 39, 42, 0.6)",
+                              color: "#b8b8c8",
+                              cursor: "help",
+                            }}
+                          >
+                            {countryCodeToFlag(event.countryCode)} {event.countryCode}
+                          </span>
+                        )}
+                        {event.renewalNumber && event.renewalNumber > 1 && (
+                          <span style={{
+                            fontSize: "11px",
+                            padding: "2px 8px",
+                            borderRadius: "4px",
+                            background: "rgba(34, 197, 94, 0.15)",
+                            color: "#34d399",
+                          }}>
+                            Renewal #{event.renewalNumber}
+                          </span>
+                        )}
+                        {event.cancelReason && (
+                          <span style={{
+                            fontSize: "11px",
+                            padding: "2px 8px",
+                            borderRadius: "4px",
+                            background: event.isRefund ? "rgba(239, 68, 68, 0.15)" : "rgba(249, 115, 22, 0.15)",
+                            color: event.isRefund ? "#f87171" : "#f97316",
+                          }}>
+                            {event.cancelReason.replace(/_/g, " ")}
+                          </span>
+                        )}
+                        {event.expirationReason && (
+                          <span style={{
+                            fontSize: "11px",
+                            padding: "2px 8px",
+                            borderRadius: "4px",
+                            background: "rgba(156, 163, 175, 0.15)",
+                            color: "#9ca3af",
+                          }}>
+                            {event.expirationReason.replace(/_/g, " ")}
+                          </span>
+                        )}
+                        {event.newProductId && (
+                          <span style={{
+                            fontSize: "11px",
+                            padding: "2px 8px",
+                            borderRadius: "4px",
+                            background: "rgba(168, 139, 250, 0.15)",
+                            color: "#a78bfa",
+                          }}>
+                            → {event.newProductId}
+                          </span>
+                        )}
+                        {event.experimentId && (
+                          <span style={{
+                            fontSize: "11px",
+                            padding: "2px 8px",
+                            borderRadius: "4px",
+                            background: "rgba(0, 240, 255, 0.15)",
+                            color: "#00f0ff",
+                          }}>
+                            {event.experimentId}: {event.experimentVariant}
+                          </span>
+                        )}
+                        {event.environment === "SANDBOX" && (
+                          <span style={{
+                            fontSize: "11px",
+                            padding: "2px 8px",
+                            borderRadius: "4px",
+                            background: "rgba(251, 191, 36, 0.15)",
+                            color: "#fbbf24",
+                          }}>
+                            SANDBOX
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <p style={{ color: "#9ca3af", textAlign: "center", padding: "40px 0" }}>
+              No RevenueCat events yet
+            </p>
+          )}
         </div>
       )}
 

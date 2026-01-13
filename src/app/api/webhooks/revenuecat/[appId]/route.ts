@@ -9,13 +9,24 @@ interface RouteParams {
   params: Promise<{ appId: string }>;
 }
 
-// Supported event types
-const SUPPORTED_EVENT_TYPES = [
+// ALL supported event types - we store everything
+const ALL_EVENT_TYPES = [
   "VIRTUAL_CURRENCY_TRANSACTION",
   "INITIAL_PURCHASE",
   "RENEWAL",
   "NON_RENEWING_PURCHASE",
   "CANCELLATION",
+  "EXPIRATION",
+  "BILLING_ISSUE",
+  "PRODUCT_CHANGE",
+  "UNCANCELLATION",
+  "SUBSCRIPTION_PAUSED",
+  "SUBSCRIPTION_EXTENDED",
+  "TRANSFER",
+  "INVOICE_ISSUANCE",
+  "TEMPORARY_ENTITLEMENT_GRANT",
+  "EXPERIMENT_ENROLLMENT",
+  "TEST",
 ] as const;
 
 // Event type to category mapping
@@ -24,8 +35,22 @@ const EVENT_CATEGORY_MAP: Record<string, EventCategory> = {
   INITIAL_PURCHASE: "REVENUE",
   RENEWAL: "REVENUE",
   NON_RENEWING_PURCHASE: "REVENUE",
-  CANCELLATION: "REVENUE",
+  CANCELLATION: "STATUS",
+  EXPIRATION: "STATUS",
+  BILLING_ISSUE: "STATUS",
+  PRODUCT_CHANGE: "STATUS",
+  UNCANCELLATION: "STATUS",
+  SUBSCRIPTION_PAUSED: "STATUS",
+  SUBSCRIPTION_EXTENDED: "STATUS",
+  TRANSFER: "OTHER",
+  INVOICE_ISSUANCE: "OTHER",
+  TEMPORARY_ENTITLEMENT_GRANT: "OTHER",
+  EXPERIMENT_ENROLLMENT: "EXPERIMENT",
+  TEST: "OTHER",
 };
+
+// Cancellation reasons that indicate a refund
+const REFUND_CANCEL_REASONS = ["CUSTOMER_SUPPORT"];
 
 // Schema for virtual currency adjustment
 const AdjustmentSchema = z.object({
@@ -77,8 +102,30 @@ const PurchaseEventSchema = BaseEventSchema.extend({
 
 // Cancellation event
 const CancellationEventSchema = PurchaseEventSchema.extend({
-  type: z.literal("CANCELLATION"),
   cancel_reason: z.string().optional(),
+});
+
+// Expiration event
+const ExpirationEventSchema = PurchaseEventSchema.extend({
+  expiration_reason: z.string().optional(),
+});
+
+// Product change event
+const ProductChangeEventSchema = PurchaseEventSchema.extend({
+  new_product_id: z.string().optional(),
+});
+
+// Transfer event
+const TransferEventSchema = BaseEventSchema.extend({
+  transferred_from: z.array(z.string()).optional(),
+  transferred_to: z.array(z.string()).optional(),
+});
+
+// Experiment enrollment event
+const ExperimentEnrollmentEventSchema = BaseEventSchema.extend({
+  experiment_id: z.string().optional(),
+  experiment_variant: z.string().optional(),
+  enrolled_at_ms: z.number().optional(),
 });
 
 // Main webhook payload schema
@@ -101,12 +148,118 @@ function calculateNetRevenue(
 }
 
 /**
+ * Update user subscription status based on event
+ */
+async function updateUserSubscriptionStatus(
+  userId: string,
+  eventType: string,
+  eventData: {
+    productId?: string | null;
+    store?: string | null;
+    expirationAtMs?: number | null;
+    purchasedAtMs?: number | null;
+    cancelReason?: string | null;
+    newProductId?: string | null;
+  }
+) {
+  const updates: Record<string, unknown> = {};
+
+  switch (eventType) {
+    case "INITIAL_PURCHASE":
+      updates.isPremium = true;
+      updates.subscriptionStatus = "ACTIVE";
+      updates.subscriptionProductId = eventData.productId;
+      updates.subscriptionStore = eventData.store;
+      if (eventData.expirationAtMs) {
+        updates.subscriptionExpiresAt = new Date(eventData.expirationAtMs);
+      }
+      if (eventData.purchasedAtMs) {
+        updates.subscriptionStartedAt = new Date(eventData.purchasedAtMs);
+      }
+      break;
+
+    case "RENEWAL":
+      updates.isPremium = true;
+      updates.subscriptionStatus = "ACTIVE";
+      if (eventData.expirationAtMs) {
+        updates.subscriptionExpiresAt = new Date(eventData.expirationAtMs);
+      }
+      // Clear any billing issue
+      updates.lastBillingIssueAt = null;
+      break;
+
+    case "NON_RENEWING_PURCHASE":
+      // One-time purchase, doesn't necessarily mean premium
+      // but we track the product
+      if (eventData.productId) {
+        updates.subscriptionProductId = eventData.productId;
+      }
+      break;
+
+    case "CANCELLATION":
+      // Check if this is a refund (CUSTOMER_SUPPORT)
+      if (eventData.cancelReason && REFUND_CANCEL_REASONS.includes(eventData.cancelReason)) {
+        updates.subscriptionStatus = "REFUNDED";
+        updates.lastRefundAt = new Date();
+        // User loses premium immediately on refund
+        updates.isPremium = false;
+      } else {
+        // Regular cancellation - user still has access until expiration
+        updates.subscriptionStatus = "CANCELLED";
+        // Don't change isPremium yet - they have access until expiration
+      }
+      break;
+
+    case "EXPIRATION":
+      updates.isPremium = false;
+      updates.subscriptionStatus = "EXPIRED";
+      break;
+
+    case "BILLING_ISSUE":
+      updates.subscriptionStatus = "BILLING_ISSUE";
+      updates.lastBillingIssueAt = new Date();
+      break;
+
+    case "UNCANCELLATION":
+      updates.subscriptionStatus = "ACTIVE";
+      // Re-enable premium if they uncancelled
+      updates.isPremium = true;
+      break;
+
+    case "SUBSCRIPTION_PAUSED":
+      updates.subscriptionStatus = "PAUSED";
+      break;
+
+    case "SUBSCRIPTION_EXTENDED":
+      updates.isPremium = true;
+      updates.subscriptionStatus = "ACTIVE";
+      if (eventData.expirationAtMs) {
+        updates.subscriptionExpiresAt = new Date(eventData.expirationAtMs);
+      }
+      break;
+
+    case "PRODUCT_CHANGE":
+      if (eventData.newProductId) {
+        updates.subscriptionProductId = eventData.newProductId;
+      }
+      break;
+  }
+
+  if (Object.keys(updates).length > 0) {
+    await prisma.appUser.update({
+      where: { id: userId },
+      data: updates,
+    });
+  }
+
+  return updates;
+}
+
+/**
  * RevenueCat webhook handler
  * 
- * This endpoint receives webhooks from RevenueCat for:
- * - VIRTUAL_CURRENCY_TRANSACTION: Token grants/deductions
- * - INITIAL_PURCHASE, RENEWAL, NON_RENEWING_PURCHASE: Revenue tracking
- * - CANCELLATION: Refund tracking
+ * This endpoint receives ALL webhooks from RevenueCat and stores them.
+ * It also updates user subscription status and processes token adjustments.
  */
 export async function POST(req: NextRequest, { params }: RouteParams) {
   try {
@@ -141,11 +294,10 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
     const { event } = payloadValidation.data;
     const eventType = event.type as string;
 
-    // Check if we support this event type
-    if (!SUPPORTED_EVENT_TYPES.includes(eventType as typeof SUPPORTED_EVENT_TYPES[number])) {
-      // Log but accept - RevenueCat expects 200 for all events
-      console.log(`RevenueCat webhook: Ignoring unsupported event type: ${eventType}`);
-      return NextResponse.json({ success: true, ignored: true });
+    // Check if this is a known event type
+    if (!ALL_EVENT_TYPES.includes(eventType as typeof ALL_EVENT_TYPES[number])) {
+      // Store unknown events but don't process them
+      console.log(`RevenueCat webhook: Unknown event type: ${eventType}, storing anyway`);
     }
 
     // Check for duplicate event (idempotency)
@@ -160,7 +312,6 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
     }
 
     // Get or create user using upsert to handle race conditions
-    // (multiple webhooks for same user can arrive simultaneously)
     const revenueCatUserId = event.app_user_id as string;
     
     // Check if user existed before upsert
@@ -175,9 +326,6 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
     });
     
     // Use upsert to atomically create or get user
-    // Note: Users created from RevenueCat are OLD users who already had the app
-    // before AI Hub was implemented. They should NOT get welcome tokens, as they
-    // already received them client-side. Instead, we flag them for token sync.
     let appUser = await prisma.appUser.upsert({
       where: {
         appId_externalId: {
@@ -185,25 +333,24 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
           externalId: revenueCatUserId,
         },
       },
-      update: {}, // Don't update anything if user exists
+      update: {},
       create: {
         appId: app.id,
         externalId: revenueCatUserId,
-        tokenBalance: 0, // No welcome tokens - user already had them client-side
-        needsTokenSync: true, // Flag for token sync when app calls POST /api/v1/users
+        tokenBalance: 0,
+        needsTokenSync: true,
       },
     });
     
     const userWasCreated = !existingUser;
 
     if (userWasCreated) {
-      console.log(`RevenueCat webhook: Created user ${revenueCatUserId} with needsTokenSync=true (old user)`);
+      console.log(`RevenueCat webhook: Created user ${revenueCatUserId} with needsTokenSync=true`);
       
-      // Audit log for user creation via RevenueCat
       await auditRevenueCatEvent("revenuecat.user_created", appUser.id, {
         revenueCatEventId: event.id as string,
         eventType: eventType,
-        eventCategory: EVENT_CATEGORY_MAP[eventType],
+        eventCategory: EVENT_CATEGORY_MAP[eventType] || "OTHER",
         eventTimestamp: new Date(event.event_timestamp_ms as number),
         appId: app.id,
         appName: app.name,
@@ -214,7 +361,7 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
       });
     }
 
-    // Process based on event type
+    // Initialize event data fields
     let tokenAmount: number | null = null;
     let tokenCurrencyCode: string | null = null;
     let source: string | null = null;
@@ -223,6 +370,8 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
     let commissionPercentage: number | null = null;
     let netRevenueUsd: number | null = null;
     let cancelReason: string | null = null;
+    let expirationReason: string | null = null;
+    let isRefund: boolean | null = null;
     let transactionId: string | null = null;
     let originalTransactionId: string | null = null;
     let purchasedAtMs: number | null = null;
@@ -231,33 +380,36 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
     let isTrialConversion: boolean | null = null;
     let offerCode: string | null = null;
     let countryCode: string | null = null;
+    let newProductId: string | null = null;
+    let transferredFrom: string[] | null = null;
+    let transferredTo: string[] | null = null;
+    let experimentId: string | null = null;
+    let experimentVariant: string | null = null;
+    let enrolledAtMs: number | null = null;
 
+    // Process based on event type
     if (eventType === "VIRTUAL_CURRENCY_TRANSACTION") {
-      // Handle token transaction
       const vcEvent = VirtualCurrencyEventSchema.parse(event);
       
       transactionId = vcEvent.virtual_currency_transaction_id || vcEvent.transaction_id || null;
       source = vcEvent.source || null;
 
-      // Process all adjustments (usually just one)
       for (const adjustment of vcEvent.adjustments) {
         tokenAmount = (tokenAmount ?? 0) + adjustment.amount;
         tokenCurrencyCode = adjustment.currency.code;
       }
 
-      // Apply token adjustment to user
+      // Apply token adjustment
       if (tokenAmount !== null && tokenAmount !== 0 && appUser) {
         const idempotencyKey = `rc_token_${eventId}`;
         
-        // Check if already processed
         const existingLedger = await prisma.tokenLedgerEntry.findUnique({
           where: { idempotencyKey },
         });
 
         if (!existingLedger) {
           const newBalance = appUser.tokenBalance + tokenAmount;
-          const currentAppUser = appUser; // Capture for closure
-          // Only set expiration for positive token grants
+          const currentAppUser = appUser;
           const tokenExpiresAt = tokenAmount > 0 ? calculateExpirationDate(app.tokenExpirationDays) : null;
           
           await prisma.$transaction(async (tx) => {
@@ -279,12 +431,10 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
             });
           });
 
-          // Update local copy of balance
           appUser = { ...appUser, tokenBalance: Math.max(0, newBalance) };
         }
       }
     } else if (eventType === "CANCELLATION") {
-      // Handle cancellation/refund
       const cancelEvent = CancellationEventSchema.parse(event);
       
       transactionId = cancelEvent.transaction_id || null;
@@ -293,8 +443,10 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
       expirationAtMs = cancelEvent.expiration_at_ms || null;
       cancelReason = cancelEvent.cancel_reason || null;
       countryCode = cancelEvent.country_code || null;
+      
+      // Check if this is a refund
+      isRefund = cancelReason ? REFUND_CANCEL_REASONS.includes(cancelReason) : false;
 
-      // Track refund amount (price will be negative for refunds)
       if (cancelEvent.price !== undefined) {
         priceUsd = cancelEvent.price;
         taxPercentage = cancelEvent.tax_percentage ?? null;
@@ -305,8 +457,99 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
           commissionPercentage ?? undefined
         );
       }
-    } else {
-      // Handle purchase events (INITIAL_PURCHASE, RENEWAL, NON_RENEWING_PURCHASE)
+
+      // Update subscription status
+      await updateUserSubscriptionStatus(appUser.id, eventType, {
+        cancelReason,
+        expirationAtMs,
+      });
+
+    } else if (eventType === "EXPIRATION") {
+      const expEvent = ExpirationEventSchema.parse(event);
+      
+      transactionId = expEvent.transaction_id || null;
+      originalTransactionId = expEvent.original_transaction_id || null;
+      purchasedAtMs = expEvent.purchased_at_ms || null;
+      expirationAtMs = expEvent.expiration_at_ms || null;
+      expirationReason = expEvent.expiration_reason || null;
+      countryCode = expEvent.country_code || null;
+
+      await updateUserSubscriptionStatus(appUser.id, eventType, {});
+
+    } else if (eventType === "BILLING_ISSUE") {
+      const billingEvent = PurchaseEventSchema.parse(event);
+      
+      transactionId = billingEvent.transaction_id || null;
+      originalTransactionId = billingEvent.original_transaction_id || null;
+      purchasedAtMs = billingEvent.purchased_at_ms || null;
+      expirationAtMs = billingEvent.expiration_at_ms || null;
+      countryCode = billingEvent.country_code || null;
+
+      await updateUserSubscriptionStatus(appUser.id, eventType, {});
+
+    } else if (eventType === "PRODUCT_CHANGE") {
+      const productEvent = ProductChangeEventSchema.parse(event);
+      
+      transactionId = productEvent.transaction_id || null;
+      originalTransactionId = productEvent.original_transaction_id || null;
+      purchasedAtMs = productEvent.purchased_at_ms || null;
+      expirationAtMs = productEvent.expiration_at_ms || null;
+      countryCode = productEvent.country_code || null;
+      newProductId = productEvent.new_product_id || null;
+
+      await updateUserSubscriptionStatus(appUser.id, eventType, { newProductId });
+
+    } else if (eventType === "UNCANCELLATION") {
+      const uncancelEvent = PurchaseEventSchema.parse(event);
+      
+      transactionId = uncancelEvent.transaction_id || null;
+      originalTransactionId = uncancelEvent.original_transaction_id || null;
+      purchasedAtMs = uncancelEvent.purchased_at_ms || null;
+      expirationAtMs = uncancelEvent.expiration_at_ms || null;
+      countryCode = uncancelEvent.country_code || null;
+
+      await updateUserSubscriptionStatus(appUser.id, eventType, {
+        expirationAtMs,
+      });
+
+    } else if (eventType === "SUBSCRIPTION_PAUSED") {
+      const pausedEvent = PurchaseEventSchema.parse(event);
+      
+      transactionId = pausedEvent.transaction_id || null;
+      originalTransactionId = pausedEvent.original_transaction_id || null;
+      purchasedAtMs = pausedEvent.purchased_at_ms || null;
+      expirationAtMs = pausedEvent.expiration_at_ms || null;
+      countryCode = pausedEvent.country_code || null;
+
+      await updateUserSubscriptionStatus(appUser.id, eventType, {});
+
+    } else if (eventType === "SUBSCRIPTION_EXTENDED") {
+      const extendedEvent = PurchaseEventSchema.parse(event);
+      
+      transactionId = extendedEvent.transaction_id || null;
+      originalTransactionId = extendedEvent.original_transaction_id || null;
+      purchasedAtMs = extendedEvent.purchased_at_ms || null;
+      expirationAtMs = extendedEvent.expiration_at_ms || null;
+      countryCode = extendedEvent.country_code || null;
+
+      await updateUserSubscriptionStatus(appUser.id, eventType, {
+        expirationAtMs,
+      });
+
+    } else if (eventType === "TRANSFER") {
+      const transferEvent = TransferEventSchema.parse(event);
+      
+      transferredFrom = transferEvent.transferred_from || null;
+      transferredTo = transferEvent.transferred_to || null;
+
+    } else if (eventType === "EXPERIMENT_ENROLLMENT") {
+      const expEvent = ExperimentEnrollmentEventSchema.parse(event);
+      
+      experimentId = expEvent.experiment_id || null;
+      experimentVariant = expEvent.experiment_variant || null;
+      enrolledAtMs = expEvent.enrolled_at_ms || null;
+
+    } else if (["INITIAL_PURCHASE", "RENEWAL", "NON_RENEWING_PURCHASE"].includes(eventType)) {
       const purchaseEvent = PurchaseEventSchema.parse(event);
       
       transactionId = purchaseEvent.transaction_id || null;
@@ -318,7 +561,6 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
       offerCode = purchaseEvent.offer_code || null;
       countryCode = purchaseEvent.country_code || null;
 
-      // Calculate revenue
       if (purchaseEvent.price !== undefined) {
         priceUsd = purchaseEvent.price;
         taxPercentage = purchaseEvent.tax_percentage ?? null;
@@ -329,6 +571,14 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
           commissionPercentage ?? undefined
         );
       }
+
+      // Update subscription status
+      await updateUserSubscriptionStatus(appUser.id, eventType, {
+        productId: (event.product_id as string) || null,
+        store: (event.store as string) || null,
+        expirationAtMs,
+        purchasedAtMs,
+      });
     }
 
     // Store the event
@@ -340,8 +590,10 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
         revenueCatUserId,
         transactionId,
         originalTransactionId,
-        eventType: eventType as RevenueCatEventType,
-        eventCategory: EVENT_CATEGORY_MAP[eventType],
+        eventType: (ALL_EVENT_TYPES.includes(eventType as typeof ALL_EVENT_TYPES[number]) 
+          ? eventType 
+          : "TEST") as RevenueCatEventType,
+        eventCategory: EVENT_CATEGORY_MAP[eventType] || "OTHER",
         eventTimestampMs: BigInt(event.event_timestamp_ms as number),
         purchasedAtMs: purchasedAtMs ? BigInt(purchasedAtMs) : null,
         expirationAtMs: expirationAtMs ? BigInt(expirationAtMs) : null,
@@ -356,10 +608,18 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
         commissionPercentage,
         netRevenueUsd,
         cancelReason,
+        expirationReason,
+        isRefund,
         renewalNumber,
         isTrialConversion,
         offerCode,
         countryCode,
+        newProductId,
+        transferredFrom: transferredFrom ? transferredFrom : null,
+        transferredTo: transferredTo ? transferredTo : null,
+        experimentId,
+        experimentVariant,
+        enrolledAtMs: enrolledAtMs ? BigInt(enrolledAtMs) : null,
         rawPayload: body,
         processed: true,
       },
@@ -378,64 +638,77 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
         auditAction = "revenuecat.non_renewing_purchase";
         break;
       case "CANCELLATION":
-        auditAction = "revenuecat.cancellation";
+        auditAction = isRefund ? "revenuecat.refund" : "revenuecat.cancellation";
         break;
       case "VIRTUAL_CURRENCY_TRANSACTION":
         auditAction = tokenAmount && tokenAmount > 0 
           ? "revenuecat.token_grant" 
           : "revenuecat.token_deduction";
         break;
+      case "EXPIRATION":
+        auditAction = "revenuecat.expiration";
+        break;
+      case "BILLING_ISSUE":
+        auditAction = "revenuecat.billing_issue";
+        break;
+      case "PRODUCT_CHANGE":
+        auditAction = "revenuecat.product_change";
+        break;
+      case "UNCANCELLATION":
+        auditAction = "revenuecat.uncancellation";
+        break;
+      case "SUBSCRIPTION_PAUSED":
+        auditAction = "revenuecat.subscription_paused";
+        break;
+      case "SUBSCRIPTION_EXTENDED":
+        auditAction = "revenuecat.subscription_extended";
+        break;
+      case "TRANSFER":
+        auditAction = "revenuecat.transfer";
+        break;
       default:
-        auditAction = "revenuecat.initial_purchase"; // Fallback
+        auditAction = "revenuecat.other";
     }
 
     // Create comprehensive audit log
     await auditRevenueCatEvent(auditAction, storedEvent.id, {
-      // Event identification
       revenueCatEventId: eventId,
       eventType,
-      eventCategory: EVENT_CATEGORY_MAP[eventType],
+      eventCategory: EVENT_CATEGORY_MAP[eventType] || "OTHER",
       eventTimestamp: new Date(event.event_timestamp_ms as number),
-      
-      // App info
       appId: app.id,
       appName: app.name,
       revenueCatAppId: appId,
-      
-      // User info
       appUserId: appUser.id,
       userExternalId: revenueCatUserId,
       userCreatedByWebhook: userWasCreated,
-      
-      // Transaction details
       transactionId,
       originalTransactionId,
       productId: (event.product_id as string) || null,
       store: (event.store as string) || null,
       environment: (event.environment as string) || "PRODUCTION",
-      
-      // Token details
       tokenAmount,
       tokenCurrencyCode,
       tokenSource: source,
       newTokenBalance: appUser.tokenBalance,
-      
-      // Revenue details
       priceUsd,
       taxPercentage,
       commissionPercentage,
       netRevenueUsd,
-      
-      // Subscription details
       renewalNumber,
       isTrialConversion,
       offerCode,
       countryCode,
       purchasedAt: purchasedAtMs ? new Date(purchasedAtMs) : null,
       expiresAt: expirationAtMs ? new Date(expirationAtMs) : null,
-      
-      // Cancellation details
       cancelReason,
+      expirationReason,
+      isRefund,
+      newProductId,
+      transferredFrom,
+      transferredTo,
+      experimentId,
+      experimentVariant,
     });
 
     console.log(`RevenueCat webhook: Processed ${eventType} for user ${revenueCatUserId} in app ${app.name}`);
@@ -444,8 +717,6 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
   } catch (error) {
     console.error("RevenueCat webhook error:", error);
     
-    // Return 200 to prevent RevenueCat from retrying (we log the error)
-    // In production, you might want to return 500 for retries
     return NextResponse.json(
       { error: "Processing error", details: error instanceof Error ? error.message : "Unknown error" },
       { status: 200 }
@@ -473,6 +744,6 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
     status: "ok",
     app: app.name,
     message: "RevenueCat webhook endpoint is ready",
+    supportedEvents: ALL_EVENT_TYPES,
   });
 }
-
