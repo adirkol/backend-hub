@@ -91,6 +91,8 @@ interface UserData {
   subscriptionStartedAt: string | null;
   lastBillingIssueAt: string | null;
   lastRefundAt: string | null;
+  // Previous user IDs (from TRANSFER events)
+  previousUserIds: string[] | null;
 }
 
 interface Stats {
@@ -466,6 +468,60 @@ export function UserTabs({
                   {formatDate(user.updatedAt)}
                 </p>
               </div>
+              {user.previousUserIds && user.previousUserIds.length > 0 && (
+                <div>
+                  <label style={{ 
+                    fontSize: "12px", 
+                    color: "#9ca3af", 
+                    textTransform: "uppercase", 
+                    letterSpacing: "0.05em",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "6px",
+                  }}>
+                    <ArrowRightLeft style={{ width: "12px", height: "12px" }} />
+                    Previous User IDs
+                  </label>
+                  <div style={{ marginTop: "8px", display: "flex", flexDirection: "column", gap: "6px" }}>
+                    {user.previousUserIds.map((prevId, index) => (
+                      <div 
+                        key={index}
+                        style={{ 
+                          fontSize: "13px", 
+                          color: "#a78bfa", 
+                          fontFamily: "monospace",
+                          padding: "6px 10px",
+                          background: "rgba(168, 139, 250, 0.1)",
+                          borderRadius: "6px",
+                          border: "1px solid rgba(168, 139, 250, 0.2)",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "8px",
+                        }}
+                      >
+                        <span style={{ 
+                          fontSize: "10px", 
+                          color: "#9ca3af",
+                          background: "rgba(39, 39, 42, 0.6)",
+                          padding: "2px 6px",
+                          borderRadius: "4px",
+                        }}>
+                          Merged
+                        </span>
+                        {prevId}
+                      </div>
+                    ))}
+                  </div>
+                  <p style={{ 
+                    fontSize: "11px", 
+                    color: "#71717a", 
+                    marginTop: "8px",
+                    fontStyle: "italic",
+                  }}>
+                    User accounts merged via RevenueCat TRANSFER
+                  </p>
+                </div>
+              )}
             </div>
           </div>
 

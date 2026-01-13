@@ -177,6 +177,9 @@ model AppUser {
   subscriptionStartedAt  DateTime? // When subscription first started
   lastBillingIssueAt     DateTime? // Track billing problems
   lastRefundAt           DateTime? // Track refunds (CUSTOMER_SUPPORT cancellation)
+  
+  // User identity transfer tracking (e.g., app reinstall with new user ID)
+  previousUserIds        Json?     // Array of previous externalIds that were transferred to this user
 
   app              App               @relation(fields: [appId], references: [id], onDelete: Cascade)
   tokenLedger      TokenLedgerEntry[]

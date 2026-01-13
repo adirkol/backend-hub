@@ -283,6 +283,8 @@ export default async function UserDetailPage({ params }: PageProps) {
           subscriptionStartedAt: user.subscriptionStartedAt?.toISOString() || null,
           lastBillingIssueAt: user.lastBillingIssueAt?.toISOString() || null,
           lastRefundAt: user.lastRefundAt?.toISOString() || null,
+          // Previous user IDs (from TRANSFER events)
+          previousUserIds: (user.previousUserIds as string[] | null) || null,
         }}
         appId={appId}
         jobs={serializedJobs}

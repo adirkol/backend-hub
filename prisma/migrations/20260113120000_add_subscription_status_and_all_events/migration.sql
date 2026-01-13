@@ -27,3 +27,6 @@ ALTER TABLE "RevenueCatEvent" ADD COLUMN IF NOT EXISTS "transferredTo" JSONB;
 ALTER TABLE "RevenueCatEvent" ADD COLUMN IF NOT EXISTS "experimentId" TEXT;
 ALTER TABLE "RevenueCatEvent" ADD COLUMN IF NOT EXISTS "experimentVariant" TEXT;
 ALTER TABLE "RevenueCatEvent" ADD COLUMN IF NOT EXISTS "enrolledAtMs" BIGINT;
+
+-- Add previousUserIds for user identity transfer tracking
+ALTER TABLE "AppUser" ADD COLUMN IF NOT EXISTS "previousUserIds" JSONB;

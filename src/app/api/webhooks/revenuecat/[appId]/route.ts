@@ -542,6 +542,126 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
       transferredFrom = transferEvent.transferred_from || null;
       transferredTo = transferEvent.transferred_to || null;
 
+      // Handle user merge when subscription is transferred
+      // The current user (app_user_id) is receiving the transfer
+      // transferred_from contains the OLD user IDs that are being merged into this one
+      if (transferredFrom && transferredFrom.length > 0) {
+        // Get current previousUserIds or initialize empty array
+        const currentPreviousIds = (appUser as { previousUserIds?: string[] }).previousUserIds || [];
+        const newPreviousIds = [...new Set([...currentPreviousIds, ...transferredFrom])];
+
+        // Find the old users and merge their data
+        let totalTokensToTransfer = 0;
+        let subscriptionToTransfer: {
+          isPremium: boolean;
+          subscriptionStatus: string | null;
+          subscriptionProductId: string | null;
+          subscriptionStore: string | null;
+          subscriptionExpiresAt: Date | null;
+          subscriptionStartedAt: Date | null;
+        } | null = null;
+
+        for (const oldExternalId of transferredFrom) {
+          const oldUser = await prisma.appUser.findUnique({
+            where: {
+              appId_externalId: {
+                appId: app.id,
+                externalId: oldExternalId,
+              },
+            },
+          });
+
+          if (oldUser) {
+            // Transfer token balance
+            totalTokensToTransfer += oldUser.tokenBalance;
+
+            // If old user has active subscription and new user doesn't, transfer it
+            if (oldUser.isPremium && !subscriptionToTransfer) {
+              subscriptionToTransfer = {
+                isPremium: oldUser.isPremium,
+                subscriptionStatus: oldUser.subscriptionStatus,
+                subscriptionProductId: oldUser.subscriptionProductId,
+                subscriptionStore: oldUser.subscriptionStore,
+                subscriptionExpiresAt: oldUser.subscriptionExpiresAt,
+                subscriptionStartedAt: oldUser.subscriptionStartedAt,
+              };
+            }
+
+            // Mark old user as inactive and zero out their balance
+            await prisma.appUser.update({
+              where: { id: oldUser.id },
+              data: {
+                isActive: false,
+                tokenBalance: 0,
+                isPremium: false,
+                subscriptionStatus: "TRANSFERRED",
+              },
+            });
+
+            // Log the merge in the old user's audit trail
+            await auditRevenueCatEvent("revenuecat.transfer", oldUser.id, {
+              revenueCatEventId: event.id as string,
+              eventType: "TRANSFER",
+              eventCategory: "OTHER",
+              eventTimestamp: new Date(event.event_timestamp_ms as number),
+              appId: app.id,
+              appName: app.name,
+              revenueCatAppId: appId,
+              appUserId: oldUser.id,
+              userExternalId: oldExternalId,
+              transferredFrom: [oldExternalId],
+              transferredTo: [revenueCatUserId],
+            });
+          }
+        }
+
+        // Update new user with merged data
+        const updateData: Record<string, unknown> = {
+          previousUserIds: newPreviousIds,
+        };
+
+        // Add token balance from old users
+        if (totalTokensToTransfer > 0) {
+          updateData.tokenBalance = appUser.tokenBalance + totalTokensToTransfer;
+
+          // Create a ledger entry for the transferred tokens
+          await prisma.tokenLedgerEntry.create({
+            data: {
+              appUserId: appUser.id,
+              amount: totalTokensToTransfer,
+              balanceAfter: appUser.tokenBalance + totalTokensToTransfer,
+              type: TokenEntryType.REVENUECAT_GRANT,
+              description: `Transferred from previous user(s): ${transferredFrom.join(", ")}`,
+              idempotencyKey: `transfer_${event.id as string}`,
+            },
+          });
+        }
+
+        // Transfer subscription if applicable
+        if (subscriptionToTransfer && !appUser.isPremium) {
+          updateData.isPremium = subscriptionToTransfer.isPremium;
+          updateData.subscriptionStatus = subscriptionToTransfer.subscriptionStatus;
+          updateData.subscriptionProductId = subscriptionToTransfer.subscriptionProductId;
+          updateData.subscriptionStore = subscriptionToTransfer.subscriptionStore;
+          updateData.subscriptionExpiresAt = subscriptionToTransfer.subscriptionExpiresAt;
+          updateData.subscriptionStartedAt = subscriptionToTransfer.subscriptionStartedAt;
+        }
+
+        await prisma.appUser.update({
+          where: { id: appUser.id },
+          data: updateData,
+        });
+
+        // Update local appUser object for correct audit log
+        appUser = { 
+          ...appUser, 
+          tokenBalance: appUser.tokenBalance + totalTokensToTransfer,
+          ...(subscriptionToTransfer && !appUser.isPremium ? subscriptionToTransfer : {}),
+        };
+
+        console.log(`RevenueCat webhook: TRANSFER - Merged ${transferredFrom.length} user(s) into ${revenueCatUserId}. Transferred ${totalTokensToTransfer} tokens.`);
+      }
+
     } else if (eventType === "EXPERIMENT_ENROLLMENT") {
       const expEvent = ExperimentEnrollmentEventSchema.parse(event);
       
