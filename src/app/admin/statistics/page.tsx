@@ -183,6 +183,7 @@ async function getStatistics() {
   // Get top paying users (last 90 days)
   const userRevenueMap = new Map<string, number>();
   for (const event of revenueEvents) {
+    if (!event.appUser) continue;
     const userId = event.appUser.externalId;
     const revenue = event.netRevenueUsd?.toNumber() || 0;
     userRevenueMap.set(userId, (userRevenueMap.get(userId) || 0) + revenue);
