@@ -159,33 +159,44 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ success: true, duplicate: true });
     }
 
-    // Get or create user
+    // Get or create user using upsert to handle race conditions
+    // (multiple webhooks for same user can arrive simultaneously)
     const revenueCatUserId = event.app_user_id as string;
-    let userWasCreated = false;
-    let appUser = await prisma.appUser.findUnique({
+    
+    // Check if user existed before upsert
+    const existingUser = await prisma.appUser.findUnique({
       where: {
         appId_externalId: {
           appId: app.id,
           externalId: revenueCatUserId,
         },
       },
+      select: { id: true },
     });
-
-    // Create user if not exists
+    
+    // Use upsert to atomically create or get user
     // Note: Users created from RevenueCat are OLD users who already had the app
     // before AI Hub was implemented. They should NOT get welcome tokens, as they
     // already received them client-side. Instead, we flag them for token sync.
-    if (!appUser) {
-      appUser = await prisma.appUser.create({
-        data: {
+    let appUser = await prisma.appUser.upsert({
+      where: {
+        appId_externalId: {
           appId: app.id,
           externalId: revenueCatUserId,
-          tokenBalance: 0, // No welcome tokens - user already had them client-side
-          needsTokenSync: true, // Flag for token sync when app calls POST /api/v1/users
         },
-      });
-      userWasCreated = true;
+      },
+      update: {}, // Don't update anything if user exists
+      create: {
+        appId: app.id,
+        externalId: revenueCatUserId,
+        tokenBalance: 0, // No welcome tokens - user already had them client-side
+        needsTokenSync: true, // Flag for token sync when app calls POST /api/v1/users
+      },
+    });
+    
+    const userWasCreated = !existingUser;
 
+    if (userWasCreated) {
       console.log(`RevenueCat webhook: Created user ${revenueCatUserId} with needsTokenSync=true (old user)`);
       
       // Audit log for user creation via RevenueCat
