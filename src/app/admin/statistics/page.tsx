@@ -89,6 +89,109 @@ async function getStatistics() {
     prisma.appUser.count(),
   ]);
 
+  // ===== REVENUE CALCULATIONS =====
+  
+  // Get all revenue events for 90 days
+  const revenueEvents = await prisma.revenueCatEvent.findMany({
+    where: {
+      eventCategory: "REVENUE",
+      createdAt: { gte: ninetyDaysAgo },
+    },
+    select: {
+      id: true,
+      eventType: true,
+      productId: true,
+      store: true,
+      countryCode: true,
+      priceUsd: true,
+      netRevenueUsd: true,
+      createdAt: true,
+      appUser: {
+        select: { externalId: true },
+      },
+    },
+  });
+
+  // Revenue by country
+  const revenueByCountry = new Map<string, { amount: number; count: number }>();
+  // Revenue by product
+  const revenueByProduct = new Map<string, { amount: number; count: number }>();
+  // Revenue by store
+  const revenueByStore = new Map<string, { amount: number; count: number }>();
+  // Daily revenue
+  const dailyRevenue = new Map<string, number>();
+  // Revenue by event type
+  const revenueByEventType = new Map<string, { amount: number; count: number }>();
+  // Total revenue
+  let totalRevenue = 0;
+
+  for (const event of revenueEvents) {
+    const revenue = event.netRevenueUsd?.toNumber() || 0;
+    totalRevenue += revenue;
+
+    // By country
+    const country = event.countryCode || "Unknown";
+    const countryStats = revenueByCountry.get(country) || { amount: 0, count: 0 };
+    countryStats.amount += revenue;
+    countryStats.count += 1;
+    revenueByCountry.set(country, countryStats);
+
+    // By product
+    const product = event.productId || "Unknown";
+    const productStats = revenueByProduct.get(product) || { amount: 0, count: 0 };
+    productStats.amount += revenue;
+    productStats.count += 1;
+    revenueByProduct.set(product, productStats);
+
+    // By store
+    const store = event.store || "Unknown";
+    const storeStats = revenueByStore.get(store) || { amount: 0, count: 0 };
+    storeStats.amount += revenue;
+    storeStats.count += 1;
+    revenueByStore.set(store, storeStats);
+
+    // By event type
+    const eventType = event.eventType;
+    const eventTypeStats = revenueByEventType.get(eventType) || { amount: 0, count: 0 };
+    eventTypeStats.amount += revenue;
+    eventTypeStats.count += 1;
+    revenueByEventType.set(eventType, eventTypeStats);
+
+    // Daily
+    const dateKey = event.createdAt.toISOString().split("T")[0];
+    dailyRevenue.set(dateKey, (dailyRevenue.get(dateKey) || 0) + revenue);
+  }
+
+  // Format daily revenue for chart (last 90 days)
+  const dailyRevenueChart: Array<{ date: string; rawDate: string; amount: number }> = [];
+  for (let i = 89; i >= 0; i--) {
+    const date = new Date();
+    date.setDate(date.getDate() - i);
+    const dateKey = date.toISOString().split("T")[0];
+    dailyRevenueChart.push({
+      date: date.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+      rawDate: dateKey,
+      amount: dailyRevenue.get(dateKey) || 0,
+    });
+  }
+
+  // Get this week's revenue
+  const revenueThisWeek = revenueEvents
+    .filter(e => e.createdAt >= weekStart)
+    .reduce((sum, e) => sum + (e.netRevenueUsd?.toNumber() || 0), 0);
+
+  // Get top paying users (last 90 days)
+  const userRevenueMap = new Map<string, number>();
+  for (const event of revenueEvents) {
+    const userId = event.appUser.externalId;
+    const revenue = event.netRevenueUsd?.toNumber() || 0;
+    userRevenueMap.set(userId, (userRevenueMap.get(userId) || 0) + revenue);
+  }
+  const topPayingUsers = Array.from(userRevenueMap.entries())
+    .map(([userId, amount]) => ({ userId, amount }))
+    .sort((a, b) => b.amount - a.amount)
+    .slice(0, 10);
+
   // ===== EXPENSE CALCULATIONS =====
   
   // Get all successful provider usage logs for 90 days
@@ -235,6 +338,25 @@ async function getStatistics() {
       byModel: Array.from(expensesByModel.values())
         .sort((a, b) => b.amount - a.amount),
       daily: dailyExpenseChart,
+    },
+    // Revenue data
+    revenue: {
+      total: totalRevenue,
+      thisWeek: revenueThisWeek,
+      byCountry: Array.from(revenueByCountry.entries())
+        .map(([code, stats]) => ({ code, ...stats }))
+        .sort((a, b) => b.amount - a.amount),
+      byProduct: Array.from(revenueByProduct.entries())
+        .map(([product, stats]) => ({ product, ...stats }))
+        .sort((a, b) => b.amount - a.amount),
+      byStore: Array.from(revenueByStore.entries())
+        .map(([store, stats]) => ({ store, ...stats }))
+        .sort((a, b) => b.amount - a.amount),
+      byEventType: Array.from(revenueByEventType.entries())
+        .map(([type, stats]) => ({ type, ...stats }))
+        .sort((a, b) => b.amount - a.amount),
+      daily: dailyRevenueChart,
+      topPayingUsers,
     },
   };
 }

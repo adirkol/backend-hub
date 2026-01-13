@@ -13,7 +13,9 @@ import {
   RefreshCw,
   CreditCard,
   XCircle,
+  Globe,
 } from "lucide-react";
+import { countryCodeToFlag, getCountryName } from "@/lib/countries";
 
 interface Job {
   id: string;
@@ -53,6 +55,7 @@ interface RevenueCatEvent {
   renewalNumber: number | null;
   eventTimestampMs: string;
   createdAt: string;
+  countryCode: string | null;
 }
 
 interface UserData {
@@ -737,7 +740,7 @@ export function UserTabs({
           <table style={{ width: "100%", borderCollapse: "collapse" }}>
             <thead>
               <tr style={{ borderBottom: "1px solid rgba(63, 63, 70, 0.4)" }}>
-                {["Event", "Transaction ID", "Product", "Store", "Price", "Net Revenue", "Date"].map((header) => (
+                {["Event", "Country", "Product", "Store", "Price", "Net Revenue", "Date"].map((header) => (
                   <th 
                     key={header}
                     style={{ 
@@ -796,24 +799,29 @@ export function UserTabs({
                     </div>
                   </td>
                   <td style={{ padding: "18px 20px" }}>
-                    <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-                      {event.transactionId && (
-                        <code style={{ 
-                          fontSize: "11px", 
-                          color: "#b8b8c8", 
-                          fontFamily: "monospace",
+                    {event.countryCode ? (
+                      <span 
+                        title={getCountryName(event.countryCode)}
+                        style={{ 
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "8px",
+                          cursor: "help",
+                        }}
+                      >
+                        <span style={{ fontSize: "20px" }}>
+                          {countryCodeToFlag(event.countryCode)}
+                        </span>
+                        <span style={{ 
+                          fontSize: "12px", 
+                          color: "#b8b8c8",
                         }}>
-                          {event.transactionId}
-                        </code>
-                      )}
-                      <code style={{ 
-                        fontSize: "10px", 
-                        color: "#9ca3af", 
-                        fontFamily: "monospace",
-                      }}>
-                        {event.revenueCatEventId}
-                      </code>
-                    </div>
+                          {event.countryCode}
+                        </span>
+                      </span>
+                    ) : (
+                      <span style={{ color: "#71717a", fontSize: "13px" }}>—</span>
+                    )}
                   </td>
                   <td style={{ padding: "18px 20px", fontSize: "13px", color: "#b8b8c8", fontFamily: "monospace" }}>
                     {event.productId || "-"}

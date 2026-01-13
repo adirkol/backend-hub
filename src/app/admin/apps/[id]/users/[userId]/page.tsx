@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { ArrowLeft } from "lucide-react";
 import { UserTabs } from "./user-tabs";
 import { getEffectiveTokenBalance } from "@/lib/tokens";
+import { getCountryDisplay } from "@/lib/countries";
 
 interface PageProps {
   params: Promise<{ id: string; userId: string }>;
@@ -72,6 +73,16 @@ async function getUserData(appId: string, userId: string) {
     take: 100,
   });
 
+  // Get user's most recent country code from RevenueCat events
+  const countryEvent = await prisma.revenueCatEvent.findFirst({
+    where: { 
+      appUserId: userId,
+      countryCode: { not: null },
+    },
+    orderBy: { createdAt: "desc" },
+    select: { countryCode: true },
+  });
+
   // Calculate aggregated stats
   const totalTokensGranted = await prisma.tokenLedgerEntry.aggregate({
     where: { 
@@ -128,6 +139,7 @@ async function getUserData(appId: string, userId: string) {
       totalExpenses: totalExpenses._sum?.costCharged?.toNumber() || 0,
     },
     effectiveBalance,
+    countryCode: countryEvent?.countryCode || null,
   };
 }
 
@@ -139,7 +151,7 @@ export default async function UserDetailPage({ params }: PageProps) {
     notFound();
   }
 
-  const { user, jobs, tokenLedger, tokenEvents, revenueEvents, stats, effectiveBalance } = data;
+  const { user, jobs, tokenLedger, tokenEvents, revenueEvents, stats, effectiveBalance, countryCode } = data;
 
   // Serialize for client component
   const serializedJobs = jobs.map((j) => ({
@@ -178,6 +190,7 @@ export default async function UserDetailPage({ params }: PageProps) {
     commissionPercentage: e.commissionPercentage?.toNumber() || null,
     netRevenueUsd: e.netRevenueUsd?.toNumber() || null,
     createdAt: e.createdAt.toISOString(),
+    countryCode: e.countryCode,
   }));
 
   return (
@@ -204,9 +217,37 @@ export default async function UserDetailPage({ params }: PageProps) {
             <h1 style={{ fontSize: "28px", fontWeight: "700", color: "#fafafa", letterSpacing: "-0.02em" }}>
               User Details
             </h1>
-            <p style={{ color: "#9ca3af", marginTop: "6px", fontSize: "15px", fontFamily: "monospace" }}>
-              {user.externalId}
-            </p>
+            <div style={{ display: "flex", alignItems: "center", gap: "12px", marginTop: "6px" }}>
+              <p style={{ color: "#9ca3af", fontSize: "15px", fontFamily: "monospace" }}>
+                {user.externalId}
+              </p>
+              {countryCode && (() => {
+                const country = getCountryDisplay(countryCode);
+                return (
+                  <span 
+                    title={country.name}
+                    style={{ 
+                      fontSize: "20px", 
+                      cursor: "help",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "6px",
+                    }}
+                  >
+                    {country.flag}
+                    <span style={{ 
+                      fontSize: "12px", 
+                      color: "#9ca3af",
+                      background: "rgba(39, 39, 42, 0.6)",
+                      padding: "2px 8px",
+                      borderRadius: "4px",
+                    }}>
+                      {country.code}
+                    </span>
+                  </span>
+                );
+              })()}
+            </div>
           </div>
           <span className={user.isActive ? "badge-success" : "badge-error"}>
             {user.isActive ? "Active" : "Inactive"}

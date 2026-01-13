@@ -16,7 +16,10 @@ import {
   Calendar,
   Filter,
   ChevronDown,
+  Globe,
+  CreditCard,
 } from "lucide-react";
+import { countryCodeToFlag, getCountryName } from "@/lib/countries";
 
 interface DailyStat {
   date: string;
@@ -73,6 +76,41 @@ interface App {
   name: string;
 }
 
+interface RevenueByCountry {
+  code: string;
+  amount: number;
+  count: number;
+}
+
+interface RevenueByProduct {
+  product: string;
+  amount: number;
+  count: number;
+}
+
+interface RevenueByStore {
+  store: string;
+  amount: number;
+  count: number;
+}
+
+interface RevenueByEventType {
+  type: string;
+  amount: number;
+  count: number;
+}
+
+interface DailyRevenue {
+  date: string;
+  rawDate: string;
+  amount: number;
+}
+
+interface TopPayingUser {
+  userId: string;
+  amount: number;
+}
+
 interface StatisticsData {
   dailyStats: DailyStat[];
   userGrowth: UserGrowth[];
@@ -92,10 +130,20 @@ interface StatisticsData {
     byModel: ExpenseByModel[];
     daily: DailyExpense[];
   };
+  revenue: {
+    total: number;
+    thisWeek: number;
+    byCountry: RevenueByCountry[];
+    byProduct: RevenueByProduct[];
+    byStore: RevenueByStore[];
+    byEventType: RevenueByEventType[];
+    daily: DailyRevenue[];
+    topPayingUsers: TopPayingUser[];
+  };
   apps: App[];
 }
 
-type TabType = "usage" | "expenses";
+type TabType = "usage" | "revenue" | "expenses";
 type RangeType = "7d" | "14d" | "30d" | "90d" | "custom";
 
 function StatCard({
@@ -239,6 +287,7 @@ export function StatisticsClient({ data }: { data: StatisticsData }) {
       dailyStats: data.dailyStats.filter(d => d.rawDate >= cutoffStr),
       userGrowth: data.userGrowth.filter(d => d.rawDate >= cutoffStr),
       expenseDaily: data.expenses.daily.filter(d => d.rawDate >= cutoffStr),
+      revenueDaily: data.revenue.daily.filter(d => d.rawDate >= cutoffStr),
     };
   }, [data, dateRange]);
 
@@ -249,6 +298,7 @@ export function StatisticsClient({ data }: { data: StatisticsData }) {
     const failedJobs = filteredData.dailyStats.reduce((sum, d) => sum + d.failed, 0);
     const newUsers = filteredData.userGrowth.reduce((sum, d) => sum + d.count, 0);
     const totalExpenses = filteredData.expenseDaily.reduce((sum, d) => sum + d.amount, 0);
+    const totalRevenue = filteredData.revenueDaily.reduce((sum, d) => sum + d.amount, 0);
     
     return {
       totalJobs,
@@ -256,12 +306,15 @@ export function StatisticsClient({ data }: { data: StatisticsData }) {
       failedJobs,
       newUsers,
       totalExpenses,
+      totalRevenue,
       avgCostPerJob: totalJobs > 0 ? totalExpenses / totalJobs : 0,
+      netProfit: totalRevenue - totalExpenses,
     };
   }, [filteredData]);
 
   const tabs = [
     { id: "usage" as const, label: "Usage", icon: <Activity style={{ width: "16px", height: "16px" }} /> },
+    { id: "revenue" as const, label: "Revenue", icon: <CreditCard style={{ width: "16px", height: "16px" }} /> },
     { id: "expenses" as const, label: "Expenses", icon: <Receipt style={{ width: "16px", height: "16px" }} /> },
   ];
 
@@ -625,6 +678,299 @@ export function StatisticsClient({ data }: { data: StatisticsData }) {
                 <p style={{ color: "#9ca3af", textAlign: "center", padding: "40px 0" }}>No data available</p>
               )}
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Revenue Tab */}
+      {activeTab === "revenue" && (
+        <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+          {/* Stats Cards */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "20px" }}>
+            <StatCard
+              title="Total Revenue"
+              value={`$${filteredTotals.totalRevenue.toFixed(2)}`}
+              icon={DollarSign}
+              iconBg="linear-gradient(135deg, rgba(34, 197, 94, 0.2) 0%, rgba(22, 163, 74, 0.3) 100%)"
+              iconColor="#34d399"
+            />
+            <StatCard
+              title="Total Expenses"
+              value={`$${filteredTotals.totalExpenses.toFixed(2)}`}
+              icon={Receipt}
+              iconBg="linear-gradient(135deg, rgba(239, 68, 68, 0.2) 0%, rgba(220, 38, 38, 0.3) 100%)"
+              iconColor="#f87171"
+            />
+            <StatCard
+              title="Net Profit"
+              value={`$${filteredTotals.netProfit.toFixed(2)}`}
+              icon={TrendingUp}
+              iconBg={`linear-gradient(135deg, ${filteredTotals.netProfit >= 0 ? "rgba(34, 197, 94, 0.2)" : "rgba(239, 68, 68, 0.2)"} 0%, ${filteredTotals.netProfit >= 0 ? "rgba(22, 163, 74, 0.3)" : "rgba(220, 38, 38, 0.3)"} 100%)`}
+              iconColor={filteredTotals.netProfit >= 0 ? "#34d399" : "#f87171"}
+            />
+            <StatCard
+              title="Transactions"
+              value={data.revenue.byCountry.reduce((sum, c) => sum + c.count, 0)}
+              icon={CreditCard}
+              iconBg="linear-gradient(135deg, rgba(0, 240, 255, 0.2) 0%, rgba(0, 184, 204, 0.3) 100%)"
+              iconColor="#00f0ff"
+            />
+          </div>
+
+          {/* Revenue Charts */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(400px, 1fr))", gap: "24px" }}>
+            {/* Revenue Over Time */}
+            <div className="glass" style={{ padding: "28px" }}>
+              <h3 style={{ fontWeight: "600", color: "#e4e4e7", marginBottom: "24px", fontSize: "16px" }}>
+                Revenue Over Time
+              </h3>
+              {filteredData.revenueDaily.length > 0 && filteredData.revenueDaily.some(d => d.amount > 0) ? (
+                <>
+                  <MiniChart data={filteredData.revenueDaily.map(d => ({ value: d.amount }))} color="#34d399" />
+                  <div style={{ display: "flex", justifyContent: "space-between", marginTop: "12px" }}>
+                    <span style={{ fontSize: "12px", color: "#9ca3af" }}>{filteredData.revenueDaily[0]?.date}</span>
+                    <span style={{ fontSize: "12px", color: "#9ca3af" }}>{filteredData.revenueDaily[filteredData.revenueDaily.length - 1]?.date}</span>
+                  </div>
+                  <p style={{ marginTop: "20px", fontSize: "14px", color: "#b8b8c8" }}>
+                    Total: <span style={{ color: "#34d399", fontWeight: "600" }}>${filteredTotals.totalRevenue.toFixed(2)}</span>
+                  </p>
+                </>
+              ) : (
+                <p style={{ color: "#9ca3af", textAlign: "center", padding: "40px 0" }}>No revenue data available</p>
+              )}
+            </div>
+
+            {/* Revenue by Country */}
+            <div className="glass" style={{ padding: "28px" }}>
+              <h3 style={{ fontWeight: "600", color: "#e4e4e7", marginBottom: "24px", fontSize: "16px", display: "flex", alignItems: "center", gap: "10px" }}>
+                <Globe style={{ width: "18px", height: "18px", color: "#00f0ff" }} />
+                Revenue by Country
+              </h3>
+              {data.revenue.byCountry.length > 0 ? (
+                <div style={{ display: "flex", flexDirection: "column", gap: "12px", maxHeight: "320px", overflowY: "auto" }}>
+                  {data.revenue.byCountry.slice(0, 15).map((country, i) => (
+                    <div key={i} style={{ 
+                      display: "flex", 
+                      alignItems: "center", 
+                      justifyContent: "space-between", 
+                      padding: "12px 16px", 
+                      borderRadius: "10px", 
+                      background: "rgba(39, 39, 42, 0.4)",
+                      border: "1px solid rgba(63, 63, 70, 0.3)",
+                    }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                        <span style={{ fontSize: "24px" }} title={getCountryName(country.code)}>
+                          {countryCodeToFlag(country.code)}
+                        </span>
+                        <div>
+                          <p style={{ fontSize: "14px", fontWeight: "500", color: "#e4e4e7" }}>
+                            {getCountryName(country.code)}
+                          </p>
+                          <p style={{ fontSize: "12px", color: "#9ca3af" }}>
+                            {country.count} transaction{country.count !== 1 ? "s" : ""}
+                          </p>
+                        </div>
+                      </div>
+                      <div style={{ textAlign: "right" }}>
+                        <p style={{ fontSize: "16px", fontWeight: "600", color: "#34d399" }}>
+                          ${country.amount.toFixed(2)}
+                        </p>
+                        <p style={{ fontSize: "12px", color: "#9ca3af" }}>
+                          {((country.amount / data.revenue.total) * 100).toFixed(1)}%
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p style={{ color: "#9ca3af", textAlign: "center", padding: "40px 0" }}>No data available</p>
+              )}
+            </div>
+          </div>
+
+          {/* Bottom Row */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: "24px" }}>
+            {/* Revenue by Store */}
+            <div className="glass" style={{ padding: "28px" }}>
+              <h3 style={{ fontWeight: "600", color: "#e4e4e7", marginBottom: "24px", fontSize: "16px" }}>
+                Revenue by Store
+              </h3>
+              {data.revenue.byStore.length > 0 ? (
+                <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+                  {data.revenue.byStore.map((store, i) => (
+                    <div key={i} style={{ 
+                      display: "flex", 
+                      alignItems: "center", 
+                      justifyContent: "space-between", 
+                      padding: "16px", 
+                      borderRadius: "12px", 
+                      background: "rgba(39, 39, 42, 0.4)",
+                      border: "1px solid rgba(63, 63, 70, 0.3)",
+                    }}>
+                      <div>
+                        <p style={{ fontSize: "14px", fontWeight: "500", color: "#e4e4e7" }}>
+                          {store.store === "APP_STORE" ? "🍎 App Store" : 
+                           store.store === "PLAY_STORE" ? "🤖 Play Store" : 
+                           store.store}
+                        </p>
+                        <p style={{ fontSize: "13px", color: "#9ca3af", marginTop: "4px" }}>
+                          {store.count} transactions
+                        </p>
+                      </div>
+                      <div style={{ textAlign: "right" }}>
+                        <p style={{ fontSize: "16px", fontWeight: "600", color: "#34d399" }}>${store.amount.toFixed(2)}</p>
+                        <p style={{ fontSize: "13px", color: "#9ca3af", marginTop: "4px" }}>
+                          ${store.count > 0 ? (store.amount / store.count).toFixed(2) : "0.00"} avg
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p style={{ color: "#9ca3af", textAlign: "center", padding: "40px 0" }}>No data available</p>
+              )}
+            </div>
+
+            {/* Revenue by Event Type */}
+            <div className="glass" style={{ padding: "28px" }}>
+              <h3 style={{ fontWeight: "600", color: "#e4e4e7", marginBottom: "24px", fontSize: "16px" }}>
+                Revenue by Type
+              </h3>
+              {data.revenue.byEventType.length > 0 ? (
+                <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                  {data.revenue.byEventType.map((eventType, i) => {
+                    const typeLabels: Record<string, { label: string; color: string }> = {
+                      INITIAL_PURCHASE: { label: "Initial Purchase", color: "#00f0ff" },
+                      RENEWAL: { label: "Renewal", color: "#34d399" },
+                      NON_RENEWING_PURCHASE: { label: "One-time Purchase", color: "#fbbf24" },
+                      CANCELLATION: { label: "Cancellation", color: "#f87171" },
+                    };
+                    const config = typeLabels[eventType.type] || { label: eventType.type, color: "#b8b8c8" };
+
+                    return (
+                      <div key={i} style={{ 
+                        display: "flex", 
+                        alignItems: "center", 
+                        justifyContent: "space-between", 
+                        padding: "14px 0",
+                        borderBottom: i < data.revenue.byEventType.length - 1 ? "1px solid rgba(63, 63, 70, 0.3)" : "none",
+                      }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                          <div style={{
+                            width: "10px",
+                            height: "10px",
+                            borderRadius: "50%",
+                            background: config.color,
+                          }} />
+                          <span style={{ fontSize: "14px", color: "#e4e4e7" }}>{config.label}</span>
+                          <span style={{ fontSize: "12px", color: "#9ca3af" }}>({eventType.count})</span>
+                        </div>
+                        <span style={{ fontSize: "14px", fontWeight: "600", color: config.color }}>
+                          ${eventType.amount.toFixed(2)}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <p style={{ color: "#9ca3af", textAlign: "center", padding: "40px 0" }}>No data available</p>
+              )}
+            </div>
+
+            {/* Top Paying Users */}
+            <div className="glass" style={{ padding: "28px" }}>
+              <h3 style={{ fontWeight: "600", color: "#e4e4e7", marginBottom: "24px", fontSize: "16px" }}>
+                Top Paying Users
+              </h3>
+              {data.revenue.topPayingUsers.length > 0 ? (
+                <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                  {data.revenue.topPayingUsers.slice(0, 8).map((user, i) => (
+                    <div key={i} style={{ 
+                      display: "flex", 
+                      alignItems: "center", 
+                      justifyContent: "space-between", 
+                      padding: "10px 14px",
+                      borderRadius: "8px",
+                      background: i < 3 ? "rgba(34, 197, 94, 0.1)" : "rgba(39, 39, 42, 0.3)",
+                      border: i < 3 ? "1px solid rgba(34, 197, 94, 0.2)" : "1px solid transparent",
+                    }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                        <span style={{ 
+                          fontSize: "12px", 
+                          fontWeight: "600", 
+                          color: i < 3 ? "#34d399" : "#9ca3af",
+                          width: "20px",
+                        }}>
+                          #{i + 1}
+                        </span>
+                        <code style={{ 
+                          fontSize: "12px", 
+                          color: "#b8b8c8",
+                          fontFamily: "monospace",
+                          maxWidth: "140px",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                        }}>
+                          {user.userId}
+                        </code>
+                      </div>
+                      <span style={{ fontSize: "14px", fontWeight: "600", color: "#34d399" }}>
+                        ${user.amount.toFixed(2)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p style={{ color: "#9ca3af", textAlign: "center", padding: "40px 0" }}>No data available</p>
+              )}
+            </div>
+          </div>
+
+          {/* Revenue by Product */}
+          <div className="glass" style={{ padding: "28px" }}>
+            <h3 style={{ fontWeight: "600", color: "#e4e4e7", marginBottom: "24px", fontSize: "16px" }}>
+              Revenue by Product
+            </h3>
+            {data.revenue.byProduct.length > 0 ? (
+              <div style={{ 
+                display: "grid", 
+                gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", 
+                gap: "16px" 
+              }}>
+                {data.revenue.byProduct.slice(0, 12).map((product, i) => (
+                  <div key={i} style={{ 
+                    padding: "20px", 
+                    borderRadius: "12px", 
+                    background: "rgba(39, 39, 42, 0.4)",
+                    border: "1px solid rgba(63, 63, 70, 0.3)",
+                  }}>
+                    <p style={{ 
+                      fontSize: "13px", 
+                      fontWeight: "500", 
+                      color: "#e4e4e7", 
+                      marginBottom: "8px",
+                      fontFamily: "monospace",
+                      wordBreak: "break-all",
+                    }}>
+                      {product.product}
+                    </p>
+                    <div style={{ display: "flex", alignItems: "baseline", gap: "12px" }}>
+                      <span style={{ fontSize: "24px", fontWeight: "700", color: "#34d399" }}>
+                        ${product.amount.toFixed(2)}
+                      </span>
+                      <span style={{ fontSize: "13px", color: "#9ca3af" }}>
+                        {product.count} sale{product.count !== 1 ? "s" : ""}
+                      </span>
+                    </div>
+                    <p style={{ fontSize: "13px", color: "#9ca3af", marginTop: "8px" }}>
+                      Avg: ${product.count > 0 ? (product.amount / product.count).toFixed(2) : "0.00"}/sale
+                    </p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p style={{ color: "#9ca3af", textAlign: "center", padding: "40px 0" }}>No product data available</p>
+            )}
           </div>
         </div>
       )}
