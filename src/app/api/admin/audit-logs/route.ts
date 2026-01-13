@@ -6,7 +6,7 @@ import { getAuditLogs } from "@/lib/audit";
 /**
  * GET /api/admin/audit-logs
  * 
- * Query audit logs with optional filters.
+ * Query audit logs with optional filters and search.
  */
 export async function GET(req: NextRequest) {
   try {
@@ -21,6 +21,7 @@ export async function GET(req: NextRequest) {
     const entityId = url.searchParams.get("entityId") || undefined;
     const actorId = url.searchParams.get("actorId") || undefined;
     const action = url.searchParams.get("action") || undefined;
+    const search = url.searchParams.get("search") || undefined;
     const limit = Math.min(parseInt(url.searchParams.get("limit") || "50"), 200);
     const offset = parseInt(url.searchParams.get("offset") || "0");
 
@@ -29,6 +30,7 @@ export async function GET(req: NextRequest) {
       entityId,
       actorId,
       action,
+      search,
       limit,
       offset,
     });

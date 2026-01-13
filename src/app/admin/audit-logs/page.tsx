@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, Fragment } from "react";
-import { Shield, Filter, RefreshCw, User, Server, Webhook } from "lucide-react";
+import { Shield, Filter, RefreshCw, User, Server, Webhook, Search, X } from "lucide-react";
 
 interface AuditLog {
   id: string;
@@ -27,6 +27,7 @@ const actionTypes = [
   "app.created",
   "app.updated",
   "app.deleted",
+  "app.users_deleted",
   "model.created",
   "model.updated",
   "model.deleted",
@@ -171,6 +172,8 @@ export default function AuditLogsPage() {
   const [page, setPage] = useState(1);
   const [entityTypeFilter, setEntityTypeFilter] = useState<string>("");
   const [actionFilter, setActionFilter] = useState<string>("");
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [searchInput, setSearchInput] = useState<string>("");
   const [expandedMetadata, setExpandedMetadata] = useState<Set<string>>(new Set());
   const limit = 25;
 
@@ -182,6 +185,7 @@ export default function AuditLogsPage() {
       params.set("offset", String((page - 1) * limit));
       if (entityTypeFilter) params.set("entityType", entityTypeFilter);
       if (actionFilter) params.set("action", actionFilter);
+      if (searchQuery) params.set("search", searchQuery);
 
       const res = await fetch(`/api/admin/audit-logs?${params.toString()}`);
       if (!res.ok) throw new Error("Failed to fetch audit logs");
@@ -194,7 +198,19 @@ export default function AuditLogsPage() {
     } finally {
       setLoading(false);
     }
-  }, [page, entityTypeFilter, actionFilter]);
+  }, [page, entityTypeFilter, actionFilter, searchQuery]);
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    setSearchQuery(searchInput);
+    setPage(1);
+  };
+
+  const clearSearch = () => {
+    setSearchInput("");
+    setSearchQuery("");
+    setPage(1);
+  };
 
   useEffect(() => {
     fetchLogs();
@@ -217,6 +233,8 @@ export default function AuditLogsPage() {
   const clearFilters = () => {
     setEntityTypeFilter("");
     setActionFilter("");
+    setSearchInput("");
+    setSearchQuery("");
     setPage(1);
   };
 
@@ -288,93 +306,185 @@ export default function AuditLogsPage() {
         </button>
       </div>
 
-      {/* Filters */}
+      {/* Search and Filters */}
       <div
         className="glass"
         style={{
           padding: "20px 24px",
           display: "flex",
-          alignItems: "center",
-          gap: "20px",
-          flexWrap: "wrap",
+          flexDirection: "column",
+          gap: "16px",
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-          <Filter style={{ width: "16px", height: "16px", color: "#9ca3af" }} />
-          <span style={{ fontSize: "14px", color: "#9ca3af", fontWeight: "500" }}>Filters:</span>
-        </div>
-
-        <select
-          value={entityTypeFilter}
-          onChange={(e) => {
-            setEntityTypeFilter(e.target.value);
-            setPage(1);
-          }}
-          style={{
-            padding: "10px 16px",
-            borderRadius: "10px",
-            fontSize: "13px",
-            fontWeight: "500",
-            background: "rgba(39, 39, 42, 0.6)",
-            border: "1px solid rgba(63, 63, 70, 0.5)",
-            color: "#e4e4e7",
-            outline: "none",
-            cursor: "pointer",
-            minWidth: "140px",
-          }}
-        >
-          <option value="">All Entities</option>
-          {entityTypes.map((type) => (
-            <option key={type} value={type}>
-              {type}
-            </option>
-          ))}
-        </select>
-
-        <select
-          value={actionFilter}
-          onChange={(e) => {
-            setActionFilter(e.target.value);
-            setPage(1);
-          }}
-          style={{
-            padding: "10px 16px",
-            borderRadius: "10px",
-            fontSize: "13px",
-            fontWeight: "500",
-            background: "rgba(39, 39, 42, 0.6)",
-            border: "1px solid rgba(63, 63, 70, 0.5)",
-            color: "#e4e4e7",
-            outline: "none",
-            cursor: "pointer",
-            minWidth: "180px",
-          }}
-        >
-          <option value="">All Actions</option>
-          {actionTypes.map((action) => (
-            <option key={action} value={action}>
-              {action}
-            </option>
-          ))}
-        </select>
-
-        {(entityTypeFilter || actionFilter) && (
+        {/* Search */}
+        <form onSubmit={handleSearch} style={{ display: "flex", gap: "12px" }}>
+          <div style={{ position: "relative", flex: 1, maxWidth: "500px" }}>
+            <Search style={{ 
+              position: "absolute", 
+              left: "14px", 
+              top: "50%", 
+              transform: "translateY(-50%)", 
+              width: "18px", 
+              height: "18px", 
+              color: "#71717a" 
+            }} />
+            <input
+              type="text"
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              placeholder="Search by user ID, external ID, app name..."
+              style={{
+                width: "100%",
+                padding: "12px 40px 12px 44px",
+                borderRadius: "10px",
+                background: "rgba(39, 39, 42, 0.6)",
+                border: searchQuery ? "1px solid rgba(0, 240, 255, 0.4)" : "1px solid rgba(63, 63, 70, 0.5)",
+                color: "#fafafa",
+                fontSize: "14px",
+                outline: "none",
+              }}
+            />
+            {searchInput && (
+              <button
+                type="button"
+                onClick={clearSearch}
+                style={{
+                  position: "absolute",
+                  right: "10px",
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  background: "transparent",
+                  border: "none",
+                  cursor: "pointer",
+                  padding: "4px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <X style={{ width: "16px", height: "16px", color: "#71717a" }} />
+              </button>
+            )}
+          </div>
           <button
-            onClick={clearFilters}
+            type="submit"
+            style={{
+              padding: "12px 20px",
+              borderRadius: "10px",
+              fontSize: "14px",
+              fontWeight: "500",
+              color: "#00f0ff",
+              background: "rgba(0, 240, 255, 0.1)",
+              border: "1px solid rgba(0, 240, 255, 0.3)",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+            }}
+          >
+            <Search style={{ width: "16px", height: "16px" }} />
+            Search
+          </button>
+        </form>
+
+        {/* Filters */}
+        <div style={{ display: "flex", alignItems: "center", gap: "20px", flexWrap: "wrap" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            <Filter style={{ width: "16px", height: "16px", color: "#71717a" }} />
+            <span style={{ fontSize: "14px", color: "#9ca3af", fontWeight: "500" }}>Filters:</span>
+          </div>
+
+          <select
+            value={entityTypeFilter}
+            onChange={(e) => {
+              setEntityTypeFilter(e.target.value);
+              setPage(1);
+            }}
             style={{
               padding: "10px 16px",
               borderRadius: "10px",
               fontSize: "13px",
               fontWeight: "500",
-              color: "#f87171",
-              background: "rgba(239, 68, 68, 0.1)",
-              border: "1px solid rgba(239, 68, 68, 0.2)",
+              background: "rgba(39, 39, 42, 0.6)",
+              border: "1px solid rgba(63, 63, 70, 0.5)",
+              color: "#e4e4e7",
+              outline: "none",
               cursor: "pointer",
-              transition: "all 0.15s ease",
+              minWidth: "140px",
             }}
           >
-            Clear Filters
-          </button>
+            <option value="">All Entities</option>
+            {entityTypes.map((type) => (
+              <option key={type} value={type}>
+                {type}
+              </option>
+            ))}
+          </select>
+
+          <select
+            value={actionFilter}
+            onChange={(e) => {
+              setActionFilter(e.target.value);
+              setPage(1);
+            }}
+            style={{
+              padding: "10px 16px",
+              borderRadius: "10px",
+              fontSize: "13px",
+              fontWeight: "500",
+              background: "rgba(39, 39, 42, 0.6)",
+              border: "1px solid rgba(63, 63, 70, 0.5)",
+              color: "#e4e4e7",
+              outline: "none",
+              cursor: "pointer",
+              minWidth: "180px",
+            }}
+          >
+            <option value="">All Actions</option>
+            {actionTypes.map((action) => (
+              <option key={action} value={action}>
+                {action}
+              </option>
+            ))}
+          </select>
+
+          {(entityTypeFilter || actionFilter || searchQuery) && (
+            <button
+              onClick={clearFilters}
+              style={{
+                padding: "10px 16px",
+                borderRadius: "10px",
+                fontSize: "13px",
+                fontWeight: "500",
+                color: "#f87171",
+                background: "rgba(239, 68, 68, 0.1)",
+                border: "1px solid rgba(239, 68, 68, 0.2)",
+                cursor: "pointer",
+                transition: "all 0.15s ease",
+              }}
+            >
+              Clear All
+            </button>
+          )}
+        </div>
+        
+        {/* Active search indicator */}
+        {searchQuery && (
+          <div style={{ 
+            display: "flex", 
+            alignItems: "center", 
+            gap: "8px",
+            padding: "8px 12px",
+            background: "rgba(0, 240, 255, 0.05)",
+            border: "1px solid rgba(0, 240, 255, 0.2)",
+            borderRadius: "8px",
+            width: "fit-content",
+          }}>
+            <Search style={{ width: "14px", height: "14px", color: "#00f0ff" }} />
+            <span style={{ fontSize: "13px", color: "#9ca3af" }}>
+              Searching for: <strong style={{ color: "#00f0ff" }}>{searchQuery}</strong>
+            </span>
+          </div>
         )}
       </div>
 

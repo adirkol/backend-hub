@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Copy, Eye, RefreshCw, Users, Zap, Coins, Settings, User, Search } from "lucide-react";
+import { Copy, Eye, RefreshCw, Users, Zap, Coins, Settings, User, Search, Trash2, AlertTriangle } from "lucide-react";
 import { AppSettingsForm } from "./settings-form";
 
 interface AppUser {
@@ -56,11 +56,44 @@ export function AppTabs({ app, users, jobs, userCount, jobCount }: AppTabsProps)
   const [activeTab, setActiveTab] = useState<TabType>("settings");
   const [showApiKey, setShowApiKey] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteResult, setDeleteResult] = useState<{ users: number; jobs: number } | null>(null);
 
   const handleCopyApiKey = async () => {
     await navigator.clipboard.writeText(app.apiKey);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleDeleteAllUsers = async () => {
+    if (deleteConfirmText !== app.slug) return;
+    
+    setIsDeleting(true);
+    try {
+      const res = await fetch(`/api/admin/apps/${app.id}/users`, {
+        method: "DELETE",
+      });
+      
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to delete users");
+      }
+      
+      const data = await res.json();
+      setDeleteResult(data.deleted);
+      
+      // Reload page after a delay to show results
+      setTimeout(() => {
+        window.location.reload();
+      }, 2000);
+    } catch (error) {
+      console.error("Error deleting users:", error);
+      alert(error instanceof Error ? error.message : "Failed to delete users");
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   const tabs: { id: TabType; label: string; icon: React.ReactNode; count?: number }[] = [
@@ -319,8 +352,8 @@ export function AppTabs({ app, users, jobs, userCount, jobCount }: AppTabsProps)
 
       {activeTab === "users" && (
         <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-          {/* Search placeholder */}
-          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+          {/* Search and Actions */}
+          <div style={{ display: "flex", alignItems: "center", gap: "12px", justifyContent: "space-between" }}>
             <div style={{ position: "relative", flex: 1, maxWidth: "480px" }}>
               <Search style={{ 
                 position: "absolute", 
@@ -346,6 +379,30 @@ export function AppTabs({ app, users, jobs, userCount, jobCount }: AppTabsProps)
                 }}
               />
             </div>
+            
+            {/* Delete All Users Button */}
+            {userCount > 0 && (
+              <button
+                onClick={() => setShowDeleteModal(true)}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  padding: "12px 18px",
+                  borderRadius: "12px",
+                  fontSize: "14px",
+                  fontWeight: "500",
+                  color: "#f87171",
+                  background: "rgba(239, 68, 68, 0.1)",
+                  border: "1px solid rgba(239, 68, 68, 0.3)",
+                  cursor: "pointer",
+                  transition: "all 0.15s ease",
+                }}
+              >
+                <Trash2 style={{ width: "16px", height: "16px" }} />
+                Delete All Users
+              </button>
+            )}
           </div>
 
           {/* Users Table */}
@@ -536,6 +593,189 @@ export function AppTabs({ app, users, jobs, userCount, jobCount }: AppTabsProps)
           </div>
         </div>
       )}
+
+      {/* Delete All Users Confirmation Modal */}
+      {showDeleteModal && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0, 0, 0, 0.8)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 1000,
+          }}
+          onClick={() => !isDeleting && setShowDeleteModal(false)}
+        >
+          <div
+            className="glass"
+            style={{
+              padding: "32px",
+              maxWidth: "480px",
+              width: "90%",
+              borderRadius: "16px",
+              border: "1px solid rgba(239, 68, 68, 0.3)",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {deleteResult ? (
+              // Success State
+              <div style={{ textAlign: "center" }}>
+                <div style={{
+                  width: "64px",
+                  height: "64px",
+                  borderRadius: "50%",
+                  background: "rgba(16, 185, 129, 0.2)",
+                  border: "1px solid rgba(16, 185, 129, 0.4)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  margin: "0 auto 20px",
+                }}>
+                  <Trash2 style={{ width: "28px", height: "28px", color: "#34d399" }} />
+                </div>
+                <h2 style={{ fontSize: "20px", fontWeight: "600", color: "#fafafa", marginBottom: "12px" }}>
+                  Deleted Successfully
+                </h2>
+                <p style={{ color: "#9ca3af", fontSize: "14px", marginBottom: "20px" }}>
+                  Removed {deleteResult.users} users and {deleteResult.jobs} jobs.
+                </p>
+                <p style={{ color: "#71717a", fontSize: "12px" }}>
+                  Refreshing page...
+                </p>
+              </div>
+            ) : (
+              // Confirmation State
+              <>
+                <div style={{ display: "flex", alignItems: "flex-start", gap: "16px", marginBottom: "24px" }}>
+                  <div style={{
+                    width: "48px",
+                    height: "48px",
+                    borderRadius: "12px",
+                    background: "rgba(239, 68, 68, 0.2)",
+                    border: "1px solid rgba(239, 68, 68, 0.4)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    flexShrink: 0,
+                  }}>
+                    <AlertTriangle style={{ width: "24px", height: "24px", color: "#f87171" }} />
+                  </div>
+                  <div>
+                    <h2 style={{ fontSize: "18px", fontWeight: "600", color: "#fafafa", marginBottom: "8px" }}>
+                      Delete All Users?
+                    </h2>
+                    <p style={{ color: "#9ca3af", fontSize: "14px", lineHeight: "1.5" }}>
+                      This will permanently delete <strong style={{ color: "#f87171" }}>{userCount} users</strong> and all their related data including:
+                    </p>
+                    <ul style={{ color: "#9ca3af", fontSize: "13px", marginTop: "12px", paddingLeft: "20px" }}>
+                      <li>Token ledger entries</li>
+                      <li>Generation jobs</li>
+                      <li>RevenueCat events</li>
+                    </ul>
+                  </div>
+                </div>
+
+                <div style={{ marginBottom: "24px" }}>
+                  <label style={{ 
+                    display: "block", 
+                    fontSize: "13px", 
+                    color: "#9ca3af", 
+                    marginBottom: "8px" 
+                  }}>
+                    Type <code style={{ color: "#f87171", background: "rgba(239, 68, 68, 0.1)", padding: "2px 6px", borderRadius: "4px" }}>{app.slug}</code> to confirm:
+                  </label>
+                  <input
+                    type="text"
+                    value={deleteConfirmText}
+                    onChange={(e) => setDeleteConfirmText(e.target.value)}
+                    placeholder={app.slug}
+                    disabled={isDeleting}
+                    style={{
+                      width: "100%",
+                      padding: "14px 16px",
+                      borderRadius: "10px",
+                      background: "rgba(39, 39, 42, 0.6)",
+                      border: deleteConfirmText === app.slug 
+                        ? "1px solid rgba(239, 68, 68, 0.5)" 
+                        : "1px solid rgba(63, 63, 70, 0.5)",
+                      color: "#fafafa",
+                      fontSize: "14px",
+                      fontFamily: "monospace",
+                      outline: "none",
+                    }}
+                  />
+                </div>
+
+                <div style={{ display: "flex", gap: "12px" }}>
+                  <button
+                    onClick={() => {
+                      setShowDeleteModal(false);
+                      setDeleteConfirmText("");
+                    }}
+                    disabled={isDeleting}
+                    style={{
+                      flex: 1,
+                      padding: "14px",
+                      borderRadius: "10px",
+                      fontSize: "14px",
+                      fontWeight: "500",
+                      color: "#b8b8c8",
+                      background: "rgba(39, 39, 42, 0.6)",
+                      border: "1px solid rgba(63, 63, 70, 0.5)",
+                      cursor: isDeleting ? "not-allowed" : "pointer",
+                    }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleDeleteAllUsers}
+                    disabled={deleteConfirmText !== app.slug || isDeleting}
+                    style={{
+                      flex: 1,
+                      padding: "14px",
+                      borderRadius: "10px",
+                      fontSize: "14px",
+                      fontWeight: "600",
+                      color: deleteConfirmText === app.slug ? "#fafafa" : "#71717a",
+                      background: deleteConfirmText === app.slug 
+                        ? "rgba(239, 68, 68, 0.8)" 
+                        : "rgba(239, 68, 68, 0.2)",
+                      border: "1px solid rgba(239, 68, 68, 0.5)",
+                      cursor: deleteConfirmText === app.slug && !isDeleting ? "pointer" : "not-allowed",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: "8px",
+                    }}
+                  >
+                    {isDeleting ? (
+                      <>
+                        <RefreshCw style={{ width: "16px", height: "16px", animation: "spin 1s linear infinite" }} />
+                        Deleting...
+                      </>
+                    ) : (
+                      <>
+                        <Trash2 style={{ width: "16px", height: "16px" }} />
+                        Delete All Users
+                      </>
+                    )}
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* CSS for spin animation */}
+      <style jsx>{`
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   );
 }

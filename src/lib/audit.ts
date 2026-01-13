@@ -17,6 +17,7 @@ export type AuditAction =
   | "app.updated"
   | "app.deleted"
   | "app.api_key_regenerated"
+  | "app.users_deleted"
   // Model actions
   | "model.created"
   | "model.updated"
@@ -257,6 +258,7 @@ export async function getAuditLogs(options: {
   entityId?: string;
   actorId?: string;
   action?: string;
+  search?: string;
   startDate?: Date;
   endDate?: Date;
   limit?: number;
@@ -273,6 +275,21 @@ export async function getAuditLogs(options: {
     where.createdAt = {};
     if (options.startDate) (where.createdAt as Record<string, Date>).gte = options.startDate;
     if (options.endDate) (where.createdAt as Record<string, Date>).lte = options.endDate;
+  }
+
+  // Search across entity_id, actor_id, and metadata (for user IDs)
+  if (options.search) {
+    where.OR = [
+      { entityId: { contains: options.search, mode: "insensitive" } },
+      { actorId: { contains: options.search, mode: "insensitive" } },
+      // Search in metadata JSON - looking for user IDs, external IDs, etc.
+      { metadata: { path: ["userExternalId"], string_contains: options.search } },
+      { metadata: { path: ["revenueCatUserId"], string_contains: options.search } },
+      { metadata: { path: ["userId"], string_contains: options.search } },
+      { metadata: { path: ["externalId"], string_contains: options.search } },
+      { metadata: { path: ["appUserId"], string_contains: options.search } },
+      { metadata: { path: ["appName"], string_contains: options.search } },
+    ];
   }
 
   const [logs, total] = await Promise.all([
