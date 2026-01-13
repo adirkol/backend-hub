@@ -125,10 +125,10 @@ export async function DELETE(req: NextRequest, { params }: RouteParams) {
 
     // Create audit log for the deletion action itself (this one is always kept)
     await auditAdminAction(
+      req,
       "app.users_deleted",
       "App",
       appId,
-      session.user.email,
       {
         appName: app.name,
         deletedUsers: deleteResult.count,
