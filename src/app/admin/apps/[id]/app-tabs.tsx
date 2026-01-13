@@ -58,8 +58,9 @@ export function AppTabs({ app, users, jobs, userCount, jobCount }: AppTabsProps)
   const [copied, setCopied] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
+  const [deleteAuditLogs, setDeleteAuditLogs] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [deleteResult, setDeleteResult] = useState<{ users: number; jobs: number } | null>(null);
+  const [deleteResult, setDeleteResult] = useState<{ users: number; jobs: number; auditLogs?: number } | null>(null);
 
   const handleCopyApiKey = async () => {
     await navigator.clipboard.writeText(app.apiKey);
@@ -72,7 +73,10 @@ export function AppTabs({ app, users, jobs, userCount, jobCount }: AppTabsProps)
     
     setIsDeleting(true);
     try {
-      const res = await fetch(`/api/admin/apps/${app.id}/users`, {
+      const params = new URLSearchParams();
+      if (deleteAuditLogs) params.set("deleteAuditLogs", "true");
+      
+      const res = await fetch(`/api/admin/apps/${app.id}/users?${params.toString()}`, {
         method: "DELETE",
       });
       
@@ -606,7 +610,13 @@ export function AppTabs({ app, users, jobs, userCount, jobCount }: AppTabsProps)
             justifyContent: "center",
             zIndex: 1000,
           }}
-          onClick={() => !isDeleting && setShowDeleteModal(false)}
+          onClick={() => {
+            if (!isDeleting) {
+              setShowDeleteModal(false);
+              setDeleteConfirmText("");
+              setDeleteAuditLogs(false);
+            }
+          }}
         >
           <div
             className="glass"
@@ -638,9 +648,14 @@ export function AppTabs({ app, users, jobs, userCount, jobCount }: AppTabsProps)
                 <h2 style={{ fontSize: "20px", fontWeight: "600", color: "#fafafa", marginBottom: "12px" }}>
                   Deleted Successfully
                 </h2>
-                <p style={{ color: "#9ca3af", fontSize: "14px", marginBottom: "20px" }}>
+                <p style={{ color: "#9ca3af", fontSize: "14px", marginBottom: "8px" }}>
                   Removed {deleteResult.users} users and {deleteResult.jobs} jobs.
                 </p>
+                {deleteResult.auditLogs !== undefined && deleteResult.auditLogs > 0 && (
+                  <p style={{ color: "#71717a", fontSize: "13px", marginBottom: "12px" }}>
+                    Also deleted {deleteResult.auditLogs} audit log entries.
+                  </p>
+                )}
                 <p style={{ color: "#71717a", fontSize: "12px" }}>
                   Refreshing page...
                 </p>
@@ -675,6 +690,59 @@ export function AppTabs({ app, users, jobs, userCount, jobCount }: AppTabsProps)
                       <li>RevenueCat events</li>
                     </ul>
                   </div>
+                </div>
+
+                {/* Audit Logs Option */}
+                <div 
+                  style={{ 
+                    marginBottom: "20px",
+                    padding: "14px 16px",
+                    borderRadius: "10px",
+                    background: deleteAuditLogs ? "rgba(251, 191, 36, 0.1)" : "rgba(39, 39, 42, 0.4)",
+                    border: deleteAuditLogs ? "1px solid rgba(251, 191, 36, 0.3)" : "1px solid rgba(63, 63, 70, 0.3)",
+                    cursor: "pointer",
+                    transition: "all 0.15s ease",
+                  }}
+                  onClick={() => !isDeleting && setDeleteAuditLogs(!deleteAuditLogs)}
+                >
+                  <label style={{ 
+                    display: "flex", 
+                    alignItems: "flex-start", 
+                    gap: "12px",
+                    cursor: "pointer",
+                  }}>
+                    <input
+                      type="checkbox"
+                      checked={deleteAuditLogs}
+                      onChange={(e) => setDeleteAuditLogs(e.target.checked)}
+                      disabled={isDeleting}
+                      style={{
+                        width: "18px",
+                        height: "18px",
+                        marginTop: "2px",
+                        accentColor: "#fbbf24",
+                        cursor: "pointer",
+                      }}
+                    />
+                    <div>
+                      <span style={{ 
+                        fontSize: "14px", 
+                        fontWeight: "500",
+                        color: deleteAuditLogs ? "#fbbf24" : "#e4e4e7",
+                      }}>
+                        Also delete audit logs
+                      </span>
+                      <p style={{ 
+                        fontSize: "12px", 
+                        color: "#71717a", 
+                        marginTop: "4px",
+                        lineHeight: "1.4",
+                      }}>
+                        Remove all audit log entries related to these users and their RevenueCat events. 
+                        <span style={{ color: "#f87171" }}> This cannot be undone.</span>
+                      </p>
+                    </div>
+                  </label>
                 </div>
 
                 <div style={{ marginBottom: "24px" }}>
@@ -713,6 +781,7 @@ export function AppTabs({ app, users, jobs, userCount, jobCount }: AppTabsProps)
                     onClick={() => {
                       setShowDeleteModal(false);
                       setDeleteConfirmText("");
+                      setDeleteAuditLogs(false);
                     }}
                     disabled={isDeleting}
                     style={{

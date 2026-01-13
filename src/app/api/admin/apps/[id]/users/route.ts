@@ -12,6 +12,7 @@ interface RouteParams {
  * DELETE /api/admin/apps/:id/users
  * Delete all users for an app (for debugging/testing purposes)
  * This also deletes related data: token ledger entries, jobs, and RevenueCat events
+ * Optionally deletes related audit logs if deleteAuditLogs=true
  */
 export async function DELETE(req: NextRequest, { params }: RouteParams) {
   try {
@@ -21,6 +22,10 @@ export async function DELETE(req: NextRequest, { params }: RouteParams) {
     }
 
     const { id: appId } = await params;
+    
+    // Parse query params
+    const url = new URL(req.url);
+    const deleteAuditLogs = url.searchParams.get("deleteAuditLogs") === "true";
 
     // Verify app exists
     const app = await prisma.app.findUnique({
@@ -36,14 +41,25 @@ export async function DELETE(req: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: "App not found" }, { status: 404 });
     }
 
+    // Get user IDs before deletion (needed for audit log deletion)
+    const userIds = await prisma.appUser.findMany({
+      where: { appId },
+      select: { id: true, externalId: true },
+    });
+    const userIdList = userIds.map(u => u.id);
+    const externalIdList = userIds.map(u => u.externalId);
+
     // Get counts before deletion for audit log
     const userCount = app._count.users;
     const jobCount = app._count.jobs;
 
-    // Get RevenueCat event count
-    const rcEventCount = await prisma.revenueCatEvent.count({
+    // Get RevenueCat event IDs and count
+    const rcEvents = await prisma.revenueCatEvent.findMany({
       where: { appId },
+      select: { id: true },
     });
+    const rcEventIds = rcEvents.map(e => e.id);
+    const rcEventCount = rcEvents.length;
 
     // Get token ledger entry count
     const tokenLedgerCount = await prisma.tokenLedgerEntry.count({
@@ -78,7 +94,36 @@ export async function DELETE(req: NextRequest, { params }: RouteParams) {
       where: { appId },
     });
 
-    // Audit log
+    // 5. Optionally delete related audit logs
+    let auditLogsDeleted = 0;
+    if (deleteAuditLogs && (userIdList.length > 0 || rcEventIds.length > 0)) {
+      // Delete audit logs where:
+      // - entityType is AppUser and entityId is one of the deleted users
+      // - entityType is RevenueCatEvent and entityId is one of the deleted RC events
+      // - metadata contains any of the user external IDs or user IDs
+      const auditDeleteResult = await prisma.auditLog.deleteMany({
+        where: {
+          OR: [
+            // Direct entity references
+            { entityType: "AppUser", entityId: { in: userIdList } },
+            { entityType: "RevenueCatEvent", entityId: { in: rcEventIds } },
+            // Metadata references (for RevenueCat events that reference users)
+            ...externalIdList.map(externalId => ({
+              metadata: { path: ["userExternalId"], equals: externalId }
+            })),
+            ...externalIdList.map(externalId => ({
+              metadata: { path: ["revenueCatUserId"], equals: externalId }
+            })),
+            ...userIdList.map(userId => ({
+              metadata: { path: ["appUserId"], equals: userId }
+            })),
+          ],
+        },
+      });
+      auditLogsDeleted = auditDeleteResult.count;
+    }
+
+    // Create audit log for the deletion action itself (this one is always kept)
     await auditAdminAction(
       "app.users_deleted",
       "App",
@@ -90,6 +135,8 @@ export async function DELETE(req: NextRequest, { params }: RouteParams) {
         deletedJobs: jobCount,
         deletedRevenueCatEvents: rcEventCount,
         deletedTokenLedgerEntries: tokenLedgerCount,
+        deletedAuditLogs: auditLogsDeleted,
+        auditLogsDeletedOption: deleteAuditLogs,
       }
     );
 
@@ -100,6 +147,7 @@ export async function DELETE(req: NextRequest, { params }: RouteParams) {
         jobs: jobCount,
         revenueCatEvents: rcEventCount,
         tokenLedgerEntries: tokenLedgerCount,
+        auditLogs: auditLogsDeleted,
       },
     });
   } catch (error) {
