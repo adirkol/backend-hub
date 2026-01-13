@@ -181,6 +181,13 @@ async function updateUserSubscriptionStatus(
     case "RENEWAL":
       updates.isPremium = true;
       updates.subscriptionStatus = "ACTIVE";
+      // Also set product/store - important for users recreated from RENEWAL event
+      if (eventData.productId) {
+        updates.subscriptionProductId = eventData.productId;
+      }
+      if (eventData.store) {
+        updates.subscriptionStore = eventData.store;
+      }
       if (eventData.expirationAtMs) {
         updates.subscriptionExpiresAt = new Date(eventData.expirationAtMs);
       }
@@ -190,9 +197,12 @@ async function updateUserSubscriptionStatus(
 
     case "NON_RENEWING_PURCHASE":
       // One-time purchase, doesn't necessarily mean premium
-      // but we track the product
+      // but we track the product and store
       if (eventData.productId) {
         updates.subscriptionProductId = eventData.productId;
+      }
+      if (eventData.store) {
+        updates.subscriptionStore = eventData.store;
       }
       break;
 
@@ -831,9 +841,42 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
       experimentVariant,
     });
 
-    console.log(`RevenueCat webhook: Processed ${eventType} for user ${revenueCatUserId} in app ${app.name}`);
+    // Collect any warnings about missing/incomplete data
+    const warnings: string[] = [];
+    
+    // Check for missing important data based on event type
+    if (["INITIAL_PURCHASE", "RENEWAL", "NON_RENEWING_PURCHASE"].includes(eventType)) {
+      if (!event.product_id) warnings.push("Missing product_id");
+      if (!event.store) warnings.push("Missing store");
+      if (!priceUsd && priceUsd !== 0) warnings.push("Missing price");
+    }
+    
+    if (eventType === "VIRTUAL_CURRENCY_TRANSACTION") {
+      if (!tokenAmount && tokenAmount !== 0) warnings.push("Missing token amount");
+    }
 
-    return NextResponse.json({ success: true });
+    // Log with details
+    const logMessage = `RevenueCat webhook: Processed ${eventType} for user ${revenueCatUserId} in app ${app.name}`;
+    if (warnings.length > 0) {
+      console.warn(`${logMessage} [WARNINGS: ${warnings.join(", ")}]`);
+    } else {
+      console.log(logMessage);
+    }
+
+    // Return detailed response for debugging
+    return NextResponse.json({ 
+      success: true,
+      processed: {
+        eventType,
+        eventId,
+        userId: revenueCatUserId,
+        appUserId: appUser.id,
+        userCreated: userWasCreated,
+        ...(tokenAmount !== null && { tokensAdjusted: tokenAmount }),
+        ...(netRevenueUsd !== null && { netRevenue: netRevenueUsd }),
+      },
+      ...(warnings.length > 0 && { warnings }),
+    });
   } catch (error) {
     console.error("RevenueCat webhook error:", error);
     
