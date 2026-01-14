@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { 
   User, 
@@ -266,6 +266,7 @@ export function UserTabs({
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
+  const tabsRef = useRef<HTMLDivElement>(null);
   
   // Get tab from URL or default to "overview"
   const tabParam = searchParams.get("tab");
@@ -275,8 +276,8 @@ export function UserTabs({
     const params = new URLSearchParams(searchParams.toString());
     params.set("tab", tab);
     router.replace(`${pathname}?${params.toString()}`, { scroll: false });
-    // Scroll to top when switching tabs
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    // Scroll to tabs when switching (keeps tabs in view)
+    tabsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
   const roas = stats.totalExpenses > 0 
@@ -396,21 +397,23 @@ export function UserTabs({
       </div>
 
       {/* Tabs */}
-      <div style={{ 
-        display: "flex", 
-        gap: "4px", 
-        borderBottom: "1px solid rgba(63, 63, 70, 0.4)",
-        paddingBottom: "0",
-        position: "sticky",
-        top: "0",
-        background: "linear-gradient(180deg, rgba(9, 9, 11, 0.98) 0%, rgba(9, 9, 11, 0.95) 100%)",
-        zIndex: 40,
-        marginLeft: "-24px",
-        marginRight: "-24px",
-        paddingLeft: "24px",
-        paddingRight: "24px",
-        paddingTop: "16px",
-        backdropFilter: "blur(12px)",
+      <div 
+        ref={tabsRef}
+        style={{ 
+          display: "flex", 
+          gap: "4px", 
+          borderBottom: "1px solid rgba(63, 63, 70, 0.4)",
+          paddingBottom: "0",
+          position: "sticky",
+          top: "0",
+          background: "linear-gradient(180deg, rgba(9, 9, 11, 0.98) 0%, rgba(9, 9, 11, 0.95) 100%)",
+          zIndex: 40,
+          marginLeft: "-24px",
+          marginRight: "-24px",
+          paddingLeft: "24px",
+          paddingRight: "24px",
+          paddingTop: "16px",
+          backdropFilter: "blur(12px)",
       }}>
         {tabs.map((tab) => (
           <button
