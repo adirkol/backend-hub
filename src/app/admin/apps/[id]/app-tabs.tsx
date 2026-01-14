@@ -63,6 +63,7 @@ export function AppTabs({ app, users, jobs, userCount, jobCount }: AppTabsProps)
   const router = useRouter();
   const pathname = usePathname();
   const tabsAnchorRef = useRef<HTMLDivElement>(null);
+  const tabsRef = useRef<HTMLDivElement>(null);
   
   // Get tab from URL or default to "settings"
   const tabParam = searchParams.get("tab");
@@ -72,8 +73,14 @@ export function AppTabs({ app, users, jobs, userCount, jobCount }: AppTabsProps)
     const params = new URLSearchParams(searchParams.toString());
     params.set("tab", tab);
     router.replace(`${pathname}?${params.toString()}`, { scroll: false });
-    // Scroll so tabs are at top of viewport (where they stick)
-    tabsAnchorRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    // Only scroll if tabs are already in sticky position (floating)
+    if (tabsRef.current) {
+      const tabsRect = tabsRef.current.getBoundingClientRect();
+      // If tabs are at or near top of viewport (sticky), scroll to anchor
+      if (tabsRect.top <= 5) {
+        tabsAnchorRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    }
   };
   
   const [showApiKey, setShowApiKey] = useState(false);
@@ -280,6 +287,7 @@ export function AppTabs({ app, users, jobs, userCount, jobCount }: AppTabsProps)
       
       {/* Tabs */}
       <div 
+        ref={tabsRef}
         style={{ 
           display: "flex", 
           gap: "4px", 
