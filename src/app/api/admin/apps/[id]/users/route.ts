@@ -9,6 +9,82 @@ interface RouteParams {
 }
 
 /**
+ * GET /api/admin/apps/:id/users
+ * List users for an app with pagination and optional search
+ */
+export async function GET(req: NextRequest, { params }: RouteParams) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.email) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { id: appId } = await params;
+    const url = new URL(req.url);
+    
+    // Parse pagination params
+    const page = Math.max(1, parseInt(url.searchParams.get("page") || "1"));
+    const limit = Math.min(100, Math.max(1, parseInt(url.searchParams.get("limit") || "20")));
+    const search = url.searchParams.get("search") || "";
+    
+    // Verify app exists
+    const app = await prisma.app.findUnique({
+      where: { id: appId },
+      select: { id: true },
+    });
+
+    if (!app) {
+      return NextResponse.json({ error: "App not found" }, { status: 404 });
+    }
+
+    // Build where clause
+    const where = {
+      appId,
+      ...(search && {
+        externalId: { contains: search, mode: "insensitive" as const },
+      }),
+    };
+
+    // Get total count and users
+    const [total, users] = await Promise.all([
+      prisma.appUser.count({ where }),
+      prisma.appUser.findMany({
+        where,
+        orderBy: { createdAt: "desc" },
+        skip: (page - 1) * limit,
+        take: limit,
+        include: {
+          _count: { select: { jobs: true } },
+        },
+      }),
+    ]);
+
+    return NextResponse.json({
+      users: users.map(u => ({
+        id: u.id,
+        externalId: u.externalId,
+        tokenBalance: u.tokenBalance,
+        isActive: u.isActive,
+        createdAt: u.createdAt.toISOString(),
+        _count: u._count,
+      })),
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching app users:", error);
+    return NextResponse.json(
+      { error: "Failed to fetch users" },
+      { status: 500 }
+    );
+  }
+}
+
+/**
  * DELETE /api/admin/apps/:id/users
  * Delete all users for an app (for debugging/testing purposes)
  * This also deletes related data: token ledger entries, jobs, and RevenueCat events

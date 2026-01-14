@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
-import { Copy, Eye, RefreshCw, Users, Zap, Coins, Settings, User, Search, Trash2, AlertTriangle } from "lucide-react";
+import { Copy, Eye, RefreshCw, Users, Zap, Coins, Settings, User, Search, Trash2, AlertTriangle, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import { AppSettingsForm } from "./settings-form";
 
 interface AppUser {
@@ -78,6 +78,55 @@ export function AppTabs({ app, users, jobs, userCount, jobCount }: AppTabsProps)
   const [deleteAuditLogs, setDeleteAuditLogs] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteResult, setDeleteResult] = useState<{ users: number; jobs: number; auditLogs?: number } | null>(null);
+
+  // Users pagination state
+  const [paginatedUsers, setPaginatedUsers] = useState<AppUser[]>(users);
+  const [usersPage, setUsersPage] = useState(1);
+  const [usersTotalPages, setUsersTotalPages] = useState(Math.ceil(userCount / 20));
+  const [usersTotal, setUsersTotal] = useState(userCount);
+  const [usersLoading, setUsersLoading] = useState(false);
+  const [userSearchQuery, setUserSearchQuery] = useState("");
+  const [userSearchInput, setUserSearchInput] = useState("");
+
+  // Fetch users with pagination
+  const fetchUsers = useCallback(async (page: number, search: string = "") => {
+    setUsersLoading(true);
+    try {
+      const params = new URLSearchParams({ page: page.toString(), limit: "20" });
+      if (search) params.set("search", search);
+      
+      const res = await fetch(`/api/admin/apps/${app.id}/users?${params.toString()}`);
+      if (!res.ok) throw new Error("Failed to fetch users");
+      
+      const data = await res.json();
+      setPaginatedUsers(data.users);
+      setUsersPage(data.pagination.page);
+      setUsersTotalPages(data.pagination.totalPages);
+      setUsersTotal(data.pagination.total);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+    } finally {
+      setUsersLoading(false);
+    }
+  }, [app.id]);
+
+  // Fetch users when users tab is active and page/search changes
+  useEffect(() => {
+    if (activeTab === "users") {
+      fetchUsers(usersPage, userSearchQuery);
+    }
+  }, [activeTab, usersPage, userSearchQuery, fetchUsers]);
+
+  // Handle user search with debounce
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (userSearchInput !== userSearchQuery) {
+        setUserSearchQuery(userSearchInput);
+        setUsersPage(1); // Reset to first page on new search
+      }
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [userSearchInput, userSearchQuery]);
 
   const handleCopyApiKey = async () => {
     await navigator.clipboard.writeText(app.apiKey);
@@ -227,6 +276,16 @@ export function AppTabs({ app, users, jobs, userCount, jobCount }: AppTabsProps)
         gap: "4px", 
         borderBottom: "1px solid rgba(63, 63, 70, 0.4)",
         paddingBottom: "0",
+        position: "sticky",
+        top: "0",
+        background: "linear-gradient(180deg, rgba(9, 9, 11, 0.98) 0%, rgba(9, 9, 11, 0.95) 100%)",
+        zIndex: 40,
+        marginLeft: "-24px",
+        marginRight: "-24px",
+        paddingLeft: "24px",
+        paddingRight: "24px",
+        paddingTop: "16px",
+        backdropFilter: "blur(12px)",
       }}>
         {tabs.map((tab) => (
           <button
@@ -414,6 +473,8 @@ export function AppTabs({ app, users, jobs, userCount, jobCount }: AppTabsProps)
               <input
                 type="text"
                 placeholder="Search users by external ID..."
+                value={userSearchInput}
+                onChange={(e) => setUserSearchInput(e.target.value)}
                 style={{
                   width: "100%",
                   padding: "14px 16px 14px 48px",
@@ -428,7 +489,7 @@ export function AppTabs({ app, users, jobs, userCount, jobCount }: AppTabsProps)
             </div>
             
             {/* Delete All Users Button */}
-            {userCount > 0 && (
+            {usersTotal > 0 && (
               <button
                 onClick={() => setShowDeleteModal(true)}
                 style={{
@@ -453,7 +514,20 @@ export function AppTabs({ app, users, jobs, userCount, jobCount }: AppTabsProps)
           </div>
 
           {/* Users Table */}
-          <div className="glass" style={{ overflow: "hidden" }}>
+          <div className="glass" style={{ overflow: "hidden", position: "relative" }}>
+            {usersLoading && (
+              <div style={{
+                position: "absolute",
+                inset: 0,
+                background: "rgba(9, 9, 11, 0.7)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                zIndex: 10,
+              }}>
+                <Loader2 className="animate-spin" style={{ width: "32px", height: "32px", color: "#00f0ff" }} />
+              </div>
+            )}
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead>
                 <tr style={{ borderBottom: "1px solid rgba(63, 63, 70, 0.4)" }}>
@@ -476,7 +550,7 @@ export function AppTabs({ app, users, jobs, userCount, jobCount }: AppTabsProps)
                 </tr>
               </thead>
               <tbody>
-                {users.map((user) => (
+                {paginatedUsers.map((user) => (
                   <tr 
                     key={user.id} 
                     className="table-row-hover"
@@ -540,16 +614,77 @@ export function AppTabs({ app, users, jobs, userCount, jobCount }: AppTabsProps)
                     </td>
                   </tr>
                 ))}
-                {users.length === 0 && (
+                {paginatedUsers.length === 0 && !usersLoading && (
                   <tr>
                     <td colSpan={6} style={{ padding: "64px 20px", textAlign: "center", color: "#9ca3af" }}>
-                      No users yet
+                      {userSearchQuery ? `No users found matching "${userSearchQuery}"` : "No users yet"}
                     </td>
                   </tr>
                 )}
               </tbody>
             </table>
           </div>
+
+          {/* Pagination */}
+          {usersTotalPages > 1 && (
+            <div style={{ 
+              display: "flex", 
+              alignItems: "center", 
+              justifyContent: "space-between",
+              padding: "16px 0",
+            }}>
+              <p style={{ fontSize: "14px", color: "#9ca3af" }}>
+                Showing {((usersPage - 1) * 20) + 1} - {Math.min(usersPage * 20, usersTotal)} of {usersTotal.toLocaleString()} users
+              </p>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <button
+                  onClick={() => setUsersPage(p => Math.max(1, p - 1))}
+                  disabled={usersPage === 1 || usersLoading}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    width: "36px",
+                    height: "36px",
+                    borderRadius: "8px",
+                    background: usersPage === 1 ? "rgba(39, 39, 42, 0.3)" : "rgba(39, 39, 42, 0.6)",
+                    border: "1px solid rgba(63, 63, 70, 0.4)",
+                    color: usersPage === 1 ? "#52525b" : "#e4e4e7",
+                    cursor: usersPage === 1 ? "not-allowed" : "pointer",
+                    transition: "all 0.15s ease",
+                  }}
+                >
+                  <ChevronLeft style={{ width: "18px", height: "18px" }} />
+                </button>
+                <span style={{ 
+                  fontSize: "14px", 
+                  color: "#e4e4e7",
+                  padding: "0 12px",
+                }}>
+                  Page {usersPage} of {usersTotalPages}
+                </span>
+                <button
+                  onClick={() => setUsersPage(p => Math.min(usersTotalPages, p + 1))}
+                  disabled={usersPage === usersTotalPages || usersLoading}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    width: "36px",
+                    height: "36px",
+                    borderRadius: "8px",
+                    background: usersPage === usersTotalPages ? "rgba(39, 39, 42, 0.3)" : "rgba(39, 39, 42, 0.6)",
+                    border: "1px solid rgba(63, 63, 70, 0.4)",
+                    color: usersPage === usersTotalPages ? "#52525b" : "#e4e4e7",
+                    cursor: usersPage === usersTotalPages ? "not-allowed" : "pointer",
+                    transition: "all 0.15s ease",
+                  }}
+                >
+                  <ChevronRight style={{ width: "18px", height: "18px" }} />
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
 

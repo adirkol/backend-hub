@@ -488,6 +488,16 @@ export function StatisticsClient({ data }: { data: StatisticsData }) {
         display: "flex", 
         gap: "4px", 
         borderBottom: "1px solid rgba(63, 63, 70, 0.4)",
+        position: "sticky",
+        top: "0",
+        background: "linear-gradient(180deg, rgba(9, 9, 11, 0.98) 0%, rgba(9, 9, 11, 0.95) 100%)",
+        zIndex: 40,
+        marginLeft: "-24px",
+        marginRight: "-24px",
+        paddingLeft: "24px",
+        paddingRight: "24px",
+        paddingTop: "16px",
+        backdropFilter: "blur(12px)",
       }}>
         {tabs.map((tab) => (
           <button
