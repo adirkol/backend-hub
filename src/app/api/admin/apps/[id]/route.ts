@@ -13,6 +13,7 @@ const UpdateAppSchema = z.object({
   description: z.string().max(500).optional(),
   isEnabled: z.boolean().optional(),
   defaultTokenGrant: z.number().int().min(0).optional(),
+  dailyTokenGrant: z.number().int().min(0).optional(),
   tokenExpirationDays: z.number().int().min(1).nullable().optional(),
   webhookUrl: z.string().url().optional().or(z.literal("")),
   webhookSecret: z.string().optional().or(z.literal("")),
@@ -73,6 +74,7 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
     if (data.description !== undefined) updateData.description = data.description || null;
     if (data.isEnabled !== undefined) updateData.isEnabled = data.isEnabled;
     if (data.defaultTokenGrant !== undefined) updateData.defaultTokenGrant = data.defaultTokenGrant;
+    if (data.dailyTokenGrant !== undefined) updateData.dailyTokenGrant = data.dailyTokenGrant;
     if (data.tokenExpirationDays !== undefined) updateData.tokenExpirationDays = data.tokenExpirationDays;
     if (data.rateLimitPerUser !== undefined) updateData.rateLimitPerUser = data.rateLimitPerUser;
     if (data.rateLimitPerApp !== undefined) updateData.rateLimitPerApp = data.rateLimitPerApp;

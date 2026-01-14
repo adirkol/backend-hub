@@ -13,12 +13,14 @@ export interface ApiAuthResult {
     rateLimitPerUser: number;
     rateLimitPerApp: number;
     defaultTokenGrant: number;
+    dailyTokenGrant: number;
     tokenExpirationDays: number | null;
   };
   appUser?: {
     id: string;
     externalId: string;
     tokenBalance: number;
+    lastDailyGrantAt: Date | null;
   };
   error?: string;
 }
@@ -50,6 +52,7 @@ export async function validateApiRequest(
       rateLimitPerUser: true,
       rateLimitPerApp: true,
       defaultTokenGrant: true,
+      dailyTokenGrant: true,
       tokenExpirationDays: true,
     },
   });
@@ -80,11 +83,15 @@ export async function validateApiRequest(
 
     if (!appUser) {
       // Create new user with default token grant
+      // If default grant is given, set lastDailyGrantAt to prevent double-dipping on day 1
+      const shouldSetDailyGrantTime = app.defaultTokenGrant > 0;
+      
       appUser = await prisma.appUser.create({
         data: {
           appId: app.id,
           externalId: externalUserId,
           tokenBalance: app.defaultTokenGrant,
+          lastDailyGrantAt: shouldSetDailyGrantTime ? new Date() : null,
         },
       });
 
@@ -123,12 +130,14 @@ export async function validateApiRequest(
         rateLimitPerUser: app.rateLimitPerUser,
         rateLimitPerApp: app.rateLimitPerApp,
         defaultTokenGrant: app.defaultTokenGrant,
+        dailyTokenGrant: app.dailyTokenGrant,
         tokenExpirationDays: app.tokenExpirationDays,
       },
       appUser: {
         id: appUser.id,
         externalId: appUser.externalId,
         tokenBalance: effectiveBalance,
+        lastDailyGrantAt: appUser.lastDailyGrantAt,
       },
     };
   }
@@ -144,6 +153,7 @@ export async function validateApiRequest(
       rateLimitPerUser: app.rateLimitPerUser,
       rateLimitPerApp: app.rateLimitPerApp,
       defaultTokenGrant: app.defaultTokenGrant,
+      dailyTokenGrant: app.dailyTokenGrant,
       tokenExpirationDays: app.tokenExpirationDays,
     },
   };

@@ -9,6 +9,7 @@ const CreateAppSchema = z.object({
   slug: z.string().min(1).max(50).regex(/^[a-z0-9-]+$/),
   description: z.string().max(500).optional(),
   defaultTokenGrant: z.number().int().min(0).default(0),
+  dailyTokenGrant: z.number().int().min(0).default(0),
   webhookUrl: z.string().url().optional().or(z.literal("")),
   rateLimitPerUser: z.number().int().min(1).default(30),
   rateLimitPerApp: z.number().int().min(1).default(1000),
@@ -87,6 +88,7 @@ export async function POST(req: NextRequest) {
         apiKey,
         apiKeyPrefix: prefix,
         defaultTokenGrant: data.defaultTokenGrant,
+        dailyTokenGrant: data.dailyTokenGrant,
         webhookUrl: data.webhookUrl || null,
         webhookSecret,
         rateLimitPerUser: data.rateLimitPerUser,
@@ -102,6 +104,7 @@ export async function POST(req: NextRequest) {
       name: app.name,
       slug: app.slug,
       defaultTokenGrant: app.defaultTokenGrant,
+      dailyTokenGrant: app.dailyTokenGrant,
     });
 
     return NextResponse.json(app, { status: 201 });

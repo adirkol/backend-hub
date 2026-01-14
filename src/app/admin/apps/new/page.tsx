@@ -31,6 +31,7 @@ export default function NewAppPage() {
     slug: "",
     description: "",
     defaultTokenGrant: 10,
+    dailyTokenGrant: 0,
     webhookUrl: "",
     rateLimitPerUser: 30,
     rateLimitPerApp: 1000,
@@ -363,16 +364,30 @@ export default function NewAppPage() {
           </h2>
 
           <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
-            <div>
-              <label style={labelStyle}>Default Token Grant</label>
-              <input
-                type="number"
-                min="0"
-                value={form.defaultTokenGrant}
-                onChange={(e) => setForm({ ...form, defaultTokenGrant: parseInt(e.target.value) || 0 })}
-                style={inputStyle}
-              />
-              <p style={hintStyle}>Tokens granted to new users</p>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px" }}>
+              <div>
+                <label style={labelStyle}>Welcome Tokens</label>
+                <input
+                  type="number"
+                  min="0"
+                  value={form.defaultTokenGrant}
+                  onChange={(e) => setForm({ ...form, defaultTokenGrant: parseInt(e.target.value) || 0 })}
+                  style={inputStyle}
+                />
+                <p style={hintStyle}>One-time grant for new users</p>
+              </div>
+
+              <div>
+                <label style={labelStyle}>Daily Token Grant</label>
+                <input
+                  type="number"
+                  min="0"
+                  value={form.dailyTokenGrant}
+                  onChange={(e) => setForm({ ...form, dailyTokenGrant: parseInt(e.target.value) || 0 })}
+                  style={inputStyle}
+                />
+                <p style={hintStyle}>Rolling 24h grant (0 = disabled)</p>
+              </div>
             </div>
 
             <div>

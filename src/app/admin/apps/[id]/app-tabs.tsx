@@ -35,6 +35,7 @@ interface AppData {
   webhookSecret: string | null;
   isEnabled: boolean;
   defaultTokenGrant: number;
+  dailyTokenGrant: number;
   tokenExpirationDays: number | null;
   rateLimitPerUser: number;
   rateLimitPerApp: number;
@@ -173,6 +174,32 @@ export function AppTabs({ app, users, jobs, userCount, jobCount }: AppTabsProps)
                 {app.defaultTokenGrant}
               </p>
               <p style={{ fontSize: "14px", color: "#9ca3af" }}>Welcome Tokens</p>
+            </div>
+          </div>
+        </div>
+        <div className="glass" style={{ padding: "24px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+            <div style={{
+              width: "48px",
+              height: "48px",
+              borderRadius: "12px",
+              background: app.dailyTokenGrant > 0 
+                ? "linear-gradient(135deg, rgba(167, 139, 250, 0.2) 0%, rgba(139, 92, 246, 0.3) 100%)"
+                : "linear-gradient(135deg, rgba(82, 82, 91, 0.2) 0%, rgba(63, 63, 70, 0.3) 100%)",
+              border: app.dailyTokenGrant > 0 
+                ? "1px solid rgba(167, 139, 250, 0.3)"
+                : "1px solid rgba(82, 82, 91, 0.3)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}>
+              <RefreshCw style={{ width: "22px", height: "22px", color: app.dailyTokenGrant > 0 ? "#a78bfa" : "#52525b" }} />
+            </div>
+            <div>
+              <p style={{ fontSize: "28px", fontWeight: "700", color: app.dailyTokenGrant > 0 ? "#fafafa" : "#71717a" }}>
+                {app.dailyTokenGrant > 0 ? app.dailyTokenGrant : "Off"}
+              </p>
+              <p style={{ fontSize: "14px", color: "#9ca3af" }}>Daily Tokens</p>
             </div>
           </div>
         </div>

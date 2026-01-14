@@ -94,7 +94,8 @@ model App {
   
   // Configuration
   isEnabled        Boolean  @default(true)
-  defaultTokenGrant Int     @default(0)  // Tokens for new users
+  defaultTokenGrant Int     @default(0)  // Tokens for new users (one-time)
+  dailyTokenGrant   Int     @default(0)  // Daily free tokens (0 = disabled, rolling 24h)
   
   // Webhook for job completion
   webhookUrl       String?
@@ -180,6 +181,9 @@ model AppUser {
   
   // User identity transfer tracking (e.g., app reinstall with new user ID)
   previousUserIds        Json?     // Array of previous externalIds that were transferred to this user
+  
+  // Daily token grant tracking (rolling 24h from last grant)
+  lastDailyGrantAt       DateTime? // When user last received daily grant
 
   app              App               @relation(fields: [appId], references: [id], onDelete: Cascade)
   tokenLedger      TokenLedgerEntry[]

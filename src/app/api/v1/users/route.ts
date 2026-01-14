@@ -117,6 +117,9 @@ export async function POST(req: NextRequest) {
     const welcomeTokens = auth.app.defaultTokenGrant;
     const additionalTokens = initial_tokens ?? 0;
     const totalTokens = welcomeTokens + additionalTokens;
+    
+    // If default grant is given, set lastDailyGrantAt to prevent double-dipping on day 1
+    const shouldSetDailyGrantTime = welcomeTokens > 0;
 
     const newUser = await prisma.appUser.create({
       data: {
@@ -125,6 +128,7 @@ export async function POST(req: NextRequest) {
         tokenBalance: totalTokens,
         metadata: metadata ? (metadata as Prisma.InputJsonValue) : undefined,
         needsTokenSync: false,
+        lastDailyGrantAt: shouldSetDailyGrantTime ? new Date() : null,
       },
     });
 

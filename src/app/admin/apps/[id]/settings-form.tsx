@@ -11,6 +11,7 @@ interface App {
   description: string | null;
   isEnabled: boolean;
   defaultTokenGrant: number;
+  dailyTokenGrant: number;
   tokenExpirationDays: number | null;
   webhookUrl: string | null;
   webhookSecret: string | null;
@@ -49,6 +50,7 @@ export function AppSettingsForm({ app }: { app: App }) {
     description: app.description || "",
     isEnabled: app.isEnabled,
     defaultTokenGrant: app.defaultTokenGrant,
+    dailyTokenGrant: app.dailyTokenGrant,
     tokenExpirationDays: app.tokenExpirationDays,
     webhookUrl: app.webhookUrl || "",
     webhookSecret: app.webhookSecret || "",
@@ -215,7 +217,7 @@ export function AppSettingsForm({ app }: { app: App }) {
 
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px" }}>
             <div>
-              <label style={labelStyle}>Default Token Grant</label>
+              <label style={labelStyle}>Welcome Tokens (new users)</label>
               <input
                 type="number"
                 min="0"
@@ -223,32 +225,57 @@ export function AppSettingsForm({ app }: { app: App }) {
                 onChange={(e) => setForm({ ...form, defaultTokenGrant: parseInt(e.target.value) || 0 })}
                 style={inputStyle}
               />
+              <p style={{ 
+                fontSize: "12px", 
+                color: "#9ca3af", 
+                marginTop: "8px",
+              }}>
+                One-time grant for new users
+              </p>
             </div>
 
             <div>
-              <label style={labelStyle}>Token Expiration (days)</label>
+              <label style={labelStyle}>Daily Token Grant</label>
               <input
                 type="number"
-                min="1"
-                value={form.tokenExpirationDays ?? ""}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  setForm({ 
-                    ...form, 
-                    tokenExpirationDays: value === "" ? null : parseInt(value) || null 
-                  });
-                }}
+                min="0"
+                value={form.dailyTokenGrant}
+                onChange={(e) => setForm({ ...form, dailyTokenGrant: parseInt(e.target.value) || 0 })}
                 style={inputStyle}
-                placeholder="Never expires"
               />
               <p style={{ 
                 fontSize: "12px", 
                 color: "#9ca3af", 
                 marginTop: "8px",
               }}>
-                Leave empty for tokens that never expire
+                Rolling 24h grant (0 = disabled)
               </p>
             </div>
+          </div>
+
+          <div>
+            <label style={labelStyle}>Token Expiration (days)</label>
+            <input
+              type="number"
+              min="1"
+              value={form.tokenExpirationDays ?? ""}
+              onChange={(e) => {
+                const value = e.target.value;
+                setForm({ 
+                  ...form, 
+                  tokenExpirationDays: value === "" ? null : parseInt(value) || null 
+                });
+              }}
+              style={inputStyle}
+              placeholder="Never expires"
+            />
+            <p style={{ 
+              fontSize: "12px", 
+              color: "#9ca3af", 
+              marginTop: "8px",
+            }}>
+              Leave empty for tokens that never expire
+            </p>
           </div>
         </div>
       </div>
