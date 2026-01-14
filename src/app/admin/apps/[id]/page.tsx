@@ -23,7 +23,7 @@ async function getAppData(id: string) {
 
   if (!app) return null;
 
-  // Get recent users (first 20)
+  // Get recent users (first 20) with revenue data
   const users = await prisma.appUser.findMany({
     where: { appId: id },
     orderBy: { createdAt: "desc" },
@@ -31,6 +31,10 @@ async function getAppData(id: string) {
     include: {
       _count: {
         select: { jobs: true },
+      },
+      revenueCatEvents: {
+        where: { priceUsd: { not: null } },
+        select: { priceUsd: true },
       },
     },
   });
@@ -59,10 +63,16 @@ export default async function AppDetailPage({ params }: PageProps) {
 
   const { app, users, jobs } = data;
 
-  // Serialize dates for client component
+  // Serialize dates for client component and calculate revenue
   const serializedUsers = users.map((u) => ({
-    ...u,
+    id: u.id,
+    externalId: u.externalId,
+    tokenBalance: u.tokenBalance,
+    isPremium: u.isPremium,
+    subscriptionStatus: u.subscriptionStatus,
+    totalRevenue: u.revenueCatEvents.reduce((sum, e) => sum + Number(e.priceUsd || 0), 0),
     createdAt: u.createdAt.toISOString(),
+    _count: u._count,
   }));
 
   const serializedJobs = jobs.map((j) => ({

@@ -45,7 +45,7 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
       }),
     };
 
-    // Get total count and users
+    // Get total count and users with revenue data
     const [total, users] = await Promise.all([
       prisma.appUser.count({ where }),
       prisma.appUser.findMany({
@@ -55,6 +55,10 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
         take: limit,
         include: {
           _count: { select: { jobs: true } },
+          revenueCatEvents: {
+            where: { priceUsd: { not: null } },
+            select: { priceUsd: true },
+          },
         },
       }),
     ]);
@@ -64,7 +68,9 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
         id: u.id,
         externalId: u.externalId,
         tokenBalance: u.tokenBalance,
-        isActive: u.isActive,
+        isPremium: u.isPremium,
+        subscriptionStatus: u.subscriptionStatus,
+        totalRevenue: u.revenueCatEvents.reduce((sum, e) => sum + Number(e.priceUsd || 0), 0),
         createdAt: u.createdAt.toISOString(),
         _count: u._count,
       })),

@@ -9,7 +9,9 @@ interface AppUser {
   id: string;
   externalId: string;
   tokenBalance: number;
-  isActive: boolean;
+  isPremium: boolean;
+  subscriptionStatus: string | null;
+  totalRevenue: number;
   createdAt: string;
   _count: { jobs: number };
 }
@@ -538,7 +540,7 @@ export function AppTabs({ app, users, jobs, userCount, jobCount }: AppTabsProps)
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead>
                 <tr style={{ borderBottom: "1px solid rgba(63, 63, 70, 0.4)" }}>
-                  {["User", "External ID", "Balance", "Jobs", "Status", "Created"].map((header) => (
+                  {["User", "External ID", "Tokens", "Revenue", "Jobs", "Subscription", "Created"].map((header) => (
                     <th 
                       key={header}
                       style={{ 
@@ -606,15 +608,36 @@ export function AppTabs({ app, users, jobs, userCount, jobCount }: AppTabsProps)
                       </div>
                     </td>
                     <td style={{ padding: "18px 20px" }}>
+                      {user.totalRevenue > 0 ? (
+                        <span style={{ color: "#10b981", fontWeight: "600", fontSize: "14px" }}>
+                          ${user.totalRevenue.toFixed(2)}
+                        </span>
+                      ) : (
+                        <span style={{ color: "#52525b", fontSize: "14px" }}>-</span>
+                      )}
+                    </td>
+                    <td style={{ padding: "18px 20px" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: "8px", color: "#b8b8c8", fontSize: "14px" }}>
                         <Zap style={{ width: "16px", height: "16px" }} />
                         <span>{user._count.jobs}</span>
                       </div>
                     </td>
                     <td style={{ padding: "18px 20px" }}>
-                      <span className={user.isActive ? "badge-success" : "badge-error"}>
-                        {user.isActive ? "Active" : "Inactive"}
-                      </span>
+                      {user.isPremium ? (
+                        <span className="badge-success">Premium</span>
+                      ) : user.subscriptionStatus ? (
+                        <span className={
+                          user.subscriptionStatus === "EXPIRED" ? "badge-default" :
+                          user.subscriptionStatus === "CANCELLED" ? "badge-warning" :
+                          user.subscriptionStatus === "BILLING_ISSUE" ? "badge-error" :
+                          user.subscriptionStatus === "REFUNDED" ? "badge-error" :
+                          "badge-default"
+                        }>
+                          {user.subscriptionStatus.charAt(0) + user.subscriptionStatus.slice(1).toLowerCase().replace(/_/g, " ")}
+                        </span>
+                      ) : (
+                        <span style={{ color: "#52525b", fontSize: "13px" }}>Free</span>
+                      )}
                     </td>
                     <td style={{ padding: "18px 20px", fontSize: "13px", color: "#9ca3af" }}>
                       {new Date(user.createdAt).toLocaleString([], { dateStyle: "short", timeStyle: "short" })}
@@ -623,7 +646,7 @@ export function AppTabs({ app, users, jobs, userCount, jobCount }: AppTabsProps)
                 ))}
                 {paginatedUsers.length === 0 && !usersLoading && (
                   <tr>
-                    <td colSpan={6} style={{ padding: "64px 20px", textAlign: "center", color: "#9ca3af" }}>
+                    <td colSpan={7} style={{ padding: "64px 20px", textAlign: "center", color: "#9ca3af" }}>
                       {userSearchQuery ? `No users found matching "${userSearchQuery}"` : "No users yet"}
                     </td>
                   </tr>
