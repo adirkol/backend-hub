@@ -35,6 +35,10 @@ async function getUsers(filters: { search?: string; appId?: string }, page = 1) 
       include: {
         app: { select: { name: true, slug: true } },
         _count: { select: { jobs: true } },
+        revenueCatEvents: {
+          where: { priceUsd: { not: null } },
+          select: { priceUsd: true },
+        },
       },
     }),
     prisma.appUser.count({ where }),
@@ -139,7 +143,7 @@ export default async function UsersPage({ searchParams }: PageProps) {
           <table style={{ width: "100%", borderCollapse: "collapse" }}>
             <thead>
               <tr style={{ borderBottom: "1px solid rgba(63, 63, 70, 0.4)" }}>
-                {["User", "App", "External ID", "Balance", "Jobs", "Status", "Created"].map((header) => (
+                {["User", "App", "External ID", "Tokens", "Revenue", "Jobs", "Subscription", "Created"].map((header) => (
                   <th 
                     key={header}
                     style={{ 
@@ -198,22 +202,16 @@ export default async function UsersPage({ searchParams }: PageProps) {
                     </div>
                   </td>
                   <td style={{ padding: "18px 20px" }}>
-                    <Link
-                      href={`/admin/apps/${user.appId}`}
-                      style={{ 
-                        display: "flex", 
-                        alignItems: "center", 
-                        gap: "8px", 
-                        fontSize: "14px", 
-                        color: "#e4e4e7", 
-                        textDecoration: "none",
-                        position: "relative",
-                        zIndex: 2,
-                      }}
-                    >
+                    <div style={{ 
+                      display: "flex", 
+                      alignItems: "center", 
+                      gap: "8px", 
+                      fontSize: "14px", 
+                      color: "#e4e4e7", 
+                    }}>
                       <AppWindow style={{ width: "16px", height: "16px", color: "#9ca3af" }} />
                       {user.app.name}
-                    </Link>
+                    </div>
                   </td>
                   <td style={{ 
                     padding: "18px 20px", 
@@ -236,15 +234,39 @@ export default async function UsersPage({ searchParams }: PageProps) {
                     </div>
                   </td>
                   <td style={{ padding: "18px 20px" }}>
+                    {(() => {
+                      const totalRevenue = user.revenueCatEvents.reduce((sum, e) => sum + Number(e.priceUsd || 0), 0);
+                      return totalRevenue > 0 ? (
+                        <span style={{ color: "#10b981", fontWeight: "600", fontSize: "14px" }}>
+                          ${totalRevenue.toFixed(2)}
+                        </span>
+                      ) : (
+                        <span style={{ color: "#52525b", fontSize: "14px" }}>-</span>
+                      );
+                    })()}
+                  </td>
+                  <td style={{ padding: "18px 20px" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: "8px", color: "#b8b8c8", fontSize: "14px" }}>
                       <Zap style={{ width: "16px", height: "16px" }} />
                       <span>{user._count.jobs}</span>
                     </div>
                   </td>
                   <td style={{ padding: "18px 20px" }}>
-                    <span className={user.isActive ? "badge-success" : "badge-error"}>
-                      {user.isActive ? "Active" : "Inactive"}
-                    </span>
+                    {user.isPremium ? (
+                      <span className="badge-success">Premium</span>
+                    ) : user.subscriptionStatus ? (
+                      <span className={
+                        user.subscriptionStatus === "EXPIRED" ? "badge-default" :
+                        user.subscriptionStatus === "CANCELLED" ? "badge-warning" :
+                        user.subscriptionStatus === "BILLING_ISSUE" ? "badge-error" :
+                        user.subscriptionStatus === "REFUNDED" ? "badge-error" :
+                        "badge-default"
+                      }>
+                        {user.subscriptionStatus.charAt(0) + user.subscriptionStatus.slice(1).toLowerCase().replace(/_/g, " ")}
+                      </span>
+                    ) : (
+                      <span style={{ color: "#52525b", fontSize: "13px" }}>Free</span>
+                    )}
                   </td>
                   <td style={{ padding: "18px 20px", fontSize: "13px", color: "#9ca3af" }}>
                     {new Date(user.createdAt).toLocaleString([], { dateStyle: "short", timeStyle: "short" })}
@@ -253,7 +275,7 @@ export default async function UsersPage({ searchParams }: PageProps) {
               ))}
               {users.length === 0 && (
                 <tr>
-                  <td colSpan={7} style={{ padding: "64px 20px", textAlign: "center", color: "#9ca3af" }}>
+                  <td colSpan={8} style={{ padding: "64px 20px", textAlign: "center", color: "#9ca3af" }}>
                     {params.q ? `No users matching "${params.q}"` : "No users yet"}
                   </td>
                 </tr>
