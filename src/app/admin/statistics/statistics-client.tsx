@@ -267,7 +267,7 @@ export function StatisticsClient({ data }: { data: StatisticsData }) {
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
-  const tabsRef = useRef<HTMLDivElement>(null);
+  const tabsAnchorRef = useRef<HTMLDivElement>(null);
   
   // Get tab from URL or default to "usage"
   const tabParam = searchParams.get("tab");
@@ -277,8 +277,8 @@ export function StatisticsClient({ data }: { data: StatisticsData }) {
     const params = new URLSearchParams(searchParams.toString());
     params.set("tab", tab);
     router.replace(`${pathname}?${params.toString()}`, { scroll: false });
-    // Scroll to tabs when switching (keeps tabs in view)
-    tabsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    // Scroll so tabs are at top of viewport (where they stick)
+    tabsAnchorRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
   
   const [dateRange, setDateRange] = useState<RangeType>("30d");
@@ -486,9 +486,11 @@ export function StatisticsClient({ data }: { data: StatisticsData }) {
         </div>
       </div>
 
+      {/* Tabs anchor for scroll targeting */}
+      <div ref={tabsAnchorRef} style={{ height: 0, marginTop: "-16px" }} />
+      
       {/* Tabs */}
       <div 
-        ref={tabsRef}
         style={{ 
           display: "flex", 
           gap: "4px", 

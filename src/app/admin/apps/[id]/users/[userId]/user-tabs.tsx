@@ -266,7 +266,7 @@ export function UserTabs({
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
-  const tabsRef = useRef<HTMLDivElement>(null);
+  const tabsAnchorRef = useRef<HTMLDivElement>(null);
   
   // Get tab from URL or default to "overview"
   const tabParam = searchParams.get("tab");
@@ -276,8 +276,8 @@ export function UserTabs({
     const params = new URLSearchParams(searchParams.toString());
     params.set("tab", tab);
     router.replace(`${pathname}?${params.toString()}`, { scroll: false });
-    // Scroll to tabs when switching (keeps tabs in view)
-    tabsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    // Scroll so tabs are at top of viewport (where they stick)
+    tabsAnchorRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
   const roas = stats.totalExpenses > 0 
@@ -396,9 +396,11 @@ export function UserTabs({
         </div>
       </div>
 
+      {/* Tabs anchor for scroll targeting */}
+      <div ref={tabsAnchorRef} style={{ height: 0, marginTop: "-16px" }} />
+      
       {/* Tabs */}
       <div 
-        ref={tabsRef}
         style={{ 
           display: "flex", 
           gap: "4px", 
