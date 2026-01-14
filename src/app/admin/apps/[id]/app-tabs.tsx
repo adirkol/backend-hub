@@ -276,7 +276,7 @@ export function AppTabs({ app, users, jobs, userCount, jobCount }: AppTabsProps)
       </div>
 
       {/* Tabs anchor for scroll targeting - offset accounts for tabs padding */}
-      <div ref={tabsAnchorRef} style={{ height: 0, marginTop: "16px", marginBottom: "-16px" }} />
+      <div ref={tabsAnchorRef} style={{ height: 0, marginTop: "32px", marginBottom: "-32px" }} />
       
       {/* Tabs */}
       <div 
