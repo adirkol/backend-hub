@@ -397,7 +397,7 @@ export function UserTabs({
       </div>
 
       {/* Tabs anchor for scroll targeting */}
-      <div ref={tabsAnchorRef} style={{ height: 0, marginTop: "-16px" }} />
+      <div ref={tabsAnchorRef} style={{ height: 0 }} />
       
       {/* Tabs */}
       <div 
