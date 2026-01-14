@@ -564,7 +564,7 @@ export function AppTabs({ app, users, jobs, userCount, jobCount }: AppTabsProps)
                     key={user.id} 
                     className="table-row-hover"
                     style={{ borderBottom: "1px solid rgba(63, 63, 70, 0.25)", cursor: "pointer" }}
-                    onClick={() => window.location.href = `/admin/apps/${app.id}/users/${user.id}`}
+                    onClick={() => window.location.href = `/admin/apps/${app.id}/users/${user.id}?from=app`}
                   >
                     <td style={{ padding: "18px 20px" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>

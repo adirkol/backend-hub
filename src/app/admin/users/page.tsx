@@ -170,7 +170,7 @@ export default async function UsersPage({ searchParams }: PageProps) {
                 >
                   <td style={{ padding: "18px 20px" }}>
                     <Link
-                      href={`/admin/apps/${user.appId}/users/${user.id}`}
+                      href={`/admin/apps/${user.appId}/users/${user.id}?from=users`}
                       style={{
                         position: "absolute",
                         inset: 0,

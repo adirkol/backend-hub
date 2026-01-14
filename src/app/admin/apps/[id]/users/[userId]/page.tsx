@@ -8,6 +8,7 @@ import { getCountryDisplay } from "@/lib/countries";
 
 interface PageProps {
   params: Promise<{ id: string; userId: string }>;
+  searchParams: Promise<{ from?: string }>;
 }
 
 async function getUserData(appId: string, userId: string) {
@@ -137,8 +138,9 @@ async function getUserData(appId: string, userId: string) {
   };
 }
 
-export default async function UserDetailPage({ params }: PageProps) {
+export default async function UserDetailPage({ params, searchParams }: PageProps) {
   const { id: appId, userId } = await params;
+  const { from } = await searchParams;
   const data = await getUserData(appId, userId);
 
   if (!data) {
@@ -207,7 +209,7 @@ export default async function UserDetailPage({ params }: PageProps) {
       {/* Header */}
       <div>
         <Link
-          href={`/admin/apps/${appId}`}
+          href={from === "users" ? "/admin/users" : `/admin/apps/${appId}?tab=users`}
           style={{
             display: "inline-flex",
             alignItems: "center",
@@ -219,7 +221,7 @@ export default async function UserDetailPage({ params }: PageProps) {
           }}
         >
           <ArrowLeft style={{ width: "16px", height: "16px" }} />
-          Back to {user.app.name}
+          {from === "users" ? "Back to Users" : `Back to ${user.app.name}`}
         </Link>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div>
