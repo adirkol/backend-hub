@@ -276,6 +276,8 @@ export function StatisticsClient({ data }: { data: StatisticsData }) {
     const params = new URLSearchParams(searchParams.toString());
     params.set("tab", tab);
     router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    // Scroll to top when switching tabs
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
   
   const [dateRange, setDateRange] = useState<RangeType>("30d");

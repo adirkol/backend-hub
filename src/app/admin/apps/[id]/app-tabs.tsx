@@ -69,6 +69,8 @@ export function AppTabs({ app, users, jobs, userCount, jobCount }: AppTabsProps)
     const params = new URLSearchParams(searchParams.toString());
     params.set("tab", tab);
     router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    // Scroll to top when switching tabs
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
   
   const [showApiKey, setShowApiKey] = useState(false);

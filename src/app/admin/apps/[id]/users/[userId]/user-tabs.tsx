@@ -275,6 +275,8 @@ export function UserTabs({
     const params = new URLSearchParams(searchParams.toString());
     params.set("tab", tab);
     router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    // Scroll to top when switching tabs
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const roas = stats.totalExpenses > 0 
