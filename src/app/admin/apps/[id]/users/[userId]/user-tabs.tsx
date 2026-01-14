@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { 
   User, 
   Zap, 
@@ -126,6 +127,8 @@ interface UserTabsProps {
 }
 
 type TabType = "overview" | "timeline" | "jobs" | "tokens" | "revenue";
+
+const VALID_TABS: TabType[] = ["overview", "timeline", "jobs", "tokens", "revenue"];
 
 function formatCurrency(amount: number): string {
   return new Intl.NumberFormat("en-US", {
@@ -260,7 +263,19 @@ export function UserTabs({
   counts,
   effectiveBalance,
 }: UserTabsProps) {
-  const [activeTab, setActiveTab] = useState<TabType>("overview");
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+  
+  // Get tab from URL or default to "overview"
+  const tabParam = searchParams.get("tab");
+  const activeTab: TabType = VALID_TABS.includes(tabParam as TabType) ? (tabParam as TabType) : "overview";
+  
+  const setActiveTab = (tab: TabType) => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("tab", tab);
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+  };
 
   const roas = stats.totalExpenses > 0 
     ? ((stats.totalRevenue / stats.totalExpenses) * 100).toFixed(1) 

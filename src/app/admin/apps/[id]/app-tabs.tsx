@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { Copy, Eye, RefreshCw, Users, Zap, Coins, Settings, User, Search, Trash2, AlertTriangle } from "lucide-react";
 import { AppSettingsForm } from "./settings-form";
 
@@ -53,8 +54,23 @@ interface AppTabsProps {
 
 type TabType = "settings" | "users" | "jobs";
 
+const VALID_TABS: TabType[] = ["settings", "users", "jobs"];
+
 export function AppTabs({ app, users, jobs, userCount, jobCount }: AppTabsProps) {
-  const [activeTab, setActiveTab] = useState<TabType>("settings");
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+  
+  // Get tab from URL or default to "settings"
+  const tabParam = searchParams.get("tab");
+  const activeTab: TabType = VALID_TABS.includes(tabParam as TabType) ? (tabParam as TabType) : "settings";
+  
+  const setActiveTab = (tab: TabType) => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("tab", tab);
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+  };
+  
   const [showApiKey, setShowApiKey] = useState(false);
   const [copied, setCopied] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);

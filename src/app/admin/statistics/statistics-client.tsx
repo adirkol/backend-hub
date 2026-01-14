@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import {
   BarChart3,
   TrendingUp,
@@ -146,6 +147,8 @@ interface StatisticsData {
 type TabType = "usage" | "revenue" | "expenses";
 type RangeType = "7d" | "14d" | "30d" | "90d" | "custom";
 
+const VALID_TABS: TabType[] = ["usage", "revenue", "expenses"];
+
 function StatCard({
   title,
   value,
@@ -261,7 +264,20 @@ function SimpleBarChart({ data }: { data: Array<{ label: string; value: number }
 }
 
 export function StatisticsClient({ data }: { data: StatisticsData }) {
-  const [activeTab, setActiveTab] = useState<TabType>("usage");
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+  
+  // Get tab from URL or default to "usage"
+  const tabParam = searchParams.get("tab");
+  const activeTab: TabType = VALID_TABS.includes(tabParam as TabType) ? (tabParam as TabType) : "usage";
+  
+  const setActiveTab = (tab: TabType) => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("tab", tab);
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+  };
+  
   const [dateRange, setDateRange] = useState<RangeType>("30d");
   const [selectedApp, setSelectedApp] = useState<string>("all");
   const [showRangeDropdown, setShowRangeDropdown] = useState(false);
