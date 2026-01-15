@@ -44,7 +44,7 @@ async function triggerGitHubWorkflow(version: string, releaseNotes: string | nul
           "X-GitHub-Api-Version": "2022-11-28",
         },
         body: JSON.stringify({
-          ref: "main",
+          ref: "master",
           inputs: {
             version: version,
             release_notes: releaseNotes || "",
@@ -55,8 +55,8 @@ async function triggerGitHubWorkflow(version: string, releaseNotes: string | nul
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("GitHub API error:", errorText);
-      return { success: false, error: `GitHub API error: ${response.status}` };
+      console.error("GitHub API error:", response.status, errorText);
+      return { success: false, error: `GitHub API error: ${response.status} - ${errorText}` };
     }
 
     // Workflow dispatch doesn't return the run ID immediately
@@ -170,8 +170,9 @@ export async function POST(req: NextRequest) {
     });
   } catch (error) {
     console.error("SDK publish error:", error);
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
     return NextResponse.json(
-      { error: "Failed to initiate publish" },
+      { error: "Failed to initiate publish", details: errorMessage },
       { status: 500 }
     );
   }
