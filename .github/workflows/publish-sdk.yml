@@ -63,7 +63,7 @@ jobs:
           git tag -a "${{ inputs.version }}" -m "v${{ inputs.version }}: ${{ inputs.release_notes }}"
           
           # Push changes and tags
-          git push origin main
+          git push origin master
           git push origin "${{ inputs.version }}"
 
       - name: Update publish status (success)
