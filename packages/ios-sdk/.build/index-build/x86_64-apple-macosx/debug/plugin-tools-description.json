@@ -1,0 +1,696 @@
+{
+  "builtTestProducts" : [
+    {
+      "binaryPath" : "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/.build/index-build/x86_64-apple-macosx/debug/AIHubSDKPackageTests.xctest/Contents/MacOS/AIHubSDKPackageTests",
+      "packagePath" : "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk",
+      "productName" : "AIHubSDKPackageTests"
+    }
+  ],
+  "copyCommands" : {
+
+  },
+  "explicitTargetDependencyImportCheckingMode" : {
+    "none" : {
+
+    }
+  },
+  "generatedSourceTargetSet" : [
+
+  ],
+  "pluginDescriptions" : [
+
+  ],
+  "swiftCommands" : {
+    "C.AIHubSDK-x86_64-apple-macosx15.0-debug.module" : {
+      "executable" : "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc",
+      "fileList" : "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/.build/index-build/x86_64-apple-macosx/debug/AIHubSDK.build/sources",
+      "importPath" : "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/.build/index-build/x86_64-apple-macosx/debug/Modules",
+      "inputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/Sources/AIHubSDK/AIHubClient.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/Sources/AIHubSDK/AIHubSDK.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/Sources/AIHubSDK/Configuration.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/Sources/AIHubSDK/Errors/AIHubError.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/Sources/AIHubSDK/Models/GenerationJob.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/Sources/AIHubSDK/Models/Responses.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/Sources/AIHubSDK/Models/User.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/.build/index-build/x86_64-apple-macosx/debug/swift-version--58304C5D6DBC2206.txt"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/.build/index-build/x86_64-apple-macosx/debug/AIHubSDK.build/sources"
+        }
+      ],
+      "isLibrary" : true,
+      "moduleName" : "AIHubSDK",
+      "moduleOutputPath" : "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/.build/index-build/x86_64-apple-macosx/debug/Modules/AIHubSDK.swiftmodule",
+      "objects" : [
+        "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/.build/index-build/x86_64-apple-macosx/debug/AIHubSDK.build/AIHubClient.swift.o",
+        "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/.build/index-build/x86_64-apple-macosx/debug/AIHubSDK.build/AIHubSDK.swift.o",
+        "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/.build/index-build/x86_64-apple-macosx/debug/AIHubSDK.build/Configuration.swift.o",
+        "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/.build/index-build/x86_64-apple-macosx/debug/AIHubSDK.build/AIHubError.swift.o",
+        "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/.build/index-build/x86_64-apple-macosx/debug/AIHubSDK.build/GenerationJob.swift.o",
+        "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/.build/index-build/x86_64-apple-macosx/debug/AIHubSDK.build/Responses.swift.o",
+        "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/.build/index-build/x86_64-apple-macosx/debug/AIHubSDK.build/User.swift.o"
+      ],
+      "otherArguments" : [
+        "-target",
+        "x86_64-apple-macosx12.0",
+        "-incremental",
+        "-enable-batch-mode",
+        "-serialize-diagnostics",
+        "-Onone",
+        "-enable-testing",
+        "-j16",
+        "-DSWIFT_PACKAGE",
+        "-DDEBUG",
+        "-DSWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE",
+        "-module-cache-path",
+        "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/.build/index-build/x86_64-apple-macosx/debug/ModuleCache",
+        "-parseable-output",
+        "-parse-as-library",
+        "-emit-objc-header",
+        "-emit-objc-header-path",
+        "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/.build/index-build/x86_64-apple-macosx/debug/AIHubSDK.build/include/AIHubSDK-Swift.h",
+        "-swift-version",
+        "5",
+        "-Xfrontend",
+        "-experimental-lazy-typecheck",
+        "-Xfrontend",
+        "-experimental-skip-all-function-bodies",
+        "-Xfrontend",
+        "-experimental-allow-module-with-compiler-errors",
+        "-Xfrontend",
+        "-empty-abi-descriptor",
+        "-plugin-path",
+        "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing",
+        "-sdk",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk",
+        "-F",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+        "-F",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/PrivateFrameworks",
+        "-I",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+        "-L",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+        "-g",
+        "-Xcc",
+        "-isysroot",
+        "-Xcc",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk",
+        "-Xcc",
+        "-F",
+        "-Xcc",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+        "-Xcc",
+        "-F",
+        "-Xcc",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/PrivateFrameworks",
+        "-Xcc",
+        "-fPIC",
+        "-Xcc",
+        "-g",
+        "-package-name",
+        "ios_sdk"
+      ],
+      "outputFileMapPath" : "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/.build/index-build/x86_64-apple-macosx/debug/AIHubSDK.build/output-file-map.json",
+      "outputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/.build/index-build/x86_64-apple-macosx/debug/Modules/AIHubSDK.swiftmodule"
+        }
+      ],
+      "prepareForIndexing" : true,
+      "sources" : [
+        "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/Sources/AIHubSDK/AIHubClient.swift",
+        "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/Sources/AIHubSDK/AIHubSDK.swift",
+        "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/Sources/AIHubSDK/Configuration.swift",
+        "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/Sources/AIHubSDK/Errors/AIHubError.swift",
+        "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/Sources/AIHubSDK/Models/GenerationJob.swift",
+        "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/Sources/AIHubSDK/Models/Responses.swift",
+        "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/Sources/AIHubSDK/Models/User.swift"
+      ],
+      "tempsPath" : "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/.build/index-build/x86_64-apple-macosx/debug/AIHubSDK.build",
+      "wholeModuleOptimization" : false
+    },
+    "C.AIHubSDKPackageTests-x86_64-apple-macosx15.0-debug.module" : {
+      "executable" : "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc",
+      "fileList" : "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/.build/index-build/x86_64-apple-macosx/debug/AIHubSDKPackageTests.build/sources",
+      "importPath" : "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/.build/index-build/x86_64-apple-macosx/debug/Modules",
+      "inputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/.build/index-build/x86_64-apple-macosx/debug/AIHubSDKPackageTests.derived/runner.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/.build/index-build/x86_64-apple-macosx/debug/swift-version--58304C5D6DBC2206.txt"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/.build/index-build/x86_64-apple-macosx/debug/Modules/AIHubSDKTests.swiftmodule"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/.build/index-build/x86_64-apple-macosx/debug/AIHubSDKPackageTests.build/sources"
+        }
+      ],
+      "isLibrary" : true,
+      "moduleName" : "AIHubSDKPackageTests",
+      "moduleOutputPath" : "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/.build/index-build/x86_64-apple-macosx/debug/Modules/AIHubSDKPackageTests.swiftmodule",
+      "objects" : [
+        "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/.build/index-build/x86_64-apple-macosx/debug/AIHubSDKPackageTests.build/runner.swift.o"
+      ],
+      "otherArguments" : [
+        "-target",
+        "x86_64-apple-macosx12.0",
+        "-incremental",
+        "-enable-batch-mode",
+        "-serialize-diagnostics",
+        "-Onone",
+        "-enable-testing",
+        "-Xfrontend",
+        "-enable-cross-import-overlays",
+        "-j16",
+        "-DSWIFT_PACKAGE",
+        "-DDEBUG",
+        "-DSWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE",
+        "-module-cache-path",
+        "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/.build/index-build/x86_64-apple-macosx/debug/ModuleCache",
+        "-parseable-output",
+        "-parse-as-library",
+        "-emit-objc-header",
+        "-emit-objc-header-path",
+        "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/.build/index-build/x86_64-apple-macosx/debug/AIHubSDKPackageTests.build/include/AIHubSDKPackageTests-Swift.h",
+        "-Xfrontend",
+        "-experimental-lazy-typecheck",
+        "-Xfrontend",
+        "-experimental-skip-all-function-bodies",
+        "-Xfrontend",
+        "-experimental-allow-module-with-compiler-errors",
+        "-Xfrontend",
+        "-empty-abi-descriptor",
+        "-plugin-path",
+        "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing",
+        "-sdk",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk",
+        "-F",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+        "-F",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/PrivateFrameworks",
+        "-I",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+        "-L",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+        "-g",
+        "-Xcc",
+        "-isysroot",
+        "-Xcc",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk",
+        "-Xcc",
+        "-F",
+        "-Xcc",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+        "-Xcc",
+        "-F",
+        "-Xcc",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/PrivateFrameworks",
+        "-Xcc",
+        "-fPIC",
+        "-Xcc",
+        "-g",
+        "-package-name",
+        "ios_sdk"
+      ],
+      "outputFileMapPath" : "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/.build/index-build/x86_64-apple-macosx/debug/AIHubSDKPackageTests.build/output-file-map.json",
+      "outputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/.build/index-build/x86_64-apple-macosx/debug/Modules/AIHubSDKPackageTests.swiftmodule"
+        }
+      ],
+      "prepareForIndexing" : true,
+      "sources" : [
+        "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/.build/index-build/x86_64-apple-macosx/debug/AIHubSDKPackageTests.derived/runner.swift"
+      ],
+      "tempsPath" : "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/.build/index-build/x86_64-apple-macosx/debug/AIHubSDKPackageTests.build",
+      "wholeModuleOptimization" : false
+    },
+    "C.AIHubSDKTests-x86_64-apple-macosx15.0-debug.module" : {
+      "executable" : "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc",
+      "fileList" : "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/.build/index-build/x86_64-apple-macosx/debug/AIHubSDKTests.build/sources",
+      "importPath" : "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/.build/index-build/x86_64-apple-macosx/debug/Modules",
+      "inputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/Tests/AIHubSDKTests/AIHubSDKTests.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/.build/index-build/x86_64-apple-macosx/debug/swift-version--58304C5D6DBC2206.txt"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/.build/index-build/x86_64-apple-macosx/debug/Modules/AIHubSDK.swiftmodule"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/.build/index-build/x86_64-apple-macosx/debug/AIHubSDKTests.build/sources"
+        }
+      ],
+      "isLibrary" : true,
+      "moduleName" : "AIHubSDKTests",
+      "moduleOutputPath" : "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/.build/index-build/x86_64-apple-macosx/debug/Modules/AIHubSDKTests.swiftmodule",
+      "objects" : [
+        "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/.build/index-build/x86_64-apple-macosx/debug/AIHubSDKTests.build/AIHubSDKTests.swift.o"
+      ],
+      "otherArguments" : [
+        "-target",
+        "x86_64-apple-macosx14.0",
+        "-incremental",
+        "-enable-batch-mode",
+        "-serialize-diagnostics",
+        "-Onone",
+        "-enable-testing",
+        "-Xfrontend",
+        "-enable-cross-import-overlays",
+        "-j16",
+        "-DSWIFT_PACKAGE",
+        "-DDEBUG",
+        "-DSWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE",
+        "-module-cache-path",
+        "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/.build/index-build/x86_64-apple-macosx/debug/ModuleCache",
+        "-parseable-output",
+        "-parse-as-library",
+        "-swift-version",
+        "5",
+        "-Xfrontend",
+        "-experimental-lazy-typecheck",
+        "-Xfrontend",
+        "-experimental-skip-all-function-bodies",
+        "-Xfrontend",
+        "-experimental-allow-module-with-compiler-errors",
+        "-Xfrontend",
+        "-empty-abi-descriptor",
+        "-plugin-path",
+        "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing",
+        "-sdk",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk",
+        "-F",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+        "-F",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/PrivateFrameworks",
+        "-I",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+        "-L",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+        "-g",
+        "-Xcc",
+        "-isysroot",
+        "-Xcc",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk",
+        "-Xcc",
+        "-F",
+        "-Xcc",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+        "-Xcc",
+        "-F",
+        "-Xcc",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/PrivateFrameworks",
+        "-Xcc",
+        "-fPIC",
+        "-Xcc",
+        "-g",
+        "-package-name",
+        "ios_sdk"
+      ],
+      "outputFileMapPath" : "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/.build/index-build/x86_64-apple-macosx/debug/AIHubSDKTests.build/output-file-map.json",
+      "outputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/.build/index-build/x86_64-apple-macosx/debug/Modules/AIHubSDKTests.swiftmodule"
+        }
+      ],
+      "prepareForIndexing" : true,
+      "sources" : [
+        "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/Tests/AIHubSDKTests/AIHubSDKTests.swift"
+      ],
+      "tempsPath" : "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/.build/index-build/x86_64-apple-macosx/debug/AIHubSDKTests.build",
+      "wholeModuleOptimization" : false
+    }
+  },
+  "swiftFrontendCommands" : {
+
+  },
+  "swiftTargetScanArgs" : {
+    "AIHubSDK" : [
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc",
+      "-module-name",
+      "AIHubSDK",
+      "-package-name",
+      "ios_sdk",
+      "-c",
+      "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/Sources/AIHubSDK/AIHubClient.swift",
+      "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/Sources/AIHubSDK/AIHubSDK.swift",
+      "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/Sources/AIHubSDK/Configuration.swift",
+      "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/Sources/AIHubSDK/Errors/AIHubError.swift",
+      "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/Sources/AIHubSDK/Models/GenerationJob.swift",
+      "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/Sources/AIHubSDK/Models/Responses.swift",
+      "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/Sources/AIHubSDK/Models/User.swift",
+      "-I",
+      "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/.build/index-build/x86_64-apple-macosx/debug/Modules",
+      "-target",
+      "x86_64-apple-macosx12.0",
+      "-incremental",
+      "-enable-batch-mode",
+      "-serialize-diagnostics",
+      "-Onone",
+      "-enable-testing",
+      "-j16",
+      "-DSWIFT_PACKAGE",
+      "-DDEBUG",
+      "-DSWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE",
+      "-module-cache-path",
+      "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/.build/index-build/x86_64-apple-macosx/debug/ModuleCache",
+      "-parseable-output",
+      "-parse-as-library",
+      "-emit-objc-header",
+      "-emit-objc-header-path",
+      "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/.build/index-build/x86_64-apple-macosx/debug/AIHubSDK.build/include/AIHubSDK-Swift.h",
+      "-swift-version",
+      "5",
+      "-Xfrontend",
+      "-experimental-lazy-typecheck",
+      "-Xfrontend",
+      "-experimental-skip-all-function-bodies",
+      "-Xfrontend",
+      "-experimental-allow-module-with-compiler-errors",
+      "-Xfrontend",
+      "-empty-abi-descriptor",
+      "-plugin-path",
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing",
+      "-sdk",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk",
+      "-F",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+      "-F",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/PrivateFrameworks",
+      "-I",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+      "-L",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+      "-g",
+      "-Xcc",
+      "-isysroot",
+      "-Xcc",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk",
+      "-Xcc",
+      "-F",
+      "-Xcc",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+      "-Xcc",
+      "-F",
+      "-Xcc",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/PrivateFrameworks",
+      "-Xcc",
+      "-fPIC",
+      "-Xcc",
+      "-g",
+      "-package-name",
+      "ios_sdk",
+      "-driver-use-frontend-path",
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc"
+    ],
+    "AIHubSDKPackageTests" : [
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc",
+      "-module-name",
+      "AIHubSDKPackageTests",
+      "-package-name",
+      "ios_sdk",
+      "-c",
+      "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/.build/index-build/x86_64-apple-macosx/debug/AIHubSDKPackageTests.derived/runner.swift",
+      "-I",
+      "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/.build/index-build/x86_64-apple-macosx/debug/Modules",
+      "-target",
+      "x86_64-apple-macosx12.0",
+      "-incremental",
+      "-enable-batch-mode",
+      "-serialize-diagnostics",
+      "-Onone",
+      "-enable-testing",
+      "-Xfrontend",
+      "-enable-cross-import-overlays",
+      "-j16",
+      "-DSWIFT_PACKAGE",
+      "-DDEBUG",
+      "-DSWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE",
+      "-module-cache-path",
+      "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/.build/index-build/x86_64-apple-macosx/debug/ModuleCache",
+      "-parseable-output",
+      "-parse-as-library",
+      "-emit-objc-header",
+      "-emit-objc-header-path",
+      "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/.build/index-build/x86_64-apple-macosx/debug/AIHubSDKPackageTests.build/include/AIHubSDKPackageTests-Swift.h",
+      "-Xfrontend",
+      "-experimental-lazy-typecheck",
+      "-Xfrontend",
+      "-experimental-skip-all-function-bodies",
+      "-Xfrontend",
+      "-experimental-allow-module-with-compiler-errors",
+      "-Xfrontend",
+      "-empty-abi-descriptor",
+      "-plugin-path",
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing",
+      "-sdk",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk",
+      "-F",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+      "-F",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/PrivateFrameworks",
+      "-I",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+      "-L",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+      "-g",
+      "-Xcc",
+      "-isysroot",
+      "-Xcc",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk",
+      "-Xcc",
+      "-F",
+      "-Xcc",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+      "-Xcc",
+      "-F",
+      "-Xcc",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/PrivateFrameworks",
+      "-Xcc",
+      "-fPIC",
+      "-Xcc",
+      "-g",
+      "-package-name",
+      "ios_sdk",
+      "-driver-use-frontend-path",
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc"
+    ],
+    "AIHubSDKTests" : [
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc",
+      "-module-name",
+      "AIHubSDKTests",
+      "-package-name",
+      "ios_sdk",
+      "-c",
+      "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/Tests/AIHubSDKTests/AIHubSDKTests.swift",
+      "-I",
+      "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/.build/index-build/x86_64-apple-macosx/debug/Modules",
+      "-target",
+      "x86_64-apple-macosx14.0",
+      "-incremental",
+      "-enable-batch-mode",
+      "-serialize-diagnostics",
+      "-Onone",
+      "-enable-testing",
+      "-Xfrontend",
+      "-enable-cross-import-overlays",
+      "-j16",
+      "-DSWIFT_PACKAGE",
+      "-DDEBUG",
+      "-DSWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE",
+      "-module-cache-path",
+      "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/.build/index-build/x86_64-apple-macosx/debug/ModuleCache",
+      "-parseable-output",
+      "-parse-as-library",
+      "-swift-version",
+      "5",
+      "-Xfrontend",
+      "-experimental-lazy-typecheck",
+      "-Xfrontend",
+      "-experimental-skip-all-function-bodies",
+      "-Xfrontend",
+      "-experimental-allow-module-with-compiler-errors",
+      "-Xfrontend",
+      "-empty-abi-descriptor",
+      "-plugin-path",
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing",
+      "-sdk",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk",
+      "-F",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+      "-F",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/PrivateFrameworks",
+      "-I",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+      "-L",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+      "-g",
+      "-Xcc",
+      "-isysroot",
+      "-Xcc",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk",
+      "-Xcc",
+      "-F",
+      "-Xcc",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+      "-Xcc",
+      "-F",
+      "-Xcc",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/PrivateFrameworks",
+      "-Xcc",
+      "-fPIC",
+      "-Xcc",
+      "-g",
+      "-package-name",
+      "ios_sdk",
+      "-driver-use-frontend-path",
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc"
+    ]
+  },
+  "targetDependencyMap" : {
+    "AIHubSDK" : [
+
+    ],
+    "AIHubSDKPackageTests" : [
+      "AIHubSDKTests",
+      "AIHubSDK"
+    ],
+    "AIHubSDKTests" : [
+      "AIHubSDK"
+    ]
+  },
+  "testDiscoveryCommands" : {
+
+  },
+  "testEntryPointCommands" : {
+
+  },
+  "traitConfiguration" : {
+    "default" : {
+
+    }
+  },
+  "writeCommands" : {
+    "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/.build/index-build/x86_64-apple-macosx/debug/AIHubSDK.build/sources" : {
+      "alwaysOutOfDate" : false,
+      "inputs" : [
+        {
+          "kind" : "virtual",
+          "name" : "<sources-file-list>"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/Sources/AIHubSDK/AIHubClient.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/Sources/AIHubSDK/AIHubSDK.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/Sources/AIHubSDK/Configuration.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/Sources/AIHubSDK/Errors/AIHubError.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/Sources/AIHubSDK/Models/GenerationJob.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/Sources/AIHubSDK/Models/Responses.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/Sources/AIHubSDK/Models/User.swift"
+        }
+      ],
+      "outputFilePath" : "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/.build/index-build/x86_64-apple-macosx/debug/AIHubSDK.build/sources"
+    },
+    "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/.build/index-build/x86_64-apple-macosx/debug/AIHubSDKPackageTests.build/sources" : {
+      "alwaysOutOfDate" : false,
+      "inputs" : [
+        {
+          "kind" : "virtual",
+          "name" : "<sources-file-list>"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/.build/index-build/x86_64-apple-macosx/debug/AIHubSDKPackageTests.derived/runner.swift"
+        }
+      ],
+      "outputFilePath" : "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/.build/index-build/x86_64-apple-macosx/debug/AIHubSDKPackageTests.build/sources"
+    },
+    "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/.build/index-build/x86_64-apple-macosx/debug/AIHubSDKTests.build/sources" : {
+      "alwaysOutOfDate" : false,
+      "inputs" : [
+        {
+          "kind" : "virtual",
+          "name" : "<sources-file-list>"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/Tests/AIHubSDKTests/AIHubSDKTests.swift"
+        }
+      ],
+      "outputFilePath" : "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/.build/index-build/x86_64-apple-macosx/debug/AIHubSDKTests.build/sources"
+    },
+    "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/.build/index-build/x86_64-apple-macosx/debug/swift-version--58304C5D6DBC2206.txt" : {
+      "alwaysOutOfDate" : true,
+      "inputs" : [
+        {
+          "kind" : "virtual",
+          "name" : "<swift-get-version>"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc"
+        }
+      ],
+      "outputFilePath" : "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/.build/index-build/x86_64-apple-macosx/debug/swift-version--58304C5D6DBC2206.txt"
+    }
+  }
+}

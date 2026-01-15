@@ -1,0 +1,54 @@
+{
+  "": {
+    "swift-dependencies": "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/.build/index-build/x86_64-apple-macosx/debug/AIHubSDK.build/master.swiftdeps"
+  },
+  "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/Sources/AIHubSDK/AIHubClient.swift": {
+    "dependencies": "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/.build/index-build/x86_64-apple-macosx/debug/AIHubSDK.build/AIHubClient.d",
+    "object": "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/.build/index-build/x86_64-apple-macosx/debug/AIHubSDK.build/AIHubClient.swift.o",
+    "swiftmodule": "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/.build/index-build/x86_64-apple-macosx/debug/AIHubSDK.build/AIHubClient~partial.swiftmodule",
+    "swift-dependencies": "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/.build/index-build/x86_64-apple-macosx/debug/AIHubSDK.build/AIHubClient.swiftdeps",
+    "diagnostics": "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/.build/index-build/x86_64-apple-macosx/debug/AIHubSDK.build/AIHubClient.dia"
+  },
+  "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/Sources/AIHubSDK/AIHubSDK.swift": {
+    "dependencies": "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/.build/index-build/x86_64-apple-macosx/debug/AIHubSDK.build/AIHubSDK.d",
+    "object": "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/.build/index-build/x86_64-apple-macosx/debug/AIHubSDK.build/AIHubSDK.swift.o",
+    "swiftmodule": "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/.build/index-build/x86_64-apple-macosx/debug/AIHubSDK.build/AIHubSDK~partial.swiftmodule",
+    "swift-dependencies": "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/.build/index-build/x86_64-apple-macosx/debug/AIHubSDK.build/AIHubSDK.swiftdeps",
+    "diagnostics": "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/.build/index-build/x86_64-apple-macosx/debug/AIHubSDK.build/AIHubSDK.dia"
+  },
+  "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/Sources/AIHubSDK/Configuration.swift": {
+    "dependencies": "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/.build/index-build/x86_64-apple-macosx/debug/AIHubSDK.build/Configuration.d",
+    "object": "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/.build/index-build/x86_64-apple-macosx/debug/AIHubSDK.build/Configuration.swift.o",
+    "swiftmodule": "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/.build/index-build/x86_64-apple-macosx/debug/AIHubSDK.build/Configuration~partial.swiftmodule",
+    "swift-dependencies": "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/.build/index-build/x86_64-apple-macosx/debug/AIHubSDK.build/Configuration.swiftdeps",
+    "diagnostics": "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/.build/index-build/x86_64-apple-macosx/debug/AIHubSDK.build/Configuration.dia"
+  },
+  "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/Sources/AIHubSDK/Errors/AIHubError.swift": {
+    "dependencies": "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/.build/index-build/x86_64-apple-macosx/debug/AIHubSDK.build/AIHubError.d",
+    "object": "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/.build/index-build/x86_64-apple-macosx/debug/AIHubSDK.build/AIHubError.swift.o",
+    "swiftmodule": "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/.build/index-build/x86_64-apple-macosx/debug/AIHubSDK.build/AIHubError~partial.swiftmodule",
+    "swift-dependencies": "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/.build/index-build/x86_64-apple-macosx/debug/AIHubSDK.build/AIHubError.swiftdeps",
+    "diagnostics": "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/.build/index-build/x86_64-apple-macosx/debug/AIHubSDK.build/AIHubError.dia"
+  },
+  "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/Sources/AIHubSDK/Models/GenerationJob.swift": {
+    "dependencies": "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/.build/index-build/x86_64-apple-macosx/debug/AIHubSDK.build/GenerationJob.d",
+    "object": "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/.build/index-build/x86_64-apple-macosx/debug/AIHubSDK.build/GenerationJob.swift.o",
+    "swiftmodule": "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/.build/index-build/x86_64-apple-macosx/debug/AIHubSDK.build/GenerationJob~partial.swiftmodule",
+    "swift-dependencies": "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/.build/index-build/x86_64-apple-macosx/debug/AIHubSDK.build/GenerationJob.swiftdeps",
+    "diagnostics": "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/.build/index-build/x86_64-apple-macosx/debug/AIHubSDK.build/GenerationJob.dia"
+  },
+  "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/Sources/AIHubSDK/Models/Responses.swift": {
+    "dependencies": "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/.build/index-build/x86_64-apple-macosx/debug/AIHubSDK.build/Responses.d",
+    "object": "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/.build/index-build/x86_64-apple-macosx/debug/AIHubSDK.build/Responses.swift.o",
+    "swiftmodule": "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/.build/index-build/x86_64-apple-macosx/debug/AIHubSDK.build/Responses~partial.swiftmodule",
+    "swift-dependencies": "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/.build/index-build/x86_64-apple-macosx/debug/AIHubSDK.build/Responses.swiftdeps",
+    "diagnostics": "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/.build/index-build/x86_64-apple-macosx/debug/AIHubSDK.build/Responses.dia"
+  },
+  "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/Sources/AIHubSDK/Models/User.swift": {
+    "dependencies": "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/.build/index-build/x86_64-apple-macosx/debug/AIHubSDK.build/User.d",
+    "object": "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/.build/index-build/x86_64-apple-macosx/debug/AIHubSDK.build/User.swift.o",
+    "swiftmodule": "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/.build/index-build/x86_64-apple-macosx/debug/AIHubSDK.build/User~partial.swiftmodule",
+    "swift-dependencies": "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/.build/index-build/x86_64-apple-macosx/debug/AIHubSDK.build/User.swiftdeps",
+    "diagnostics": "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/.build/index-build/x86_64-apple-macosx/debug/AIHubSDK.build/User.dia"
+  }
+}

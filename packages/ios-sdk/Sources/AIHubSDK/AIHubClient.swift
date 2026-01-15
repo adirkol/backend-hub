@@ -4,12 +4,10 @@ import Foundation
 ///
 /// ## Usage
 /// ```swift
+/// // Initialize with your App API key and the user's unique ID
 /// let client = AIHubClient(
-///     configuration: AIHubConfiguration(
-///         apiKey: "your-api-key",
-///         baseURL: URL(string: "https://your-api.com")!
-///     ),
-///     userId: "user-123"
+///     apiKey: "your-app-api-key",
+///     userId: userManager.currentUserId  // Your app's user identifier
 /// )
 ///
 /// // Generate an image
@@ -37,7 +35,9 @@ public final class AIHubClient: @unchecked Sendable {
     /// Creates a new AIHub client
     /// - Parameters:
     ///   - configuration: The SDK configuration
-    ///   - userId: The external user ID for this user
+    ///   - userId: The user ID that your app creates and manages for each user.
+    ///             This should be a unique, stable identifier (e.g., UUID stored in Keychain/UserDefaults).
+    ///             AIHub uses this ID to track the user's token balance and generation history.
     public init(configuration: AIHubConfiguration, userId: String) {
         self.configuration = configuration
         self.userId = userId
@@ -47,17 +47,17 @@ public final class AIHubClient: @unchecked Sendable {
         self.decoder = JSONDecoder()
     }
     
-    /// Convenience initializer with API key and user ID
+    /// Convenience initializer with App API key and user ID
     /// - Parameters:
-    ///   - apiKey: Your app's API key
-    ///   - userId: The external user ID
-    ///   - baseURL: The API base URL (defaults to production)
+    ///   - apiKey: Your App API key (found in Admin Panel → Apps → Settings)
+    ///   - userId: The user ID that your app creates and manages for each user.
+    ///             This should be a unique, stable identifier (e.g., UUID stored in Keychain/UserDefaults).
+    ///             AIHub uses this ID to track the user's token balance and generation history.
     public convenience init(
         apiKey: String,
-        userId: String,
-        baseURL: URL = URL(string: "https://api.yourdomain.com")!
+        userId: String
     ) {
-        let config = AIHubConfiguration(apiKey: apiKey, baseURL: baseURL)
+        let config = AIHubConfiguration(apiKey: apiKey)
         self.init(configuration: config, userId: userId)
     }
     

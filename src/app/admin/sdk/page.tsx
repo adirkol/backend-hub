@@ -75,6 +75,21 @@ export default function SDKPage() {
     fetchStatus();
   }, [fetchStatus]);
 
+  // Auto-poll when there's an in-progress publish
+  useEffect(() => {
+    const hasInProgress = status?.publishHistory.some(
+      (publish) => publish.status === "IN_PROGRESS"
+    );
+
+    if (!hasInProgress) return;
+
+    const pollInterval = setInterval(() => {
+      fetchStatus();
+    }, 3000); // Poll every 3 seconds
+
+    return () => clearInterval(pollInterval);
+  }, [status?.publishHistory, fetchStatus]);
+
   const handlePublish = async () => {
     if (!version.match(/^\d+\.\d+\.\d+$/)) {
       setPublishError("Invalid version format. Use semantic versioning (e.g., 1.0.0)");

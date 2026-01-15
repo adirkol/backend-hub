@@ -2,7 +2,10 @@ import Foundation
 
 /// Configuration for the AIHub SDK
 public struct AIHubConfiguration {
-    /// The API key for your app (found in Admin Panel → Apps → Settings)
+    /// The production API base URL
+    public static let productionURL = URL(string: "https://hub.videobakery.co")!
+    
+    /// The App API key (found in Admin Panel → Apps → Settings)
     public let apiKey: String
     
     /// The base URL for the API (defaults to production)
@@ -16,13 +19,13 @@ public struct AIHubConfiguration {
     
     /// Creates a new configuration
     /// - Parameters:
-    ///   - apiKey: Your app's API key
-    ///   - baseURL: The API base URL (defaults to production)
+    ///   - apiKey: Your App API key (found in Admin Panel → Apps → Settings)
+    ///   - baseURL: The API base URL (defaults to production: https://hub.videobakery.co)
     ///   - timeoutInterval: Request timeout in seconds (default: 30)
     ///   - sessionConfiguration: Custom URLSession configuration
     public init(
         apiKey: String,
-        baseURL: URL = URL(string: "https://api.yourdomain.com")!,
+        baseURL: URL = AIHubConfiguration.productionURL,
         timeoutInterval: TimeInterval = 30,
         sessionConfiguration: URLSessionConfiguration = .default
     ) {
@@ -34,7 +37,7 @@ public struct AIHubConfiguration {
     
     /// Creates a configuration for a custom base URL
     /// - Parameters:
-    ///   - apiKey: Your app's API key
+    ///   - apiKey: Your App API key
     ///   - baseURLString: The API base URL as a string
     ///   - timeoutInterval: Request timeout in seconds (default: 30)
     public init(

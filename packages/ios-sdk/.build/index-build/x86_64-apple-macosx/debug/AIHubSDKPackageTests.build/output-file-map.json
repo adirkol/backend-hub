@@ -1,0 +1,12 @@
+{
+  "": {
+    "swift-dependencies": "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/.build/index-build/x86_64-apple-macosx/debug/AIHubSDKPackageTests.build/master.swiftdeps"
+  },
+  "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/.build/index-build/x86_64-apple-macosx/debug/AIHubSDKPackageTests.derived/runner.swift": {
+    "dependencies": "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/.build/index-build/x86_64-apple-macosx/debug/AIHubSDKPackageTests.build/runner.d",
+    "object": "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/.build/index-build/x86_64-apple-macosx/debug/AIHubSDKPackageTests.build/runner.swift.o",
+    "swiftmodule": "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/.build/index-build/x86_64-apple-macosx/debug/AIHubSDKPackageTests.build/runner~partial.swiftmodule",
+    "swift-dependencies": "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/.build/index-build/x86_64-apple-macosx/debug/AIHubSDKPackageTests.build/runner.swiftdeps",
+    "diagnostics": "/Users/adir/Code/MoneyMachine/backend-hub/packages/ios-sdk/.build/index-build/x86_64-apple-macosx/debug/AIHubSDKPackageTests.build/runner.dia"
+  }
+}
