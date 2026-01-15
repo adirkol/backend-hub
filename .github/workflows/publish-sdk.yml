@@ -1,0 +1,91 @@
+name: Publish iOS SDK
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'SDK version (e.g., 1.0.0)'
+        required: true
+        type: string
+      release_notes:
+        description: 'Release notes'
+        required: false
+        type: string
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout source repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Clone distribution repo
+        run: |
+          git clone https://x-access-token:${{ secrets.SDK_REPO_TOKEN }}@github.com/adirkol/aihub-ios-sdk.git dist-repo
+
+      - name: Copy SDK files
+        run: |
+          # Remove old files (except .git)
+          find dist-repo -mindepth 1 -maxdepth 1 ! -name '.git' -exec rm -rf {} +
+          
+          # Copy SDK files
+          cp -r packages/ios-sdk/* dist-repo/
+          
+          # List files for debugging
+          echo "Files in distribution repo:"
+          ls -la dist-repo/
+
+      - name: Update version in Package.swift
+        run: |
+          cd dist-repo
+          # Update version comment in Package.swift if needed
+          # The version is tracked via git tags, not in the file
+
+      - name: Commit and push
+        run: |
+          cd dist-repo
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          
+          git add -A
+          
+          # Check if there are changes
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Release v${{ inputs.version }}" -m "${{ inputs.release_notes }}"
+          fi
+          
+          # Create tag
+          git tag -a "${{ inputs.version }}" -m "v${{ inputs.version }}: ${{ inputs.release_notes }}"
+          
+          # Push changes and tags
+          git push origin main
+          git push origin "${{ inputs.version }}"
+
+      - name: Update publish status (success)
+        if: success()
+        run: |
+          curl -X POST "${{ secrets.BACKEND_URL }}/api/admin/sdk/webhook" \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer ${{ secrets.WEBHOOK_SECRET }}" \
+            -d '{
+              "version": "${{ inputs.version }}",
+              "status": "SUCCESS",
+              "commitSha": "'$(cd dist-repo && git rev-parse HEAD)'"
+            }'
+
+      - name: Update publish status (failure)
+        if: failure()
+        run: |
+          curl -X POST "${{ secrets.BACKEND_URL }}/api/admin/sdk/webhook" \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer ${{ secrets.WEBHOOK_SECRET }}" \
+            -d '{
+              "version": "${{ inputs.version }}",
+              "status": "FAILED",
+              "error": "Workflow failed"
+            }'

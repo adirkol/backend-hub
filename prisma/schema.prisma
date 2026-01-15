@@ -538,3 +538,36 @@ enum EventCategory {
   EXPERIMENT  // A/B test enrollment (EXPERIMENT_ENROLLMENT)
   OTHER       // Other events (TEST, INVOICE_ISSUANCE, etc.)
 }
+
+// ============================================
+// SDK Publishing
+// ============================================
+
+model SDKPublish {
+  id           String          @id @default(cuid())
+  version      String          @unique  // Semantic version (e.g., "1.0.0")
+  releaseNotes String?         @db.Text
+  publishedBy  String          // Admin email who triggered publish
+  status       SDKPublishStatus @default(PENDING)
+  
+  // GitHub info
+  commitSha    String?         // Commit SHA in distribution repo
+  tagName      String?         // Git tag (e.g., "1.0.0")
+  workflowRunId String?        // GitHub Actions workflow run ID
+  
+  // Error info
+  errorMessage String?         @db.Text
+  
+  createdAt    DateTime        @default(now())
+  completedAt  DateTime?       // When publish completed (success or failure)
+
+  @@index([status])
+  @@index([createdAt])
+}
+
+enum SDKPublishStatus {
+  PENDING     // Publish initiated
+  IN_PROGRESS // GitHub workflow running
+  SUCCESS     // Published successfully
+  FAILED      // Publish failed
+}

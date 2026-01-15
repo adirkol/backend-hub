@@ -18,6 +18,7 @@ import {
   BookOpen,
   Shield,
   HardDrive,
+  Package,
 } from "lucide-react";
 
 interface User {
@@ -36,6 +37,7 @@ const navItems = [
   { href: "/admin/audit-logs", label: "Audit Logs", icon: Shield },
   { href: "/admin/backups", label: "Backups", icon: HardDrive },
   { href: "/admin/statistics", label: "Statistics", icon: BarChart3 },
+  { href: "/admin/sdk", label: "iOS SDK", icon: Package },
   { href: "/admin/docs", label: "Documentation", icon: BookOpen },
 ];
 

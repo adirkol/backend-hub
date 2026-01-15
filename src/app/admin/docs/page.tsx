@@ -506,6 +506,7 @@ class GenerateViewController: UIViewController {
         <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: "8px" }}>
           {[
             { id: "overview", label: "Overview" },
+            { id: "installation", label: "SDK Installation" },
             { id: "authentication", label: "Authentication" },
             { id: "models", label: "Available Models" },
             { id: "create-user", label: "POST /users" },
@@ -618,6 +619,52 @@ class GenerateViewController: UIViewController {
           <p style={{ color: "#9ca3af", fontSize: "14px" }}>
             Base URL: <code style={{ color: "#00f0ff", background: "rgba(0, 240, 255, 0.1)", padding: "2px 8px", borderRadius: "4px" }}>{baseUrl}/api/v1</code>
           </p>
+        </Section>
+
+        {/* SDK Installation */}
+        <Section id="installation" title="SDK Installation">
+          <p style={{ color: "#b8b8c8", fontSize: "15px", lineHeight: "1.7", marginBottom: "20px" }}>
+            The easiest way to integrate with AIHub is using our official iOS SDK. 
+            It provides type-safe Swift APIs with async/await support.
+          </p>
+
+          <div className="glass" style={{ padding: "24px", marginBottom: "20px" }}>
+            <h4 style={{ fontSize: "15px", fontWeight: "600", color: "#fafafa", marginBottom: "16px" }}>
+              Swift Package Manager
+            </h4>
+            <p style={{ color: "#9ca3af", fontSize: "14px", marginBottom: "12px" }}>
+              Add the following to your <code style={{ color: "#00f0ff" }}>Package.swift</code> dependencies:
+            </p>
+            <pre style={{
+              padding: "16px",
+              background: "rgba(9, 9, 11, 0.6)",
+              borderRadius: "8px",
+              overflow: "auto",
+              fontSize: "13px",
+              lineHeight: "1.6",
+              fontFamily: "'JetBrains Mono', monospace",
+            }}>
+              <code style={{ color: "#e4e4e7" }}>{`.package(url: "https://github.com/adirkol/aihub-ios-sdk.git", from: "1.0.0")`}</code>
+            </pre>
+            <p style={{ color: "#71717a", fontSize: "13px", marginTop: "12px" }}>
+              Or in Xcode: File → Add Package Dependencies → Enter the URL above
+            </p>
+          </div>
+
+          <div style={{ 
+            padding: "16px 20px", 
+            background: "rgba(168, 85, 247, 0.08)", 
+            borderRadius: "10px",
+            border: "1px solid rgba(168, 85, 247, 0.25)",
+            display: "flex",
+            alignItems: "center",
+            gap: "12px",
+          }}>
+            <span style={{ fontSize: "14px", color: "#a78bfa" }}>
+              📦 Manage SDK versions and publish updates from the{" "}
+              <a href="/admin/sdk" style={{ color: "#00f0ff", textDecoration: "underline" }}>iOS SDK page</a>
+            </span>
+          </div>
         </Section>
 
         {/* Authentication */}
