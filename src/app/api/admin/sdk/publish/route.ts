@@ -3,7 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { z } from "zod";
-import { logAuditEvent } from "@/lib/audit";
+import { createAuditLog } from "@/lib/audit";
 import { execSync } from "child_process";
 
 const PublishSchema = z.object({
@@ -146,7 +146,7 @@ export async function POST(req: NextRequest) {
     });
 
     // Log audit event
-    await logAuditEvent({
+    await createAuditLog({
       action: "sdk.publish.initiated",
       entityType: "SDKPublish",
       entityId: publish.id,

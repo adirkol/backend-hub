@@ -54,7 +54,11 @@ export type AuditAction =
   // System actions
   | "system.settings_updated"
   | "system.backup_exported"
-  | "system.backup_imported";
+  | "system.backup_imported"
+  // SDK actions
+  | "sdk.publish.initiated"
+  | "sdk.publish.completed"
+  | "sdk.publish.failed";
 
 export type EntityType =
   | "App"
@@ -64,6 +68,7 @@ export type EntityType =
   | "GenerationJob"
   | "ModelProviderConfig"
   | "RevenueCatEvent"
+  | "SDKPublish"
   | "System";
 
 export type ActorType = "admin" | "api" | "system" | "revenuecat";
