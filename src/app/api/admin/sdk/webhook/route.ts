@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { version, status, commitSha, error } = validation.data;
+    const { version, status, error } = validation.data;
 
     // Find and update the publish record
     const publish = await prisma.sDKPublish.findUnique({
@@ -45,11 +45,13 @@ export async function POST(req: NextRequest) {
     }
 
     // Update the publish record
+    // Note: We don't update commitSha here - the source repo's SHA is already
+    // stored when the publish was created. The workflow sends the distribution
+    // repo's SHA which we don't need for change detection.
     await prisma.sDKPublish.update({
       where: { id: publish.id },
       data: {
         status,
-        commitSha: commitSha || publish.commitSha,
         errorMessage: error || null,
         completedAt: new Date(),
       },

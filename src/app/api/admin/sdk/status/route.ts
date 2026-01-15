@@ -33,6 +33,15 @@ function getChangedFiles(sdkPath: string, lastCommitSha: string | null): string[
   }
   
   try {
+    // First check if the commit SHA exists in this repo
+    try {
+      execSync(`git cat-file -t ${lastCommitSha}`, { cwd: process.cwd(), encoding: "utf-8" });
+    } catch {
+      // Commit doesn't exist in source repo (might be from distribution repo)
+      // Treat as if all files are changed
+      return getSDKFiles(sdkPath);
+    }
+    
     const result = execSync(
       `git diff --name-only ${lastCommitSha} HEAD -- packages/ios-sdk/`,
       { cwd: process.cwd(), encoding: "utf-8" }
@@ -44,8 +53,9 @@ function getChangedFiles(sdkPath: string, lastCommitSha: string | null): string[
       .filter(Boolean)
       .map(f => f.replace("packages/ios-sdk/", ""));
   } catch {
-    // If git diff fails, return empty (no changes detected)
-    return [];
+    // If git diff fails for any other reason, show all files as changed
+    // (better to show false positives than miss real changes)
+    return getSDKFiles(sdkPath);
   }
 }
 
