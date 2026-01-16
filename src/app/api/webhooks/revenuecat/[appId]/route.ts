@@ -322,7 +322,32 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
     }
 
     // Get or create user using upsert to handle race conditions
-    const revenueCatUserId = event.app_user_id as string;
+    // For TRANSFER events, app_user_id may be missing - use transferred_to[0] instead
+    let revenueCatUserId = event.app_user_id as string | undefined;
+    
+    if (!revenueCatUserId && eventType === "TRANSFER") {
+      const transferredTo = event.transferred_to as string[] | undefined;
+      if (transferredTo && transferredTo.length > 0) {
+        revenueCatUserId = transferredTo[0];
+        console.log(`RevenueCat webhook: TRANSFER event - using transferred_to[0] as user ID: ${revenueCatUserId}`);
+      }
+    }
+    
+    if (!revenueCatUserId) {
+      console.error(`RevenueCat webhook: Missing app_user_id for event type ${eventType}`);
+      await logError("webhook", "Missing app_user_id in RevenueCat event", {
+        endpoint: `/api/webhooks/revenuecat/${appId}`,
+        method: "POST",
+        eventType,
+        eventId: eventId,
+        appId: app.id,
+        appName: app.name,
+      });
+      return NextResponse.json(
+        { error: "Missing app_user_id", eventType },
+        { status: 400 }
+      );
+    }
     
     // Check if user existed before upsert
     const existingUser = await prisma.appUser.findUnique({
