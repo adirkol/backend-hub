@@ -3,7 +3,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { TokenEntryType, RevenueCatEventType, EventCategory } from "@prisma/client";
 import { calculateExpirationDate } from "@/lib/tokens";
-import { auditRevenueCatEvent, AuditAction } from "@/lib/audit";
+import { auditRevenueCatEvent, AuditAction, logError } from "@/lib/audit";
 
 interface RouteParams {
   params: Promise<{ appId: string }>;
@@ -336,23 +336,55 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
     });
     
     // Use upsert to atomically create or get user
-    let appUser = await prisma.appUser.upsert({
-      where: {
-        appId_externalId: {
+    // Handle race condition: if two webhooks arrive simultaneously, one might fail with P2002
+    let appUser;
+    let userWasCreated = !existingUser;
+    
+    try {
+      appUser = await prisma.appUser.upsert({
+        where: {
+          appId_externalId: {
+            appId: app.id,
+            externalId: revenueCatUserId,
+          },
+        },
+        update: {},
+        create: {
           appId: app.id,
           externalId: revenueCatUserId,
+          tokenBalance: 0,
+          needsTokenSync: true,
         },
-      },
-      update: {},
-      create: {
-        appId: app.id,
-        externalId: revenueCatUserId,
-        tokenBalance: 0,
-        needsTokenSync: true,
-      },
-    });
-    
-    const userWasCreated = !existingUser;
+      });
+    } catch (upsertError) {
+      // Handle race condition - if unique constraint failed, fetch the existing user
+      if (
+        upsertError instanceof Error && 
+        upsertError.message.includes("Unique constraint failed")
+      ) {
+        console.log(`RevenueCat webhook: Race condition detected for user ${revenueCatUserId}, fetching existing user`);
+        
+        const existingUserFetch = await prisma.appUser.findUnique({
+          where: {
+            appId_externalId: {
+              appId: app.id,
+              externalId: revenueCatUserId,
+            },
+          },
+        });
+        
+        if (!existingUserFetch) {
+          // This shouldn't happen, but handle it gracefully
+          throw new Error(`User ${revenueCatUserId} not found after race condition`);
+        }
+        
+        appUser = existingUserFetch;
+        userWasCreated = false; // User was created by the other concurrent request
+      } else {
+        // Re-throw other errors
+        throw upsertError;
+      }
+    }
 
     if (userWasCreated) {
       console.log(`RevenueCat webhook: Created user ${revenueCatUserId} with needsTokenSync=true`);
@@ -878,10 +910,34 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
       ...(warnings.length > 0 && { warnings }),
     });
   } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    const errorStack = error instanceof Error ? error.stack : undefined;
+    
     console.error("RevenueCat webhook error:", error);
     
+    // Log error to Audit Logs for debugging
+    try {
+      const body = await req.clone().json().catch(() => ({}));
+      await logError("webhook", errorMessage, {
+        endpoint: `/api/webhooks/revenuecat/${(await params).appId}`,
+        method: "POST",
+        requestBody: body,
+        responseStatus: 200, // We return 200 to prevent RevenueCat from retrying
+        stack: errorStack,
+        source: "revenuecat",
+        eventType: (body as Record<string, unknown>)?.event 
+          ? ((body as Record<string, unknown>).event as Record<string, unknown>)?.type as string 
+          : undefined,
+        eventId: (body as Record<string, unknown>)?.event 
+          ? ((body as Record<string, unknown>).event as Record<string, unknown>)?.id as string 
+          : undefined,
+      });
+    } catch (logErr) {
+      console.error("Failed to log error to audit:", logErr);
+    }
+    
     return NextResponse.json(
-      { error: "Processing error", details: error instanceof Error ? error.message : "Unknown error" },
+      { error: "Processing error", details: errorMessage },
       { status: 200 }
     );
   }

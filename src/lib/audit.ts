@@ -58,7 +58,11 @@ export type AuditAction =
   // SDK actions
   | "sdk.publish.initiated"
   | "sdk.publish.completed"
-  | "sdk.publish.failed";
+  | "sdk.publish.failed"
+  // Error logging
+  | "error.webhook"
+  | "error.api"
+  | "error.system";
 
 export type EntityType =
   | "App"
@@ -69,7 +73,8 @@ export type EntityType =
   | "ModelProviderConfig"
   | "RevenueCatEvent"
   | "SDKPublish"
-  | "System";
+  | "System"
+  | "Error";
 
 export type ActorType = "admin" | "api" | "system" | "revenuecat";
 
@@ -330,4 +335,38 @@ export async function getAuditLogs(options: {
   ]);
 
   return { logs, total };
+}
+
+/**
+ * Helper to log errors for debugging.
+ * Use this to capture webhook errors, API errors, etc.
+ */
+export async function logError(
+  source: "webhook" | "api" | "system",
+  errorMessage: string,
+  metadata: {
+    endpoint?: string;
+    method?: string;
+    requestBody?: unknown;
+    responseStatus?: number;
+    stack?: string;
+    appId?: string;
+    userId?: string;
+    [key: string]: unknown;
+  }
+): Promise<void> {
+  const action = `error.${source}` as AuditAction;
+  const entityId = `error_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+
+  await createAuditLog({
+    action,
+    entityType: "Error",
+    entityId,
+    actorType: "system",
+    metadata: {
+      errorMessage,
+      timestamp: new Date().toISOString(),
+      ...metadata,
+    },
+  });
 }
