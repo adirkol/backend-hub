@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Save, Loader2, Trash2, Copy, Check, ExternalLink } from "lucide-react";
+import { ProductTokenConfig } from "./product-token-config";
 
 interface App {
   id: string;
@@ -279,6 +280,9 @@ export function AppSettingsForm({ app }: { app: App }) {
           </div>
         </div>
       </div>
+
+      {/* Product Token Mapping - placed between App Settings and Webhook Settings */}
+      <ProductTokenConfig appId={app.id} />
 
       <div className="glass" style={{ padding: "28px" }}>
         <h2 style={{ 

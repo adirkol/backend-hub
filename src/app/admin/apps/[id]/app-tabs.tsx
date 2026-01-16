@@ -4,7 +4,6 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { Copy, Eye, RefreshCw, Users, Zap, Coins, Settings, User, Search, Trash2, AlertTriangle, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import { AppSettingsForm } from "./settings-form";
-import { ProductTokenConfig } from "./product-token-config";
 
 interface AppUser {
   id: string;
@@ -469,11 +468,8 @@ export function AppTabs({ app, users, jobs, userCount, jobCount }: AppTabsProps)
             </div>
           </div>
 
-          {/* Settings Form */}
+          {/* Settings Form (includes Product Token Mapping) */}
           <AppSettingsForm app={app} />
-
-          {/* Product Token Mapping */}
-          <ProductTokenConfig appId={app.id} />
         </div>
       )}
 
