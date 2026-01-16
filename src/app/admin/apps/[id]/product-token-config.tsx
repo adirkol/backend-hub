@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Plus, Trash2, Loader2, RefreshCw, Coins } from "lucide-react";
+import { Plus, Trash2, Loader2, RefreshCw, Coins, History } from "lucide-react";
 
 interface ProductConfig {
   id: string;
@@ -36,8 +36,11 @@ export function ProductTokenConfig({ appId }: { appId: string }) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
   const [newProduct, setNewProduct] = useState({ productId: "", tokenAmount: 0, displayName: "" });
   const [showAddForm, setShowAddForm] = useState(false);
+  const [syncing, setSyncing] = useState(false);
+  const [unmappedProducts, setUnmappedProducts] = useState<string[]>([]);
 
   const fetchProducts = useCallback(async () => {
     try {
@@ -138,6 +141,45 @@ export function ProductTokenConfig({ appId }: { appId: string }) {
     }
   };
 
+  const handleSyncFromHistory = async () => {
+    setSyncing(true);
+    setError(null);
+    setSuccess(null);
+
+    try {
+      const res = await fetch(`/api/admin/apps/${appId}/products/sync`, {
+        method: "POST",
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to sync products");
+      }
+
+      const data = await res.json();
+      
+      if (data.synced > 0) {
+        setSuccess(`Synced ${data.synced} product(s) from history: ${data.newProducts.map((p: { productId: string }) => p.productId).join(", ")}`);
+      } else {
+        setSuccess("All products already synced from history");
+      }
+      
+      // Show unmapped purchase products if any
+      if (data.unmappedPurchaseProducts?.length > 0) {
+        setUnmappedProducts(data.unmappedPurchaseProducts);
+      }
+
+      await fetchProducts();
+      
+      // Clear success message after 5 seconds
+      setTimeout(() => setSuccess(null), 5000);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to sync products");
+    } finally {
+      setSyncing(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="glass" style={{ padding: "28px" }}>
@@ -169,7 +211,7 @@ export function ProductTokenConfig({ appId }: { appId: string }) {
           <button
             type="button"
             onClick={fetchProducts}
-            disabled={saving}
+            disabled={saving || syncing}
             style={{
               display: "flex",
               alignItems: "center",
@@ -184,6 +226,32 @@ export function ProductTokenConfig({ appId }: { appId: string }) {
             }}
           >
             <RefreshCw style={{ width: "14px", height: "14px" }} />
+          </button>
+          <button
+            type="button"
+            onClick={handleSyncFromHistory}
+            disabled={saving || syncing}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              padding: "10px 16px",
+              borderRadius: "10px",
+              background: syncing ? "rgba(167, 139, 250, 0.2)" : "rgba(167, 139, 250, 0.1)",
+              border: "1px solid rgba(167, 139, 250, 0.3)",
+              color: "#a78bfa",
+              fontSize: "13px",
+              fontWeight: "500",
+              cursor: syncing ? "not-allowed" : "pointer",
+            }}
+            title="Scan historical RevenueCat events and auto-populate missing products"
+          >
+            {syncing ? (
+              <Loader2 style={{ width: "14px", height: "14px" }} className="animate-spin" />
+            ) : (
+              <History style={{ width: "14px", height: "14px" }} />
+            )}
+            Sync from History
           </button>
           <button
             type="button"
@@ -219,6 +287,46 @@ export function ProductTokenConfig({ appId }: { appId: string }) {
           marginBottom: "20px",
         }}>
           {error}
+        </div>
+      )}
+
+      {success && (
+        <div style={{
+          padding: "14px 18px",
+          borderRadius: "10px",
+          background: "rgba(16, 185, 129, 0.1)",
+          border: "1px solid rgba(16, 185, 129, 0.25)",
+          color: "#6ee7b7",
+          fontSize: "13px",
+          marginBottom: "20px",
+        }}>
+          {success}
+        </div>
+      )}
+
+      {unmappedProducts.length > 0 && (
+        <div style={{
+          padding: "14px 18px",
+          borderRadius: "10px",
+          background: "rgba(251, 191, 36, 0.1)",
+          border: "1px solid rgba(251, 191, 36, 0.25)",
+          color: "#fcd34d",
+          fontSize: "13px",
+          marginBottom: "20px",
+        }}>
+          <strong>Products without token data:</strong> The following products appear in purchase events but don&apos;t have token amounts in the history. You may need to add them manually:
+          <div style={{ marginTop: "8px", display: "flex", flexWrap: "wrap", gap: "8px" }}>
+            {unmappedProducts.map(p => (
+              <code key={p} style={{ 
+                background: "rgba(39, 39, 42, 0.6)", 
+                padding: "4px 8px", 
+                borderRadius: "4px",
+                fontSize: "12px",
+              }}>
+                {p}
+              </code>
+            ))}
+          </div>
         </div>
       )}
 
@@ -397,6 +505,20 @@ export function ProductTokenConfig({ appId }: { appId: string }) {
                     fontWeight: "500",
                   }}>
                     Auto (webhook)
+                  </span>
+                ) : product.lastUpdatedBy === "sync" ? (
+                  <span style={{ 
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "4px",
+                    padding: "3px 8px",
+                    borderRadius: "6px",
+                    background: "rgba(167, 139, 250, 0.15)",
+                    color: "#a78bfa",
+                    fontSize: "10px",
+                    fontWeight: "500",
+                  }}>
+                    Synced (history)
                   </span>
                 ) : product.lastUpdatedBy === "admin" ? (
                   <span style={{ 
