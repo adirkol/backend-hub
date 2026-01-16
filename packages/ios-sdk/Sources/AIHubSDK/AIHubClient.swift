@@ -79,21 +79,31 @@ public final class AIHubClient: @unchecked Sendable {
             initialTokens: initialTokens
         )
         
-        return try await post(
+        let response = try await post(
             path: "/users",
             body: request,
             responseType: CreateUserResponse.self
         )
+        
+        // Update cached balance
+        AIHubSDK.updateCachedBalance(response.user.tokenBalance)
+        
+        return response
     }
     
     /// Gets the current user's info including token balance
     /// Note: This may also trigger a daily token grant if eligible
     /// - Returns: The user info
     public func getUser() async throws -> AIHubUser {
-        return try await get(
+        let user = try await get(
             path: "/users/\(userId)",
             responseType: AIHubUser.self
         )
+        
+        // Update cached balance
+        AIHubSDK.updateCachedBalance(user.tokenBalance)
+        
+        return user
     }
     
     /// Gets the current user's token balance
@@ -391,5 +401,73 @@ public extension AIHubClient {
     func hasEnoughTokens(for cost: Int) async throws -> Bool {
         let balance = try await getBalance()
         return balance >= cost
+    }
+    
+    /// Checks the user's balance and returns detailed information
+    /// - Parameter requiredTokens: The number of tokens needed (optional)
+    /// - Returns: A `BalanceCheck` result with current balance and check status
+    func checkBalance(for requiredTokens: Int? = nil) async throws -> BalanceCheck {
+        let balance = try await getBalance()
+        
+        if let required = requiredTokens {
+            return BalanceCheck(
+                currentBalance: balance,
+                requiredTokens: required,
+                hasEnough: balance >= required
+            )
+        } else {
+            return BalanceCheck(
+                currentBalance: balance,
+                requiredTokens: nil,
+                hasEnough: true
+            )
+        }
+    }
+    
+    /// Refreshes the cached balance from the server
+    /// - Returns: The updated token balance
+    @discardableResult
+    func refreshBalance() async throws -> Int {
+        return try await getBalance()
+    }
+    
+    /// Fetches the product to token mapping for optimistic UI updates
+    /// - Returns: A dictionary mapping product IDs to token amounts
+    ///
+    /// Use this to show expected token amounts immediately after a purchase,
+    /// before the server has processed the RevenueCat webhook.
+    ///
+    /// Example:
+    /// ```swift
+    /// let products = try await AIHubSDK.client.getProductTokenMapping()
+    /// // After purchase of "AIMusicGenerator.Tokens.100"
+    /// if let tokens = products["AIMusicGenerator.Tokens.100"] {
+    ///     // Show optimistic balance: currentBalance + tokens
+    /// }
+    /// ```
+    func getProductTokenMapping() async throws -> [String: Int] {
+        let response = try await get(
+            path: "/products",
+            responseType: ProductsResponse.self
+        )
+        return response.products
+    }
+}
+
+/// Result of a balance check operation
+public struct BalanceCheck: Sendable {
+    /// The user's current token balance
+    public let currentBalance: Int
+    
+    /// The number of tokens required (if specified)
+    public let requiredTokens: Int?
+    
+    /// Whether the user has enough tokens
+    public let hasEnough: Bool
+    
+    /// The shortfall if the user doesn't have enough tokens
+    public var shortfall: Int {
+        guard let required = requiredTokens else { return 0 }
+        return max(0, required - currentBalance)
     }
 }

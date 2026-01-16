@@ -131,6 +131,154 @@ The `userId` should be:
 - **Stable**: The same user should always have the same ID
 - **Persistent**: Store it in UserDefaults or Keychain
 
+## Token Balance
+
+### Display Balance Instantly with Caching
+
+The SDK automatically caches the token balance in UserDefaults. This lets you show the balance immediately when your app launches, without waiting for a network request:
+
+```swift
+class TokenDisplayViewController: UIViewController {
+    @IBOutlet weak var tokenLabel: UILabel!
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        
+        // 1. Show cached balance immediately (instant, may be stale)
+        if let cachedBalance = AIHubSDK.cachedBalance {
+            tokenLabel.text = "Tokens: \(cachedBalance)"
+        } else {
+            tokenLabel.text = "Tokens: --"
+        }
+        
+        // 2. Listen for balance updates from the server
+        AIHubSDK.onBalanceUpdate = { [weak self] newBalance in
+            DispatchQueue.main.async {
+                self?.tokenLabel.text = "Tokens: \(newBalance)"
+            }
+        }
+        
+        // 3. Fetch fresh balance from server
+        Task {
+            try? await AIHubSDK.client.refreshBalance()
+        }
+    }
+}
+```
+
+### Balance Observer
+
+The `onBalanceUpdate` closure is called automatically whenever the SDK receives balance data from the server, including:
+- After `registerUser()`
+- After `getUser()`
+- After `getBalance()` or `refreshBalance()`
+
+```swift
+// Set up the observer once (e.g., in AppDelegate or your main view controller)
+AIHubSDK.onBalanceUpdate = { newBalance in
+    DispatchQueue.main.async {
+        // Update your UI
+        NotificationCenter.default.post(
+            name: .tokenBalanceDidUpdate,
+            object: nil,
+            userInfo: ["balance": newBalance]
+        )
+    }
+}
+
+// Define the notification name
+extension Notification.Name {
+    static let tokenBalanceDidUpdate = Notification.Name("tokenBalanceDidUpdate")
+}
+```
+
+### Check Balance Before Generation
+
+```swift
+func generateWithBalanceCheck() async {
+    do {
+        // Option 1: Simple check
+        guard try await AIHubSDK.client.hasEnoughTokens(for: 5) else {
+            showPurchasePrompt()
+            return
+        }
+        
+        // Option 2: Get balance details
+        let check = try await AIHubSDK.client.checkBalance(for: 5)
+        if !check.hasEnough {
+            showAlert("Need \(check.shortfall) more tokens. Current: \(check.currentBalance)")
+            return
+        }
+        
+        // Proceed with generation
+        let job = try await AIHubSDK.client.generateAndWait(
+            model: "flux-dev",
+            prompt: "A beautiful sunset"
+        )
+    } catch {
+        print("Error: \(error)")
+    }
+}
+```
+
+### Get Current Balance
+
+```swift
+// Fetch fresh balance from server (updates cache automatically)
+let balance = try await AIHubSDK.client.getBalance()
+print("Current balance: \(balance)")
+
+// Or use refreshBalance() which is the same
+let balance = try await AIHubSDK.client.refreshBalance()
+```
+
+### Optimistic UI Updates After Purchase
+
+When a user purchases tokens through RevenueCat, there may be a brief delay before the webhook is processed and the balance is updated on the server. To provide instant feedback, use the product token mapping:
+
+```swift
+class PurchaseManager {
+    // Cache the product → token mapping
+    private var productTokenMap: [String: Int] = [:]
+    
+    func loadProductMapping() async {
+        // Fetch mapping once (or periodically)
+        if let mapping = try? await AIHubSDK.client.getProductTokenMapping() {
+            productTokenMap = mapping
+        }
+    }
+    
+    func handlePurchaseSuccess(productId: String) {
+        // Get tokens for this product
+        guard let purchasedTokens = productTokenMap[productId] else {
+            // Product not found in mapping, just refresh balance
+            Task { try? await AIHubSDK.client.refreshBalance() }
+            return
+        }
+        
+        // Show optimistic balance immediately
+        if let currentBalance = AIHubSDK.cachedBalance {
+            let optimisticBalance = currentBalance + purchasedTokens
+            
+            // Update UI immediately
+            DispatchQueue.main.async {
+                NotificationCenter.default.post(
+                    name: .tokenBalanceDidUpdate,
+                    object: nil,
+                    userInfo: ["balance": optimisticBalance, "isOptimistic": true]
+                )
+            }
+        }
+        
+        // Then fetch actual balance in background (will update UI when ready)
+        Task {
+            try await Task.sleep(nanoseconds: 2_000_000_000) // Wait 2 seconds for webhook
+            try? await AIHubSDK.client.refreshBalance()
+        }
+    }
+}
+```
+
 ### Use Anywhere in Your App
 
 Once configured, access `AIHubSDK.client` from any file:
@@ -297,10 +445,13 @@ Static entry point for SDK configuration.
 | `configure(apiKey:)` | Configure with API key only (call `setUser` later) |
 | `setUser(userId:)` | Set or change the user ID |
 | `reset()` | Reset all configuration (for logout) |
+| `clearCache()` | Clear cached data for current user |
 | `client` | The configured `AIHubClient` instance |
 | `isConfigured` | `true` if SDK is ready to use |
 | `hasApiKey` | `true` if API key is set |
 | `userId` | Current user ID, if set |
+| `cachedBalance` | Cached token balance (instant access, may be stale) |
+| `onBalanceUpdate` | Closure called when balance updates from server |
 
 ### AIHubClient
 
@@ -313,8 +464,11 @@ The client for API interactions. Access via `AIHubSDK.client`.
 | `registerUser(metadata:initialTokens:)` | Register a new user or get existing user |
 | `getUser()` | Get user info (may trigger daily token grant) |
 | `getBalance()` | Get current token balance |
+| `refreshBalance()` | Refresh and return current balance |
+| `checkBalance(for:)` | Check balance with detailed result |
 | `getTokenHistory(limit:)` | Get token transaction history |
 | `hasEnoughTokens(for:)` | Check if user has enough tokens |
+| `getProductTokenMapping()` | Get product ID → token amount mapping for optimistic UI |
 
 #### Generation Methods
 
@@ -384,7 +538,7 @@ func handleGeneration() async {
 ```swift
 enum JobStatus {
     case queued    // Job is waiting in queue
-    case running   // Job is being processed
+    case rgunning   // Job is being processed
     case succeeded // Job completed successfully
     case failed    // Job failed
     case cancelled // Job was cancelled

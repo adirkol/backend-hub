@@ -501,6 +501,36 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
           appUser = { ...appUser, tokenBalance: Math.max(0, newBalance) };
         }
       }
+
+      // Auto-update product token config if we have product_id and token amount
+      // This learns from actual transactions and overwrites any existing config
+      const productId = vcEvent.product_id;
+      if (productId && tokenAmount !== null && tokenAmount > 0) {
+        try {
+          await prisma.productTokenConfig.upsert({
+            where: {
+              appId_productId: {
+                appId: app.id,
+                productId,
+              },
+            },
+            update: {
+              tokenAmount,
+              lastUpdatedBy: "webhook",
+            },
+            create: {
+              appId: app.id,
+              productId,
+              tokenAmount,
+              lastUpdatedBy: "webhook",
+            },
+          });
+          console.log(`RevenueCat webhook: Auto-updated product config: ${productId} = ${tokenAmount} tokens`);
+        } catch (configError) {
+          // Non-fatal - just log and continue
+          console.error(`RevenueCat webhook: Failed to update product config for ${productId}:`, configError);
+        }
+      }
     } else if (eventType === "CANCELLATION") {
       const cancelEvent = CancellationEventSchema.parse(event);
       

@@ -121,6 +121,7 @@ model App {
   jobs             GenerationJob[]
   usageLogs        ProviderUsageLog[]
   modelTokenConfigs AppModelTokenConfig[]
+  productTokenConfigs ProductTokenConfig[]
   revenueCatEvents RevenueCatEvent[]
 
   createdAt DateTime @default(now())
@@ -147,6 +148,31 @@ model AppModelTokenConfig {
   @@unique([appId, modelId])
   @@index([appId])
   @@index([modelId])
+}
+
+// Product to token mapping for in-app purchases
+// Auto-updated from RevenueCat webhooks, can also be manually configured
+model ProductTokenConfig {
+  id          String  @id @default(cuid())
+  appId       String
+  productId   String  // e.g., "AIMusic.Weekly.10USD", "AIMusicGenerator.Tokens.100"
+  tokenAmount Int     // Number of tokens this product grants
+  
+  // Metadata
+  displayName String? // Optional friendly name for admin display
+  isActive    Boolean @default(true)
+  
+  // Track source of last update
+  lastUpdatedBy String? // "webhook" or "admin"
+
+  app App @relation(fields: [appId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([appId, productId])
+  @@index([appId])
+  @@index([productId])
 }
 
 // Users are scoped per-app (no cross-app identity)

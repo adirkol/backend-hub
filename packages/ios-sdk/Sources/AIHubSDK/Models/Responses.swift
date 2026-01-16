@@ -120,6 +120,15 @@ public struct TokenHistoryResponse: Codable {
     }
 }
 
+/// Response from fetching product to token mapping
+public struct ProductsResponse: Codable {
+    /// Dictionary mapping product IDs to token amounts
+    public let products: [String: Int]
+    
+    /// Number of products in the mapping
+    public let count: Int
+}
+
 /// Error response from the API
 internal struct APIErrorResponse: Codable {
     let error: String
