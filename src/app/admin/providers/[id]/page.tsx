@@ -9,6 +9,8 @@ interface ModelConfig {
   providerModelId: string;
   priority: number;
   costPerRequest: number;
+  inputTokenCostPer1M: number | null;
+  outputTokenCostPer1M: number | null;
   model: {
     id: string;
     name: string;
@@ -55,9 +57,9 @@ export default function ProviderDetailPage({ params }: { params: Promise<{ id: s
     }
   };
 
-  const updateCost = (configId: string, cost: number) => {
+  const updateCost = (configId: string, field: 'costPerRequest' | 'inputTokenCostPer1M' | 'outputTokenCostPer1M', value: number | null) => {
     setModelConfigs(configs => 
-      configs.map(c => c.id === configId ? { ...c, costPerRequest: cost } : c)
+      configs.map(c => c.id === configId ? { ...c, [field]: value } : c)
     );
     // Remove from saved set when editing
     setSavedConfigs(prev => {
@@ -73,10 +75,20 @@ export default function ProviderDetailPage({ params }: { params: Promise<{ id: s
 
     setSaving(configId);
     try {
+      // Determine if this is token-based pricing (LLM) or per-request pricing
+      const isTokenBased = config.inputTokenCostPer1M !== null || config.outputTokenCostPer1M !== null;
+      
+      const body = isTokenBased 
+        ? { 
+            inputTokenCostPer1M: config.inputTokenCostPer1M,
+            outputTokenCostPer1M: config.outputTokenCostPer1M,
+          }
+        : { costPerRequest: config.costPerRequest };
+
       const res = await fetch(`/api/admin/providers/${providerId}/configs/${configId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ costPerRequest: config.costPerRequest }),
+        body: JSON.stringify(body),
       });
       if (!res.ok) throw new Error("Failed to save");
       setSavedConfigs(prev => new Set(prev).add(configId));
@@ -85,6 +97,11 @@ export default function ProviderDetailPage({ params }: { params: Promise<{ id: s
     } finally {
       setSaving(null);
     }
+  };
+  
+  // Check if model uses token-based pricing
+  const isTokenBasedPricing = (config: ModelConfig) => {
+    return config.inputTokenCostPer1M !== null || config.outputTokenCostPer1M !== null;
   };
 
   if (loading) {
@@ -228,27 +245,78 @@ export default function ProviderDetailPage({ params }: { params: Promise<{ id: s
                 </div>
 
                 <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                    <span style={{ color: "#9ca3af", fontSize: "14px" }}>$</span>
-                    <input
-                      type="number"
-                      step="0.0001"
-                      min="0"
-                      value={config.costPerRequest}
-                      onChange={(e) => updateCost(config.id, parseFloat(e.target.value) || 0)}
-                      style={{
-                        width: "100px",
-                        padding: "8px 12px",
-                        background: "rgba(24, 24, 27, 0.8)",
-                        border: "1px solid rgba(63, 63, 70, 0.8)",
-                        borderRadius: "8px",
-                        color: "#fafafa",
-                        fontSize: "14px",
-                        fontFamily: "monospace",
-                      }}
-                    />
-                    <span style={{ color: "#9ca3af", fontSize: "13px" }}>/req</span>
-                  </div>
+                  {isTokenBasedPricing(config) ? (
+                    /* Token-based pricing (for LLMs) */
+                    <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                        <span style={{ color: "#9ca3af", fontSize: "12px", width: "50px" }}>Input:</span>
+                        <span style={{ color: "#9ca3af", fontSize: "14px" }}>$</span>
+                        <input
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          value={config.inputTokenCostPer1M ?? 0}
+                          onChange={(e) => updateCost(config.id, 'inputTokenCostPer1M', parseFloat(e.target.value) || 0)}
+                          style={{
+                            width: "80px",
+                            padding: "6px 10px",
+                            background: "rgba(24, 24, 27, 0.8)",
+                            border: "1px solid rgba(63, 63, 70, 0.8)",
+                            borderRadius: "6px",
+                            color: "#fafafa",
+                            fontSize: "13px",
+                            fontFamily: "monospace",
+                          }}
+                        />
+                        <span style={{ color: "#71717a", fontSize: "11px" }}>/1M tokens</span>
+                      </div>
+                      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                        <span style={{ color: "#9ca3af", fontSize: "12px", width: "50px" }}>Output:</span>
+                        <span style={{ color: "#9ca3af", fontSize: "14px" }}>$</span>
+                        <input
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          value={config.outputTokenCostPer1M ?? 0}
+                          onChange={(e) => updateCost(config.id, 'outputTokenCostPer1M', parseFloat(e.target.value) || 0)}
+                          style={{
+                            width: "80px",
+                            padding: "6px 10px",
+                            background: "rgba(24, 24, 27, 0.8)",
+                            border: "1px solid rgba(63, 63, 70, 0.8)",
+                            borderRadius: "6px",
+                            color: "#fafafa",
+                            fontSize: "13px",
+                            fontFamily: "monospace",
+                          }}
+                        />
+                        <span style={{ color: "#71717a", fontSize: "11px" }}>/1M tokens</span>
+                      </div>
+                    </div>
+                  ) : (
+                    /* Per-request pricing (for image models) */
+                    <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                      <span style={{ color: "#9ca3af", fontSize: "14px" }}>$</span>
+                      <input
+                        type="number"
+                        step="0.0001"
+                        min="0"
+                        value={config.costPerRequest}
+                        onChange={(e) => updateCost(config.id, 'costPerRequest', parseFloat(e.target.value) || 0)}
+                        style={{
+                          width: "100px",
+                          padding: "8px 12px",
+                          background: "rgba(24, 24, 27, 0.8)",
+                          border: "1px solid rgba(63, 63, 70, 0.8)",
+                          borderRadius: "8px",
+                          color: "#fafafa",
+                          fontSize: "14px",
+                          fontFamily: "monospace",
+                        }}
+                      />
+                      <span style={{ color: "#9ca3af", fontSize: "13px" }}>/req</span>
+                    </div>
+                  )}
 
                   <button
                     onClick={() => saveCost(config.id)}
@@ -269,6 +337,7 @@ export default function ProviderDetailPage({ params }: { params: Promise<{ id: s
                       display: "flex",
                       alignItems: "center",
                       gap: "6px",
+                      alignSelf: isTokenBasedPricing(config) ? "flex-start" : "center",
                     }}
                   >
                     {saving === config.id ? (

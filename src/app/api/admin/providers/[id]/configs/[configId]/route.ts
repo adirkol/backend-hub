@@ -4,7 +4,9 @@ import { z } from "zod";
 import { auditAdminAction } from "@/lib/audit";
 
 const UpdateConfigSchema = z.object({
-  costPerRequest: z.number().min(0),
+  costPerRequest: z.number().min(0).optional(),
+  inputTokenCostPer1M: z.number().min(0).nullable().optional(),
+  outputTokenCostPer1M: z.number().min(0).nullable().optional(),
 });
 
 export async function PATCH(
@@ -39,11 +41,21 @@ export async function PATCH(
       );
     }
 
+    // Build update data object
+    const updateData: Record<string, unknown> = {};
+    if (parsed.data.costPerRequest !== undefined) {
+      updateData.costPerRequest = parsed.data.costPerRequest;
+    }
+    if (parsed.data.inputTokenCostPer1M !== undefined) {
+      updateData.inputTokenCostPer1M = parsed.data.inputTokenCostPer1M;
+    }
+    if (parsed.data.outputTokenCostPer1M !== undefined) {
+      updateData.outputTokenCostPer1M = parsed.data.outputTokenCostPer1M;
+    }
+
     const updated = await prisma.modelProviderConfig.update({
       where: { id: configId },
-      data: {
-        costPerRequest: parsed.data.costPerRequest,
-      },
+      data: updateData,
       include: {
         model: { select: { name: true } },
         provider: { select: { name: true } },
@@ -55,10 +67,18 @@ export async function PATCH(
       providerId,
       providerName: updated.provider.name,
       modelName: updated.model.name,
-      costPerRequest: {
+      costPerRequest: parsed.data.costPerRequest !== undefined ? {
         from: Number(existingConfig.costPerRequest),
         to: parsed.data.costPerRequest,
-      },
+      } : undefined,
+      inputTokenCostPer1M: parsed.data.inputTokenCostPer1M !== undefined ? {
+        from: existingConfig.inputTokenCostPer1M ? Number(existingConfig.inputTokenCostPer1M) : null,
+        to: parsed.data.inputTokenCostPer1M,
+      } : undefined,
+      outputTokenCostPer1M: parsed.data.outputTokenCostPer1M !== undefined ? {
+        from: existingConfig.outputTokenCostPer1M ? Number(existingConfig.outputTokenCostPer1M) : null,
+        to: parsed.data.outputTokenCostPer1M,
+      } : undefined,
     });
 
     return NextResponse.json({
@@ -66,6 +86,8 @@ export async function PATCH(
       config: {
         ...updated,
         costPerRequest: Number(updated.costPerRequest),
+        inputTokenCostPer1M: updated.inputTokenCostPer1M ? Number(updated.inputTokenCostPer1M) : null,
+        outputTokenCostPer1M: updated.outputTokenCostPer1M ? Number(updated.outputTokenCostPer1M) : null,
       },
     });
   } catch (error) {
