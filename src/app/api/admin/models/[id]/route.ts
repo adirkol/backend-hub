@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
+import { Prisma } from "@prisma/client";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { z } from "zod";
@@ -16,7 +17,7 @@ const UpdateModelSchema = z.object({
     providerModelId: z.string(),
     priority: z.number().int(),
     isEnabled: z.boolean(),
-    config: z.record(z.unknown()).nullable().optional(),
+    config: z.record(z.string(), z.unknown()).nullable().optional(),
   })).optional(),
   appTokenOverrides: z.record(z.string(), z.number().int().min(1)).optional(),
 });
@@ -126,7 +127,7 @@ export async function PATCH(
             providerModelId: config.providerModelId,
             priority: config.priority,
             isEnabled: config.isEnabled,
-            config: config.config ?? undefined,
+            ...(config.config !== undefined && { config: config.config as Prisma.InputJsonValue }),
           },
         });
       }
@@ -140,7 +141,7 @@ export async function PATCH(
             providerModelId: config.providerModelId,
             priority: config.priority,
             isEnabled: config.isEnabled,
-            config: config.config ?? undefined,
+            ...(config.config !== undefined && { config: config.config as Prisma.InputJsonValue }),
           },
         });
       }

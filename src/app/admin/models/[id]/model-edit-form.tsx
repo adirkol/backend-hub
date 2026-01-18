@@ -36,12 +36,20 @@ interface ProviderConfig {
   priority: number;
   isEnabled: boolean;
   costPerRequest: number;
-  config?: Record<string, unknown> | null;
+  config?: unknown;
   provider: {
     id: string;
     name: string;
     displayName: string;
   };
+}
+
+// Helper to safely access config as Record
+function getConfigValue(config: unknown, key: string): unknown {
+  if (config && typeof config === 'object' && !Array.isArray(config)) {
+    return (config as Record<string, unknown>)[key];
+  }
+  return undefined;
 }
 
 interface AppTokenConfig {
@@ -246,14 +254,14 @@ function SortableProviderItem({
           {/* Turbo Mode Toggle */}
           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
             <button
-              onClick={() => onConfigChange("turbo", !(config.config?.turbo ?? true))}
+              onClick={() => onConfigChange("turbo", !(getConfigValue(config.config, "turbo") ?? true))}
               style={{
                 width: "36px",
                 height: "20px",
                 borderRadius: "10px",
                 border: "none",
                 cursor: "pointer",
-                background: (config.config?.turbo ?? true)
+                background: (getConfigValue(config.config, "turbo") ?? true)
                   ? "linear-gradient(135deg, #00f0ff 0%, #00b8cc 100%)"
                   : "rgba(63, 63, 70, 0.5)",
                 position: "relative",
@@ -267,7 +275,7 @@ function SortableProviderItem({
                 background: "#fff",
                 position: "absolute",
                 top: "2px",
-                left: (config.config?.turbo ?? true) ? "18px" : "2px",
+                left: (getConfigValue(config.config, "turbo") ?? true) ? "18px" : "2px",
                 transition: "left 0.2s ease",
               }} />
             </button>
@@ -279,14 +287,14 @@ function SortableProviderItem({
           {/* Disable Safety Checker Toggle */}
           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
             <button
-              onClick={() => onConfigChange("disable_safety_checker", !(config.config?.disable_safety_checker ?? false))}
+              onClick={() => onConfigChange("disable_safety_checker", !(getConfigValue(config.config, "disable_safety_checker") ?? false))}
               style={{
                 width: "36px",
                 height: "20px",
                 borderRadius: "10px",
                 border: "none",
                 cursor: "pointer",
-                background: (config.config?.disable_safety_checker ?? false)
+                background: (getConfigValue(config.config, "disable_safety_checker") ?? false)
                   ? "linear-gradient(135deg, #ef4444 0%, #dc2626 100%)"
                   : "rgba(63, 63, 70, 0.5)",
                 position: "relative",
@@ -300,11 +308,11 @@ function SortableProviderItem({
                 background: "#fff",
                 position: "absolute",
                 top: "2px",
-                left: (config.config?.disable_safety_checker ?? false) ? "18px" : "2px",
+                left: (getConfigValue(config.config, "disable_safety_checker") ?? false) ? "18px" : "2px",
                 transition: "left 0.2s ease",
               }} />
             </button>
-            <span style={{ fontSize: "12px", color: (config.config?.disable_safety_checker ?? false) ? "#ef4444" : "#9ca3af" }}>
+            <span style={{ fontSize: "12px", color: (getConfigValue(config.config, "disable_safety_checker") ?? false) ? "#ef4444" : "#9ca3af" }}>
               Disable Safety Checker
             </span>
           </div>
@@ -362,11 +370,13 @@ export function ModelEditForm({ model, allProviders, apps }: Props) {
 
   const updateProviderConfig = (configId: string, key: string, value: unknown) => {
     setProviderConfigs((items) =>
-      items.map((item) =>
-        item.id === configId
-          ? { ...item, config: { ...(item.config || {}), [key]: value } }
-          : item
-      )
+      items.map((item) => {
+        if (item.id !== configId) return item;
+        const existingConfig = (item.config && typeof item.config === 'object' && !Array.isArray(item.config))
+          ? item.config as Record<string, unknown>
+          : {};
+        return { ...item, config: { ...existingConfig, [key]: value } };
+      })
     );
   };
 
