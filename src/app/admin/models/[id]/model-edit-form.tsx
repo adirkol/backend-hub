@@ -36,6 +36,7 @@ interface ProviderConfig {
   priority: number;
   isEnabled: boolean;
   costPerRequest: number;
+  config?: Record<string, unknown> | null;
   provider: {
     id: string;
     name: string;
@@ -88,11 +89,13 @@ function SortableProviderItem({
   index,
   onRemove,
   onModelIdChange,
+  onConfigChange,
 }: { 
   config: ProviderConfig; 
   index: number;
   onRemove: () => void;
   onModelIdChange: (value: string) => void;
+  onConfigChange: (key: string, value: unknown) => void;
 }) {
   const {
     attributes,
@@ -109,6 +112,8 @@ function SortableProviderItem({
     zIndex: isDragging ? 1000 : 1,
   };
 
+  const isPImageEdit = config.providerModelId === "prunaai/p-image-edit";
+
   return (
     <div
       ref={setNodeRef}
@@ -121,7 +126,8 @@ function SortableProviderItem({
         background: isDragging ? "rgba(39, 39, 42, 0.9)" : "rgba(24, 24, 27, 0.6)",
         border: `1px solid ${isDragging ? "rgba(0, 240, 255, 0.5)" : "rgba(63, 63, 70, 0.4)"}`,
         borderRadius: "12px",
-        marginBottom: "12px",
+        marginBottom: isPImageEdit ? "60px" : "12px",
+        position: "relative",
       }}
     >
       {/* Drag Handle */}
@@ -222,6 +228,88 @@ function SortableProviderItem({
       >
         <Trash2 style={{ width: "16px", height: "16px" }} />
       </button>
+
+      {/* p-image-edit specific settings */}
+      {config.providerModelId === "prunaai/p-image-edit" && (
+        <div style={{
+          position: "absolute",
+          bottom: "-48px",
+          left: "64px",
+          right: "16px",
+          display: "flex",
+          gap: "24px",
+          padding: "8px 16px",
+          background: "rgba(9, 9, 11, 0.4)",
+          borderRadius: "8px",
+          border: "1px solid rgba(63, 63, 70, 0.3)",
+        }}>
+          {/* Turbo Mode Toggle */}
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <button
+              onClick={() => onConfigChange("turbo", !(config.config?.turbo ?? true))}
+              style={{
+                width: "36px",
+                height: "20px",
+                borderRadius: "10px",
+                border: "none",
+                cursor: "pointer",
+                background: (config.config?.turbo ?? true)
+                  ? "linear-gradient(135deg, #00f0ff 0%, #00b8cc 100%)"
+                  : "rgba(63, 63, 70, 0.5)",
+                position: "relative",
+                transition: "background 0.2s ease",
+              }}
+            >
+              <div style={{
+                width: "16px",
+                height: "16px",
+                borderRadius: "50%",
+                background: "#fff",
+                position: "absolute",
+                top: "2px",
+                left: (config.config?.turbo ?? true) ? "18px" : "2px",
+                transition: "left 0.2s ease",
+              }} />
+            </button>
+            <span style={{ fontSize: "12px", color: "#9ca3af" }}>
+              Turbo Mode
+            </span>
+          </div>
+
+          {/* Disable Safety Checker Toggle */}
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <button
+              onClick={() => onConfigChange("disable_safety_checker", !(config.config?.disable_safety_checker ?? false))}
+              style={{
+                width: "36px",
+                height: "20px",
+                borderRadius: "10px",
+                border: "none",
+                cursor: "pointer",
+                background: (config.config?.disable_safety_checker ?? false)
+                  ? "linear-gradient(135deg, #ef4444 0%, #dc2626 100%)"
+                  : "rgba(63, 63, 70, 0.5)",
+                position: "relative",
+                transition: "background 0.2s ease",
+              }}
+            >
+              <div style={{
+                width: "16px",
+                height: "16px",
+                borderRadius: "50%",
+                background: "#fff",
+                position: "absolute",
+                top: "2px",
+                left: (config.config?.disable_safety_checker ?? false) ? "18px" : "2px",
+                transition: "left 0.2s ease",
+              }} />
+            </button>
+            <span style={{ fontSize: "12px", color: (config.config?.disable_safety_checker ?? false) ? "#ef4444" : "#9ca3af" }}>
+              Disable Safety Checker
+            </span>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -272,6 +360,16 @@ export function ModelEditForm({ model, allProviders, apps }: Props) {
     );
   };
 
+  const updateProviderConfig = (configId: string, key: string, value: unknown) => {
+    setProviderConfigs((items) =>
+      items.map((item) =>
+        item.id === configId
+          ? { ...item, config: { ...(item.config || {}), [key]: value } }
+          : item
+      )
+    );
+  };
+
   const addProvider = (provider: Provider) => {
     const newConfig: ProviderConfig = {
       id: `new-${Date.now()}`,
@@ -309,6 +407,7 @@ export function ModelEditForm({ model, allProviders, apps }: Props) {
             providerModelId: c.providerModelId,
             priority: i + 1,
             isEnabled: c.isEnabled,
+            config: c.config || null,
           })),
           appTokenOverrides,
         }),
@@ -547,6 +646,7 @@ export function ModelEditForm({ model, allProviders, apps }: Props) {
                 index={index}
                 onRemove={() => removeProvider(config.id)}
                 onModelIdChange={(value) => updateProviderModelId(config.id, value)}
+                onConfigChange={(key, value) => updateProviderConfig(config.id, key, value)}
               />
             ))}
           </SortableContext>

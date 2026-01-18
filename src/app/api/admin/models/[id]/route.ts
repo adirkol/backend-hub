@@ -16,6 +16,7 @@ const UpdateModelSchema = z.object({
     providerModelId: z.string(),
     priority: z.number().int(),
     isEnabled: z.boolean(),
+    config: z.record(z.unknown()).nullable().optional(),
   })).optional(),
   appTokenOverrides: z.record(z.string(), z.number().int().min(1)).optional(),
 });
@@ -125,6 +126,7 @@ export async function PATCH(
             providerModelId: config.providerModelId,
             priority: config.priority,
             isEnabled: config.isEnabled,
+            config: config.config ?? undefined,
           },
         });
       }
@@ -138,6 +140,7 @@ export async function PATCH(
             providerModelId: config.providerModelId,
             priority: config.priority,
             isEnabled: config.isEnabled,
+            config: config.config ?? undefined,
           },
         });
       }

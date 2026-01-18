@@ -124,10 +124,28 @@ export class ReplicateAdapter implements ProviderAdapter {
         modelInput.image_input = input.imageUrls.map(String);
         delete modelInput.image;
         delete modelInput.input_images;
+        delete modelInput.images;
+      } else if (input.providerModelId === "prunaai/p-image-edit") {
+        // p-image-edit uses images array
+        modelInput.images = input.imageUrls.map(String);
+        delete modelInput.image;
+        delete modelInput.input_images;
+        delete modelInput.image_input;
+        
+        // Set turbo mode (default true, can be overridden via providerConfig)
+        if (modelInput.turbo === undefined) {
+          modelInput.turbo = true;
+        }
+        
+        // Set disable_safety_checker (default false, can be toggled via providerConfig)
+        if (modelInput.disable_safety_checker === undefined) {
+          modelInput.disable_safety_checker = false;
+        }
       } else {
         // Other models (like openai/gpt-image-1.5) use input_images
         modelInput.input_images = input.imageUrls.map(String);
         delete modelInput.image;
+        delete modelInput.images;
       }
     }
 
@@ -229,6 +247,23 @@ export class ReplicateAdapter implements ProviderAdapter {
         "21:9",
       ];
       if (validRatios.includes(aspectRatio)) return aspectRatio;
+      return "match_input_image";
+    }
+
+    // prunaai/p-image-edit accepts: "match_input_image", "1:1", "16:9", "9:16", "4:3", "3:4", "3:2", "2:3"
+    if (modelId === "prunaai/p-image-edit") {
+      const validRatios = [
+        "match_input_image",
+        "1:1",
+        "16:9",
+        "9:16",
+        "4:3",
+        "3:4",
+        "3:2",
+        "2:3",
+      ];
+      if (validRatios.includes(aspectRatio)) return aspectRatio;
+      // Default to match_input_image for image editing
       return "match_input_image";
     }
 
