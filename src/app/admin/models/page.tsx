@@ -36,7 +36,8 @@ export default async function ModelsPage() {
             Manage AI models and provider configurations
           </p>
         </div>
-        <button
+        <Link
+          href="/admin/models/new"
           style={{
             display: "inline-flex",
             alignItems: "center",
@@ -47,14 +48,13 @@ export default async function ModelsPage() {
             borderRadius: "12px",
             fontSize: "14px",
             fontWeight: "600",
-            border: "none",
-            cursor: "pointer",
+            textDecoration: "none",
             boxShadow: "0 4px 12px rgba(0, 240, 255, 0.3)",
           }}
         >
           <Plus style={{ width: "18px", height: "18px" }} />
           Add Model
-        </button>
+        </Link>
       </div>
 
       {/* Models Grid */}
