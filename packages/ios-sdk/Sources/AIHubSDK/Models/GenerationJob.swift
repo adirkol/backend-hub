@@ -24,20 +24,6 @@ public enum JobStatus: String, Codable, CaseIterable {
     }
 }
 
-/// Output from a successful generation
-public struct GenerationOutput: Codable, Sendable {
-    /// URL to the generated image
-    public let url: String
-    
-    /// Index of this output (for multi-output generations)
-    public let index: Int?
-    
-    public init(url: String, index: Int? = nil) {
-        self.url = url
-        self.index = index
-    }
-}
-
 /// A generation job
 public struct GenerationJob: Codable, Sendable, Identifiable {
     /// Unique identifier for the job
@@ -56,7 +42,14 @@ public struct GenerationJob: Codable, Sendable, Identifiable {
     public let tokensCharged: Int
     
     /// Generated outputs (available when status is succeeded)
-    public let outputs: [GenerationOutput]?
+    /// For image models: URLs to generated images
+    /// For LLM models: Text responses
+    public let outputs: [String]?
+    
+    /// Number of outputs requested
+    public var numOutputs: Int {
+        outputs?.count ?? 0
+    }
     
     /// Provider that processed the job (available when completed)
     public let providerUsed: String?
@@ -103,7 +96,7 @@ public struct GenerationJob: Codable, Sendable, Identifiable {
         model = try container.decode(String.self, forKey: .model)
         userId = try container.decode(String.self, forKey: .userId)
         tokensCharged = try container.decode(Int.self, forKey: .tokensCharged)
-        outputs = try container.decodeIfPresent([GenerationOutput].self, forKey: .outputs)
+        outputs = try container.decodeIfPresent([String].self, forKey: .outputs)
         providerUsed = try container.decodeIfPresent(String.self, forKey: .providerUsed)
         error = try container.decodeIfPresent(String.self, forKey: .error)
         errorCode = try container.decodeIfPresent(String.self, forKey: .errorCode)

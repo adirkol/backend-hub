@@ -302,7 +302,7 @@ class GenerationViewController: UIViewController {
                     prompt: "A beautiful sunset over the ocean"
                 )
                 
-                if let imageURL = job.outputs?.first?.url {
+                if let imageURL = job.outputs?.first {
                     await loadImage(from: imageURL)
                 }
             } catch {
@@ -378,7 +378,7 @@ func generateImage(prompt: String) async throws -> UIImage? {
     let job = try await AIHubSDK.client.waitForCompletion(jobId: submitResponse.jobId)
     
     // Download the generated image
-    if let imageURL = job.outputs?.first?.url,
+    if let imageURL = job.outputs?.first,
        let url = URL(string: imageURL) {
         let (data, _) = try await URLSession.shared.data(from: url)
         return UIImage(data: data)
@@ -399,7 +399,7 @@ func quickGenerate() async {
             aspectRatio: "1:1"
         )
         
-        if let imageURL = job.outputs?.first?.url {
+        if let imageURL = job.outputs?.first {
             print("Generated: \(imageURL)")
         }
     } catch AIHubError.insufficientTokens(let balance, let required) {
@@ -449,7 +449,7 @@ func editImageFromURL() async {
             aspectRatio: "match_input_image"  // Preserve original aspect ratio
         )
         
-        if let editedImageURL = job.outputs?.first?.url {
+        if let editedImageURL = job.outputs?.first {
             print("Edited image: \(editedImageURL)")
             await loadAndDisplayImage(from: editedImageURL)
         }
@@ -481,7 +481,7 @@ func editImageFromCamera(image: UIImage) async {
             aspectRatio: "match_input_image"
         )
         
-        if let resultURL = job.outputs?.first?.url,
+        if let resultURL = job.outputs?.first,
            let url = URL(string: resultURL) {
             let (data, _) = try await URLSession.shared.data(from: url)
             if let editedImage = UIImage(data: data) {
@@ -520,7 +520,7 @@ func applyStyleFromReference(contentImage: UIImage, styleImage: UIImage) async {
             aspectRatio: "match_input_image"
         )
         
-        if let resultURL = job.outputs?.first?.url {
+        if let resultURL = job.outputs?.first {
             print("Style transfer complete: \(resultURL)")
         }
     } catch {
@@ -551,8 +551,7 @@ func chatWithAI(userMessage: String) async {
         )
         
         // LLM responses are text strings in the outputs array
-        if let response = job.outputs?.first?.url {
-            // Note: For LLMs, the "url" field contains the text response
+        if let response = job.outputs?.first {
             print("AI Response: \(response)")
             await MainActor.run {
                 self.responseLabel.text = response
@@ -584,7 +583,7 @@ func analyzeImage(image: UIImage, question: String) async {
             images: [dataURI]
         )
         
-        if let analysis = job.outputs?.first?.url {
+        if let analysis = job.outputs?.first {
             print("Image analysis: \(analysis)")
         }
     } catch {
@@ -614,7 +613,7 @@ func analyzeImageFromURL() async {
             images: ["https://example.com/photo.jpg"]
         )
         
-        if let description = job.outputs?.first?.url {
+        if let description = job.outputs?.first {
             print("Description: \(description)")
         }
     } catch {
@@ -642,7 +641,7 @@ func compareImages(image1: UIImage, image2: UIImage) async {
             images: [uri1, uri2]
         )
         
-        if let comparison = job.outputs?.first?.url {
+        if let comparison = job.outputs?.first {
             print("Comparison: \(comparison)")
         }
     } catch {
@@ -651,22 +650,31 @@ func compareImages(image1: UIImage, image2: UIImage) async {
 }
 ```
 
-### Understanding LLM Outputs
+### Understanding Outputs
 
-For LLM models, the output structure is slightly different from image generation:
+The `outputs` array contains strings that are:
+- **For image models**: URLs to the generated images
+- **For LLM models**: The text response
 
 ```swift
-func handleLLMResponse(job: GenerationJob) {
-    // For LLMs, outputs contain text responses (not image URLs)
-    // The text is stored in the "url" field for consistency
-    if let textResponse = job.outputs?.first?.url {
-        // This is actually a text response, not a URL
-        displayMessage(textResponse)
+func handleResponse(job: GenerationJob) {
+    guard let outputs = job.outputs else { return }
+    
+    // For image models
+    if job.model.contains("flux") || job.model.contains("image") {
+        for imageURL in outputs {
+            loadAndDisplayImage(from: imageURL)
+        }
+    }
+    
+    // For LLM models
+    if job.model.contains("gpt") {
+        if let textResponse = outputs.first {
+            displayMessage(textResponse)
+        }
     }
 }
 ```
-
-> **Note**: For LLM models, the `outputs[].url` field contains the text response, not an actual URL. This maintains API consistency while supporting both image generation and text completion.
 
 ## API Reference
 
@@ -813,8 +821,9 @@ struct GenerationJob {
     let model: String
     let userId: String
     let tokensCharged: Int
-    let outputs: [GenerationOutput]?  // Available when succeeded
-    let error: String?                 // Available when failed
+    let outputs: [String]?   // URLs (images) or text responses (LLMs)
+    var numOutputs: Int      // Count of outputs
+    let error: String?       // Available when failed
     let errorCode: String?
     let createdAt: Date
     let startedAt: Date?

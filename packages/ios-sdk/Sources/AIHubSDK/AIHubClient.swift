@@ -18,7 +18,7 @@ import Foundation
 ///
 /// // Wait for completion
 /// let result = try await client.waitForCompletion(jobId: job.jobId)
-/// print("Generated image: \(result.outputs?.first?.url ?? "N/A")")
+/// print("Generated image: \(result.outputs?.first ?? "N/A")")
 /// ```
 public final class AIHubClient: @unchecked Sendable {
     

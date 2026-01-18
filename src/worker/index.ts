@@ -66,7 +66,7 @@ interface GenerationJobData {
 
 interface GenerationJobResult {
   success: boolean;
-  outputs?: Array<{ url: string; index: number }>;
+  outputs?: string[];
   error?: string;
   usedProvider?: string;
 }
@@ -200,6 +200,7 @@ async function refundTokens(jobId: string, appUserId: string): Promise<void> {
  * Process and store outputs to R2 (or use original URLs if not requested/configured)
  * 
  * @param storeOutputs - If true, upload to R2. If false, use original provider URLs.
+ * @returns Array of output strings (URLs for images, text for LLMs)
  */
 async function processAndStoreOutputs(
   outputs: string[],
@@ -208,8 +209,8 @@ async function processAndStoreOutputs(
   jobId: string,
   job: Job,
   storeOutputs: boolean = false
-): Promise<Array<{ url: string; index: number }>> {
-  const storedOutputs: Array<{ url: string; index: number }> = [];
+): Promise<string[]> {
+  const storedOutputs: string[] = [];
 
   // Use original URLs if:
   // 1. Client didn't request storage (storeOutputs = false), OR
@@ -220,11 +221,9 @@ async function processAndStoreOutputs(
     } else {
       console.log(`[Worker] Using original provider URLs (store_outputs=false)`);
     }
-    for (let i = 0; i < outputs.length; i++) {
-      const output = outputs[i];
-      if (output.startsWith("http") || output.startsWith("data:image/")) {
-        storedOutputs.push({ url: output, index: i });
-      }
+    for (const output of outputs) {
+      // Include URLs, base64 images, and text responses (for LLMs)
+      storedOutputs.push(output);
     }
     await job.updateProgress(95);
     return storedOutputs;
@@ -252,11 +251,12 @@ async function processAndStoreOutputs(
         const key = `outputs/${appId}/${appUserId}/${jobId}-${i}.png`;
         storedUrl = await uploadToR2(buffer, key);
       } else {
-        console.warn(`[Worker] Skipping invalid output: ${output.substring(0, 50)}...`);
+        // Text output (from LLMs) - store as-is
+        storedOutputs.push(output);
         continue;
       }
 
-      storedOutputs.push({ url: storedUrl, index: i });
+      storedOutputs.push(storedUrl);
       await job.updateProgress(70 + ((i + 1) / outputs.length) * 25);
     } catch (error) {
       const message = error instanceof Error ? error.message : "Unknown error";

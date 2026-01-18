@@ -433,16 +433,13 @@ async function handleProviderCreateTest(
     });
   }
 
-  // If provider returned immediate result (Replicate)
+  // If provider returned immediate result (Replicate, OpenAI)
   if (result.immediateResult) {
     await prisma.generationJob.update({
       where: { id: job.id },
       data: {
         status: "SUCCEEDED",
-        outputs: result.immediateResult.outputs.map((url, index) => ({
-          url,
-          index,
-        })),
+        outputs: result.immediateResult.outputs,
         usedProvider: providerName,
         providerTaskId: result.immediateResult.predictionId,
         completedAt: new Date(),
@@ -542,10 +539,7 @@ async function handleProviderPollTest(data: z.infer<typeof ProviderPollTestSchem
           where: { id: jobId },
           data: {
             status: "SUCCEEDED",
-            outputs: result.result.outputs.map((url, index) => ({
-              url,
-              index,
-            })),
+            outputs: result.result.outputs,
             completedAt: new Date(),
           },
         });
