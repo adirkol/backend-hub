@@ -26,6 +26,9 @@ const HEALTHCHECK_APP_SLUG = "_healthcheck_app";
 const HEALTHCHECK_USER_EXTERNAL_ID = "_healthcheck_user";
 const DEFAULT_TEST_PROMPT = "A beautiful sunset over mountains, high quality, 4k";
 const DEFAULT_LLM_TEST_PROMPT = "Say hello and briefly describe yourself in one sentence.";
+const DEFAULT_IMAGE_EDIT_PROMPT = "Make this image look like a watercolor painting";
+// Public domain test image (small, fast to download)
+const DEFAULT_TEST_IMAGE_URL = "https://upload.wikimedia.org/wikipedia/commons/thumb/4/47/PNG_transparency_demonstration_1.png/280px-PNG_transparency_demonstration_1.png";
 
 // =============================================================================
 // Schema Definitions
@@ -398,6 +401,11 @@ async function handleProviderCreateTest(
     providerModelId.startsWith("gpt-") ||
     providerModelId.includes("gpt-");
 
+  // Determine if this model requires image input (image editing models)
+  const isImageEditModel = providerModelId.includes("image-edit") ||
+    providerModelId.includes("p-image-edit") ||
+    aiModel.name.includes("edit");
+
   // Determine endpoint for display
   const providerEndpoint = providerName === "defapi"
     ? providerModelId.startsWith("openai/")
@@ -410,14 +418,21 @@ async function handleProviderCreateTest(
         : `${providerName} API`;
 
   // Use appropriate test prompt based on model type
-  const testPrompt = prompt || (isLLMModel ? DEFAULT_LLM_TEST_PROMPT : DEFAULT_TEST_PROMPT);
+  const testPrompt = prompt || (
+    isLLMModel ? DEFAULT_LLM_TEST_PROMPT : 
+    isImageEditModel ? DEFAULT_IMAGE_EDIT_PROMPT : 
+    DEFAULT_TEST_PROMPT
+  );
+
+  // Determine test image URLs
+  const testImageUrls = isImageEditModel ? [DEFAULT_TEST_IMAGE_URL] : [];
 
   // Submit to provider
   const startTime = Date.now();
   const result = await adapter.submitGeneration({
     providerModelId,
     prompt: testPrompt,
-    imageUrls: [],
+    imageUrls: testImageUrls,
     aspectRatio: isLLMModel ? undefined : "1:1",
     numberOfOutputs: 1,
   });
