@@ -433,6 +433,241 @@ func generateWithBalanceCheck() async {
 }
 ```
 
+## Image Editing with p-image-edit
+
+The `p-image-edit` model by Pruna AI is a fast, sub-second image editing model. It supports multiple input images for reference and editing tasks.
+
+### Edit Image with URL Input
+
+```swift
+func editImageFromURL() async {
+    do {
+        let job = try await AIHubSDK.client.generateAndWait(
+            model: "p-image-edit",
+            prompt: "Change the background to a sunset beach scene",
+            images: ["https://example.com/my-photo.jpg"],
+            aspectRatio: "match_input_image"  // Preserve original aspect ratio
+        )
+        
+        if let editedImageURL = job.outputs?.first?.url {
+            print("Edited image: \(editedImageURL)")
+            await loadAndDisplayImage(from: editedImageURL)
+        }
+    } catch {
+        print("Image editing failed: \(error)")
+    }
+}
+```
+
+### Edit Image with Base64 Input
+
+For images captured from the camera or selected from the photo library, convert to base64:
+
+```swift
+func editImageFromCamera(image: UIImage) async {
+    // Convert UIImage to base64 data URI
+    guard let imageData = image.jpegData(compressionQuality: 0.8) else {
+        print("Failed to convert image to JPEG")
+        return
+    }
+    let base64String = imageData.base64EncodedString()
+    let dataURI = "data:image/jpeg;base64,\(base64String)"
+    
+    do {
+        let job = try await AIHubSDK.client.generateAndWait(
+            model: "p-image-edit",
+            prompt: "Make this photo look like a professional studio portrait",
+            images: [dataURI],
+            aspectRatio: "match_input_image"
+        )
+        
+        if let resultURL = job.outputs?.first?.url,
+           let url = URL(string: resultURL) {
+            let (data, _) = try await URLSession.shared.data(from: url)
+            if let editedImage = UIImage(data: data) {
+                await MainActor.run {
+                    self.imageView.image = editedImage
+                }
+            }
+        }
+    } catch {
+        print("Image editing failed: \(error)")
+    }
+}
+```
+
+### Multi-Image Editing (Style Transfer)
+
+Use multiple images for style transfer or reference-based editing:
+
+```swift
+func applyStyleFromReference(contentImage: UIImage, styleImage: UIImage) async {
+    // Convert both images to base64
+    guard let contentData = contentImage.jpegData(compressionQuality: 0.8),
+          let styleData = styleImage.jpegData(compressionQuality: 0.8) else {
+        return
+    }
+    
+    let contentURI = "data:image/jpeg;base64,\(contentData.base64EncodedString())"
+    let styleURI = "data:image/jpeg;base64,\(styleData.base64EncodedString())"
+    
+    do {
+        // Image 1 is the main image, Image 2 is the style reference
+        let job = try await AIHubSDK.client.generateAndWait(
+            model: "p-image-edit",
+            prompt: "Apply the artistic style from image 2 to image 1",
+            images: [contentURI, styleURI],
+            aspectRatio: "match_input_image"
+        )
+        
+        if let resultURL = job.outputs?.first?.url {
+            print("Style transfer complete: \(resultURL)")
+        }
+    } catch {
+        print("Style transfer failed: \(error)")
+    }
+}
+```
+
+## LLM Chat Completion
+
+AIHub supports OpenAI LLM models for text generation and chat completion. Available models:
+
+| Model | Description | Best For |
+|-------|-------------|----------|
+| `gpt-4o-mini` | Cost-efficient, 128K context | High-volume apps, general tasks |
+| `gpt-4.1-mini` | 1M context, excellent coding | Complex tasks, long documents |
+| `gpt-4.1-nano` | Fastest and cheapest | Classification, simple tasks |
+| `gpt-5-nano` | GPT-5 series, 400K context | Advanced reasoning |
+
+### Simple Text Chat
+
+```swift
+func chatWithAI(userMessage: String) async {
+    do {
+        let job = try await AIHubSDK.client.generateAndWait(
+            model: "gpt-4o-mini",
+            prompt: userMessage
+        )
+        
+        // LLM responses are text strings in the outputs array
+        if let response = job.outputs?.first?.url {
+            // Note: For LLMs, the "url" field contains the text response
+            print("AI Response: \(response)")
+            await MainActor.run {
+                self.responseLabel.text = response
+            }
+        }
+    } catch {
+        print("Chat failed: \(error)")
+    }
+}
+```
+
+### LLM with Vision (Analyze Images)
+
+LLM models support vision input for analyzing images:
+
+```swift
+func analyzeImage(image: UIImage, question: String) async {
+    // Convert image to base64
+    guard let imageData = image.jpegData(compressionQuality: 0.8) else {
+        return
+    }
+    let base64String = imageData.base64EncodedString()
+    let dataURI = "data:image/jpeg;base64,\(base64String)"
+    
+    do {
+        let job = try await AIHubSDK.client.generateAndWait(
+            model: "gpt-4o-mini",  // or any vision-capable model
+            prompt: question,
+            images: [dataURI]
+        )
+        
+        if let analysis = job.outputs?.first?.url {
+            print("Image analysis: \(analysis)")
+        }
+    } catch {
+        print("Image analysis failed: \(error)")
+    }
+}
+
+// Usage example
+func describePhoto() async {
+    guard let photo = selectedPhoto else { return }
+    
+    await analyzeImage(
+        image: photo,
+        question: "Describe this image in detail. What objects, people, or scenes do you see?"
+    )
+}
+```
+
+### LLM with Image URL
+
+```swift
+func analyzeImageFromURL() async {
+    do {
+        let job = try await AIHubSDK.client.generateAndWait(
+            model: "gpt-4.1-mini",
+            prompt: "What's in this image? List all the items you can see.",
+            images: ["https://example.com/photo.jpg"]
+        )
+        
+        if let description = job.outputs?.first?.url {
+            print("Description: \(description)")
+        }
+    } catch {
+        print("Analysis failed: \(error)")
+    }
+}
+```
+
+### Multi-Image Comparison
+
+```swift
+func compareImages(image1: UIImage, image2: UIImage) async {
+    guard let data1 = image1.jpegData(compressionQuality: 0.7),
+          let data2 = image2.jpegData(compressionQuality: 0.7) else {
+        return
+    }
+    
+    let uri1 = "data:image/jpeg;base64,\(data1.base64EncodedString())"
+    let uri2 = "data:image/jpeg;base64,\(data2.base64EncodedString())"
+    
+    do {
+        let job = try await AIHubSDK.client.generateAndWait(
+            model: "gpt-4o-mini",
+            prompt: "Compare these two images. What are the main differences and similarities?",
+            images: [uri1, uri2]
+        )
+        
+        if let comparison = job.outputs?.first?.url {
+            print("Comparison: \(comparison)")
+        }
+    } catch {
+        print("Comparison failed: \(error)")
+    }
+}
+```
+
+### Understanding LLM Outputs
+
+For LLM models, the output structure is slightly different from image generation:
+
+```swift
+func handleLLMResponse(job: GenerationJob) {
+    // For LLMs, outputs contain text responses (not image URLs)
+    // The text is stored in the "url" field for consistency
+    if let textResponse = job.outputs?.first?.url {
+        // This is actually a text response, not a URL
+        displayMessage(textResponse)
+    }
+}
+```
+
+> **Note**: For LLM models, the `outputs[].url` field contains the text response, not an actual URL. This maintains API consistency while supporting both image generation and text completion.
+
 ## API Reference
 
 ### AIHubSDK
@@ -531,14 +766,35 @@ func handleGeneration() async {
 | `generationFailed` | Generation failed | No |
 | `cannotCancelJob` | Job not in QUEUED status | No |
 
-## Models
+## Available AI Models
+
+### Image Generation Models
+
+| Model | Description | Token Cost | Max Images |
+|-------|-------------|------------|------------|
+| `flux-dev` | High-quality image generation with excellent prompt following | 10 | 0 |
+| `flux-schnell` | Fast image generation for quick iterations | 5 | 0 |
+| `gpt-image-1.5` | OpenAI's GPT-based image generation | 15 | 4 |
+| `nano-banana` | Google's efficient model with broad aspect ratio support | 8 | 4 |
+| `p-image-edit` | Pruna AI's sub-second image editing model | 5 | 10 |
+
+### LLM Models (Chat Completion)
+
+| Model | Description | Token Cost | Context | Vision |
+|-------|-------------|------------|---------|--------|
+| `gpt-4o-mini` | Cost-efficient multimodal model | 2 | 128K | ✓ |
+| `gpt-4.1-mini` | Excellent coding and instruction following | 3 | 1M | ✓ |
+| `gpt-4.1-nano` | Fastest and most cost-effective | 1 | 1M | ✓ |
+| `gpt-5-nano` | GPT-5 series with advanced reasoning | 2 | 400K | ✓ |
+
+## Data Types
 
 ### JobStatus
 
 ```swift
 enum JobStatus {
     case queued    // Job is waiting in queue
-    case rgunning   // Job is being processed
+    case running   // Job is being processed
     case succeeded // Job completed successfully
     case failed    // Job failed
     case cancelled // Job was cancelled
