@@ -6,7 +6,7 @@ import { z } from "zod";
 import { defapiAdapter } from "@/lib/providers/defapi";
 import { replicateAdapter } from "@/lib/providers/replicate";
 import { openaiAdapter } from "@/lib/providers/openai";
-import { reserveTokens, refundTokens } from "@/lib/tokens";
+import { reserveTokens, refundTokens, grantTokens, getEffectiveTokenBalance } from "@/lib/tokens";
 
 /**
  * Healthcheck API for testing AI models and providers
@@ -94,24 +94,44 @@ async function getOrCreateHealthcheckResources() {
   });
 
   if (!appUser) {
+    // Create user with 0 balance first
     appUser = await prisma.appUser.create({
       data: {
         appId: app.id,
         externalId: HEALTHCHECK_USER_EXTERNAL_ID,
-        tokenBalance: 1000000,
+        tokenBalance: 0,
         metadata: { type: "healthcheck" },
       },
     });
     console.log("[Healthcheck] Created healthcheck user:", appUser.id);
+    
+    // Grant tokens properly through the ledger system
+    await grantTokens(
+      appUser.id,
+      1000000,
+      "Healthcheck user initial grant",
+      `healthcheck_initial_${appUser.id}`
+    );
+    appUser.tokenBalance = 1000000;
   }
 
-  // Ensure user has enough tokens (refill if low)
-  if (appUser.tokenBalance < 10000) {
-    await prisma.appUser.update({
+  // Check effective balance (considers ledger entries, not just raw balance)
+  const { effectiveBalance } = await getEffectiveTokenBalance(appUser.id);
+  
+  // Refill if effective balance is low
+  if (effectiveBalance < 10000) {
+    const refillAmount = 1000000 - effectiveBalance;
+    await grantTokens(
+      appUser.id,
+      refillAmount,
+      "Healthcheck user refill",
+      `healthcheck_refill_${appUser.id}_${Date.now()}`
+    );
+    // Update local reference
+    appUser = await prisma.appUser.findUnique({
       where: { id: appUser.id },
-      data: { tokenBalance: 1000000 },
-    });
-    appUser.tokenBalance = 1000000;
+    }) || appUser;
+    console.log(`[Healthcheck] Refilled user with ${refillAmount} tokens`);
   }
 
   return { app, appUser };
