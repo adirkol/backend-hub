@@ -54,10 +54,22 @@ jobs:
           
           # Check if there are changes
           if git diff --staged --quiet; then
-            echo "No changes to commit"
-          else
-            git commit -m "Release v${{ inputs.version }}" -m "${{ inputs.release_notes }}"
+            echo "::error::No changes detected in SDK files. The SDK files in the distribution repo are already up to date."
+            echo "This can happen if:"
+            echo "  1. The changes were already published in a previous version"
+            echo "  2. The source files haven't actually changed"
+            echo ""
+            echo "Current files in dist-repo:"
+            ls -la
+            exit 1
           fi
+          
+          # Show what's being committed
+          echo "Changes to be committed:"
+          git diff --staged --name-status
+          
+          # Commit changes
+          git commit -m "Release v${{ inputs.version }}" -m "${{ inputs.release_notes }}"
           
           # Create tag
           git tag -a "${{ inputs.version }}" -m "v${{ inputs.version }}: ${{ inputs.release_notes }}"
