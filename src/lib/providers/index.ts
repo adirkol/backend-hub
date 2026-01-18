@@ -8,12 +8,14 @@
 export * from "./types";
 export { DefAPIAdapter, defapiAdapter } from "./defapi";
 export { ReplicateAdapter, replicateAdapter } from "./replicate";
+export { OpenAIAdapter, openaiAdapter } from "./openai";
 export { ProviderOrchestrator } from "./orchestrator";
 export type { OrchestratorInput } from "./orchestrator";
 
 import { ProviderAdapter } from "./types";
 import { defapiAdapter } from "./defapi";
 import { replicateAdapter } from "./replicate";
+import { openaiAdapter } from "./openai";
 
 /**
  * Map of provider names to their adapter instances
@@ -21,6 +23,7 @@ import { replicateAdapter } from "./replicate";
 const providerAdapters: Record<string, ProviderAdapter> = {
   defapi: defapiAdapter,
   replicate: replicateAdapter,
+  openai: openaiAdapter,
 };
 
 /**

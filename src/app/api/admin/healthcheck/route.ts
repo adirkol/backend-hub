@@ -5,6 +5,7 @@ import { prisma } from "@/lib/db";
 import { z } from "zod";
 import { defapiAdapter } from "@/lib/providers/defapi";
 import { replicateAdapter } from "@/lib/providers/replicate";
+import { openaiAdapter } from "@/lib/providers/openai";
 import { reserveTokens, refundTokens } from "@/lib/tokens";
 
 /**
@@ -24,6 +25,7 @@ import { reserveTokens, refundTokens } from "@/lib/tokens";
 const HEALTHCHECK_APP_SLUG = "_healthcheck_app";
 const HEALTHCHECK_USER_EXTERNAL_ID = "_healthcheck_user";
 const DEFAULT_TEST_PROMPT = "A beautiful sunset over mountains, high quality, 4k";
+const DEFAULT_LLM_TEST_PROMPT = "Say hello and briefly describe yourself in one sentence.";
 
 // =============================================================================
 // Schema Definitions
@@ -124,6 +126,8 @@ function getProviderAdapter(providerName: string) {
       return defapiAdapter;
     case "replicate":
       return replicateAdapter;
+    case "openai":
+      return openaiAdapter;
     default:
       return null;
   }
@@ -369,6 +373,11 @@ async function handleProviderCreateTest(
     data: { tokensCharged: true },
   });
 
+  // Determine if this is an LLM model (OpenAI provider or GPT models)
+  const isLLMModel = providerName === "openai" || 
+    providerModelId.startsWith("gpt-") ||
+    providerModelId.includes("gpt-");
+
   // Determine endpoint for display
   const providerEndpoint = providerName === "defapi"
     ? providerModelId.startsWith("openai/")
@@ -376,15 +385,20 @@ async function handleProviderCreateTest(
       : "POST https://api.defapi.org/api/image/gen"
     : providerName === "replicate"
       ? `POST https://api.replicate.com/v1/predictions`
-      : `${providerName} API`;
+      : providerName === "openai"
+        ? `POST https://api.openai.com/v1/chat/completions`
+        : `${providerName} API`;
+
+  // Use appropriate test prompt based on model type
+  const testPrompt = prompt || (isLLMModel ? DEFAULT_LLM_TEST_PROMPT : DEFAULT_TEST_PROMPT);
 
   // Submit to provider
   const startTime = Date.now();
   const result = await adapter.submitGeneration({
     providerModelId,
-    prompt: prompt || DEFAULT_TEST_PROMPT,
+    prompt: testPrompt,
     imageUrls: [],
-    aspectRatio: "1:1",
+    aspectRatio: isLLMModel ? undefined : "1:1",
     numberOfOutputs: 1,
   });
 

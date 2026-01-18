@@ -160,7 +160,84 @@ async function main() {
     },
   });
 
+  // ============================================
+  // OpenAI LLM Models
+  // ============================================
+
+  // GPT-4o-mini - Cost-efficient multimodal model
+  const gpt4oMini = await prisma.aIModel.upsert({
+    where: { name: "gpt-4o-mini" },
+    update: {},
+    create: {
+      name: "gpt-4o-mini",
+      displayName: "GPT-4o Mini",
+      modelFamily: "openai",
+      description: "Cost-efficient multimodal model with 128K context. Supports text and vision inputs. Great for high-volume applications.",
+      tokenCost: 2,
+      supportsImages: true, // Supports vision input
+      supportsPrompt: true,
+      maxInputImages: 10,
+      supportedAspectRatios: [], // LLM model, no aspect ratio
+      isEnabled: true,
+    },
+  });
+
+  // GPT-4.1-mini - Balanced performance and cost
+  const gpt41Mini = await prisma.aIModel.upsert({
+    where: { name: "gpt-4.1-mini" },
+    update: {},
+    create: {
+      name: "gpt-4.1-mini",
+      displayName: "GPT-4.1 Mini",
+      modelFamily: "openai",
+      description: "1M token context window with excellent coding and instruction following. Vision support for image analysis.",
+      tokenCost: 3,
+      supportsImages: true,
+      supportsPrompt: true,
+      maxInputImages: 10,
+      supportedAspectRatios: [],
+      isEnabled: true,
+    },
+  });
+
+  // GPT-4.1-nano - Fastest and cheapest
+  const gpt41Nano = await prisma.aIModel.upsert({
+    where: { name: "gpt-4.1-nano" },
+    update: {},
+    create: {
+      name: "gpt-4.1-nano",
+      displayName: "GPT-4.1 Nano",
+      modelFamily: "openai",
+      description: "Fastest and most cost-effective. 1M context window. Ideal for classification, autocompletion, and simple tasks.",
+      tokenCost: 1,
+      supportsImages: true,
+      supportsPrompt: true,
+      maxInputImages: 10,
+      supportedAspectRatios: [],
+      isEnabled: true,
+    },
+  });
+
+  // GPT-5-nano - Next-gen efficient model
+  const gpt5Nano = await prisma.aIModel.upsert({
+    where: { name: "gpt-5-nano" },
+    update: {},
+    create: {
+      name: "gpt-5-nano",
+      displayName: "GPT-5 Nano",
+      modelFamily: "openai",
+      description: "GPT-5 series nano model. 400K context, up to 128K output tokens. Supports verbosity and reasoning_effort parameters.",
+      tokenCost: 2,
+      supportsImages: true,
+      supportsPrompt: true,
+      maxInputImages: 10,
+      supportedAspectRatios: [],
+      isEnabled: true,
+    },
+  });
+
   console.log(`✅ AI Models created: ${fluxDev.displayName}, ${fluxSchnell.displayName}, ${gptImage.displayName}, ${nanoBanana.displayName}, ${pImageEdit.displayName}`);
+  console.log(`✅ LLM Models created: ${gpt4oMini.displayName}, ${gpt41Mini.displayName}, ${gpt41Nano.displayName}, ${gpt5Nano.displayName}`);
 
   // Create model provider configs
   await prisma.modelProviderConfig.upsert({
@@ -320,7 +397,92 @@ async function main() {
     },
   });
 
+  // ============================================
+  // OpenAI LLM Provider Configs
+  // ============================================
+
+  // GPT-4o-mini provider config
+  await prisma.modelProviderConfig.upsert({
+    where: {
+      modelId_providerId: {
+        modelId: gpt4oMini.id,
+        providerId: openai.id,
+      },
+    },
+    update: {},
+    create: {
+      modelId: gpt4oMini.id,
+      providerId: openai.id,
+      priority: 1,
+      isEnabled: true,
+      providerModelId: "gpt-4o-mini",
+      config: {},
+    },
+  });
+
+  // GPT-4.1-mini provider config
+  await prisma.modelProviderConfig.upsert({
+    where: {
+      modelId_providerId: {
+        modelId: gpt41Mini.id,
+        providerId: openai.id,
+      },
+    },
+    update: {},
+    create: {
+      modelId: gpt41Mini.id,
+      providerId: openai.id,
+      priority: 1,
+      isEnabled: true,
+      providerModelId: "gpt-4.1-mini",
+      config: {},
+    },
+  });
+
+  // GPT-4.1-nano provider config
+  await prisma.modelProviderConfig.upsert({
+    where: {
+      modelId_providerId: {
+        modelId: gpt41Nano.id,
+        providerId: openai.id,
+      },
+    },
+    update: {},
+    create: {
+      modelId: gpt41Nano.id,
+      providerId: openai.id,
+      priority: 1,
+      isEnabled: true,
+      providerModelId: "gpt-4.1-nano",
+      config: {},
+    },
+  });
+
+  // GPT-5-nano provider config
+  await prisma.modelProviderConfig.upsert({
+    where: {
+      modelId_providerId: {
+        modelId: gpt5Nano.id,
+        providerId: openai.id,
+      },
+    },
+    update: {},
+    create: {
+      modelId: gpt5Nano.id,
+      providerId: openai.id,
+      priority: 1,
+      isEnabled: true,
+      providerModelId: "gpt-5-nano",
+      config: {
+        // GPT-5 specific defaults
+        verbosity: "medium",
+        reasoning_effort: "medium",
+      },
+    },
+  });
+
   console.log("✅ Model provider configurations created");
+  console.log("✅ LLM provider configurations created");
 
   console.log("\n🎉 Seeding complete!");
   console.log(`\n📧 You can now login at /admin/login with: ${createdAdmins.join(" or ")}`);
