@@ -48,6 +48,8 @@ async function getModel(id: string) {
     providerConfigs: model.providerConfigs.map((config) => ({
       ...config,
       costPerRequest: Number(config.costPerRequest),
+      inputTokenCostPer1M: config.inputTokenCostPer1M ? Number(config.inputTokenCostPer1M) : null,
+      outputTokenCostPer1M: config.outputTokenCostPer1M ? Number(config.outputTokenCostPer1M) : null,
     })),
   };
 

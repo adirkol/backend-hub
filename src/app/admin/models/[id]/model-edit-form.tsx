@@ -36,6 +36,8 @@ interface ProviderConfig {
   priority: number;
   isEnabled: boolean;
   costPerRequest: number;
+  inputTokenCostPer1M?: number | null;
+  outputTokenCostPer1M?: number | null;
   config?: unknown;
   provider: {
     id: string;
@@ -202,22 +204,48 @@ function SortableProviderItem({
         />
       </div>
 
-      {/* Cost per Request */}
-      <div style={{
-        padding: "8px 14px",
-        background: "rgba(250, 204, 21, 0.1)",
-        border: "1px solid rgba(250, 204, 21, 0.2)",
-        borderRadius: "8px",
-        color: "#fbbf24",
-        fontSize: "13px",
-        fontWeight: "500",
-        display: "flex",
-        alignItems: "center",
-        gap: "4px",
-      }}>
-        <span style={{ color: "#b8b8c8", fontSize: "12px" }}>Cost:</span>
-        ${config.costPerRequest.toFixed(4)}
-      </div>
+      {/* Cost Display - Token-based for LLMs, per-request for others */}
+      {(config.inputTokenCostPer1M != null || config.outputTokenCostPer1M != null) ? (
+        /* Token-based pricing for LLMs */
+        <div style={{
+          padding: "8px 14px",
+          background: "rgba(250, 204, 21, 0.1)",
+          border: "1px solid rgba(250, 204, 21, 0.2)",
+          borderRadius: "8px",
+          fontSize: "12px",
+          display: "flex",
+          flexDirection: "column",
+          gap: "2px",
+        }}>
+          <div style={{ display: "flex", gap: "6px" }}>
+            <span style={{ color: "#9ca3af" }}>In:</span>
+            <span style={{ color: "#fbbf24", fontWeight: "500" }}>${config.inputTokenCostPer1M?.toFixed(2) ?? "0"}</span>
+            <span style={{ color: "#71717a" }}>/1M</span>
+          </div>
+          <div style={{ display: "flex", gap: "6px" }}>
+            <span style={{ color: "#9ca3af" }}>Out:</span>
+            <span style={{ color: "#fbbf24", fontWeight: "500" }}>${config.outputTokenCostPer1M?.toFixed(2) ?? "0"}</span>
+            <span style={{ color: "#71717a" }}>/1M</span>
+          </div>
+        </div>
+      ) : (
+        /* Per-request pricing */
+        <div style={{
+          padding: "8px 14px",
+          background: "rgba(250, 204, 21, 0.1)",
+          border: "1px solid rgba(250, 204, 21, 0.2)",
+          borderRadius: "8px",
+          color: "#fbbf24",
+          fontSize: "13px",
+          fontWeight: "500",
+          display: "flex",
+          alignItems: "center",
+          gap: "4px",
+        }}>
+          <span style={{ color: "#b8b8c8", fontSize: "12px" }}>Cost:</span>
+          ${config.costPerRequest.toFixed(4)}
+        </div>
+      )}
 
       {/* Remove Button */}
       <button
