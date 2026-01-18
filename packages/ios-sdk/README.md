@@ -546,7 +546,7 @@ AIHub supports OpenAI LLM models for text generation and chat completion. Availa
 func chatWithAI(userMessage: String) async {
     do {
         let job = try await AIHubSDK.client.generateAndWait(
-            model: "gpt-4o-mini",
+            model: "gpt-4.1-nano",
             prompt: userMessage
         )
         
@@ -578,7 +578,7 @@ func analyzeImage(image: UIImage, question: String) async {
     
     do {
         let job = try await AIHubSDK.client.generateAndWait(
-            model: "gpt-4o-mini",  // or any vision-capable model
+            model: "gpt-4.1-nano",  // or any vision-capable model
             prompt: question,
             images: [dataURI]
         )
@@ -636,7 +636,7 @@ func compareImages(image1: UIImage, image2: UIImage) async {
     
     do {
         let job = try await AIHubSDK.client.generateAndWait(
-            model: "gpt-4o-mini",
+            model: "gpt-4.1-nano",
             prompt: "Compare these two images. What are the main differences and similarities?",
             images: [uri1, uri2]
         )

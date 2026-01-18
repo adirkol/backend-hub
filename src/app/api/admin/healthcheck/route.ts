@@ -27,8 +27,8 @@ const HEALTHCHECK_USER_EXTERNAL_ID = "_healthcheck_user";
 const DEFAULT_TEST_PROMPT = "A beautiful sunset over mountains, high quality, 4k";
 const DEFAULT_LLM_TEST_PROMPT = "Say hello and briefly describe yourself in one sentence.";
 const DEFAULT_IMAGE_EDIT_PROMPT = "Make this image look like a watercolor painting";
-// Public domain test image (small, fast to download)
-const DEFAULT_TEST_IMAGE_URL = "https://upload.wikimedia.org/wikipedia/commons/thumb/4/47/PNG_transparency_demonstration_1.png/280px-PNG_transparency_demonstration_1.png";
+// Placeholder test image (reliable, fast, publicly accessible)
+const DEFAULT_TEST_IMAGE_URL = "https://picsum.photos/512/512";
 
 // =============================================================================
 // Schema Definitions
