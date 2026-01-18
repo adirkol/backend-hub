@@ -6,12 +6,33 @@ import { reserveTokens } from "@/lib/tokens";
 import { addGenerationJob } from "@/lib/queue";
 import { checkApiRateLimits, getRateLimitHeaders } from "@/lib/rate-limit";
 
+// Validate image input - accepts URLs or base64 data URIs
+const imageInputSchema = z.string().refine(
+  (val) => {
+    // Accept HTTP/HTTPS URLs
+    if (val.startsWith('http://') || val.startsWith('https://')) {
+      try {
+        new URL(val);
+        return true;
+      } catch {
+        return false;
+      }
+    }
+    // Accept base64 data URIs (e.g., data:image/png;base64,...)
+    if (val.startsWith('data:image/')) {
+      return true;
+    }
+    return false;
+  },
+  { message: "Must be a valid URL or base64 data URI (data:image/...)" }
+);
+
 const GenerateSchema = z.object({
   model: z.string().min(1),
   input: z
     .object({
       prompt: z.string().optional(),
-      images: z.array(z.string().url()).optional(),
+      images: z.array(imageInputSchema).optional(),
       aspect_ratio: z.string().optional().default("1:1"),
       num_outputs: z.number().int().min(1).max(4).optional().default(1),
     })
