@@ -29,6 +29,15 @@ export interface GenerationInput {
 }
 
 /**
+ * Token usage information (for LLMs)
+ */
+export interface TokenUsage {
+  inputTokens?: number;
+  outputTokens?: number;
+  totalTokens?: number;
+}
+
+/**
  * Result of submitting a generation request
  */
 export interface ProviderSubmitResult {
@@ -42,6 +51,12 @@ export interface ProviderSubmitResult {
   
   /** Error message if submission failed */
   error?: string;
+  
+  /** Token usage (for LLM providers like OpenAI) */
+  usage?: TokenUsage;
+  
+  /** Cost charged by the provider (calculated from tokens or flat rate) */
+  costCharged?: number;
 }
 
 /**
@@ -59,6 +74,9 @@ export interface ProviderPollResult {
   
   /** Cost charged by the provider (if available) */
   costCharged?: number;
+  
+  /** Token usage (for LLM providers) */
+  usage?: TokenUsage;
 }
 
 /**
@@ -140,6 +158,9 @@ export interface OrchestratorResult {
   
   /** Cost charged by the successful provider */
   costCharged?: number;
+  
+  /** Token usage (for LLM providers) */
+  usage?: TokenUsage;
   
   /** Number of providers attempted before success/failure */
   attemptsCount: number;

@@ -12,6 +12,7 @@ import {
   GenerationInput,
   OrchestratorResult,
   ProviderAdapter,
+  TokenUsage,
 } from "./types";
 import { getProviderAdapter } from "./index";
 import { DefAPIAdapter } from "./defapi";
@@ -181,7 +182,7 @@ export class ProviderOrchestrator {
         if (result.success && result.outputs && result.outputs.length > 0) {
           const latencyMs = Date.now() - attemptStart;
           
-          // Log successful usage
+          // Log successful usage (including token usage for LLMs)
           await this.logUsage({
             jobId: input.jobId,
             appId: input.appId,
@@ -191,12 +192,17 @@ export class ProviderOrchestrator {
             attemptNumber: attemptsCount,
             success: true,
             costCharged: result.costCharged,
+            usage: result.usage,
             latencyMs,
           });
 
+          const tokenInfo = result.usage 
+            ? `, tokens: ${result.usage.inputTokens || 0} in / ${result.usage.outputTokens || 0} out`
+            : '';
+          
           console.log(
             `[Orchestrator] Success with ${providerConfig.provider.displayName} ` +
-            `after ${latencyMs}ms - ${result.outputs.length} outputs`
+            `after ${latencyMs}ms - ${result.outputs.length} outputs${tokenInfo}`
           );
 
           return {
@@ -205,6 +211,7 @@ export class ProviderOrchestrator {
             usedProvider: providerConfig.provider.name,
             latencyMs: Date.now() - startTime,
             costCharged: result.costCharged,
+            usage: result.usage,
             attemptsCount,
           };
         } else {
@@ -271,6 +278,7 @@ export class ProviderOrchestrator {
     outputs?: string[];
     error?: string;
     costCharged?: number;
+    usage?: TokenUsage;
     providerTaskId?: string;
   }> {
     // Submit generation request
@@ -283,12 +291,14 @@ export class ProviderOrchestrator {
       };
     }
 
-    // If provider returned immediate result (like Replicate SDK)
+    // If provider returned immediate result (like Replicate SDK or OpenAI)
     if (submitResult.immediateResult) {
       return {
         success: true,
         outputs: submitResult.immediateResult.outputs,
         providerTaskId: submitResult.immediateResult.predictionId,
+        costCharged: submitResult.costCharged,
+        usage: submitResult.usage,
       };
     }
 
@@ -390,6 +400,7 @@ export class ProviderOrchestrator {
     attemptNumber: number;
     success: boolean;
     costCharged?: number;
+    usage?: TokenUsage;
     errorMessage?: string;
     latencyMs: number;
   }): Promise<void> {
@@ -404,6 +415,9 @@ export class ProviderOrchestrator {
           attemptNumber: data.attemptNumber,
           success: data.success,
           costCharged: data.costCharged ? new Prisma.Decimal(data.costCharged) : null,
+          inputTokens: data.usage?.inputTokens ?? null,
+          outputTokens: data.usage?.outputTokens ?? null,
+          totalTokens: data.usage?.totalTokens ?? null,
           errorMessage: data.errorMessage,
           latencyMs: data.latencyMs,
         },

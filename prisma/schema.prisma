@@ -326,6 +326,11 @@ model ModelProviderConfig {
   costPerRequest  Decimal  @default(0) @db.Decimal(10, 6)
   isEnabled       Boolean  @default(true)
   
+  // Token-based pricing (for LLMs like OpenAI)
+  // Cost per 1 million tokens (stored in USD)
+  inputTokenCostPer1M   Decimal? @db.Decimal(10, 6)  // e.g., 0.15 for gpt-4o-mini input
+  outputTokenCostPer1M  Decimal? @db.Decimal(10, 6)  // e.g., 0.60 for gpt-4o-mini output
+  
   // Provider-specific config
   config          Json?    // { "aspect_ratio_map": {...}, ... }
 
@@ -351,6 +356,11 @@ model ProviderUsageLog {
   costCharged     Decimal? @db.Decimal(10, 6)
   latencyMs       Int?
   errorMessage    String?  @db.Text
+  
+  // Token usage tracking (for LLMs like OpenAI)
+  inputTokens     Int?     // Number of input/prompt tokens
+  outputTokens    Int?     // Number of output/completion tokens
+  totalTokens     Int?     // Total tokens used
 
   provider AIProvider @relation(fields: [providerId], references: [id])
   app      App?       @relation(fields: [appId], references: [id])

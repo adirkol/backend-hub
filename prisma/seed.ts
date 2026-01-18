@@ -399,6 +399,7 @@ async function main() {
 
   // ============================================
   // OpenAI LLM Provider Configs
+  // Token pricing per 1 million tokens (USD)
   // ============================================
 
   // GPT-4o-mini provider config
@@ -409,13 +410,18 @@ async function main() {
         providerId: openai.id,
       },
     },
-    update: {},
+    update: {
+      inputTokenCostPer1M: 0.15,
+      outputTokenCostPer1M: 0.60,
+    },
     create: {
       modelId: gpt4oMini.id,
       providerId: openai.id,
       priority: 1,
       isEnabled: true,
       providerModelId: "gpt-4o-mini",
+      inputTokenCostPer1M: 0.15,  // $0.15 per 1M input tokens
+      outputTokenCostPer1M: 0.60, // $0.60 per 1M output tokens
       config: {},
     },
   });
@@ -428,13 +434,18 @@ async function main() {
         providerId: openai.id,
       },
     },
-    update: {},
+    update: {
+      inputTokenCostPer1M: 0.40,
+      outputTokenCostPer1M: 1.60,
+    },
     create: {
       modelId: gpt41Mini.id,
       providerId: openai.id,
       priority: 1,
       isEnabled: true,
       providerModelId: "gpt-4.1-mini",
+      inputTokenCostPer1M: 0.40,  // $0.40 per 1M input tokens
+      outputTokenCostPer1M: 1.60, // $1.60 per 1M output tokens
       config: {},
     },
   });
@@ -447,13 +458,18 @@ async function main() {
         providerId: openai.id,
       },
     },
-    update: {},
+    update: {
+      inputTokenCostPer1M: 0.10,
+      outputTokenCostPer1M: 0.40,
+    },
     create: {
       modelId: gpt41Nano.id,
       providerId: openai.id,
       priority: 1,
       isEnabled: true,
       providerModelId: "gpt-4.1-nano",
+      inputTokenCostPer1M: 0.10,  // $0.10 per 1M input tokens
+      outputTokenCostPer1M: 0.40, // $0.40 per 1M output tokens
       config: {},
     },
   });
@@ -466,13 +482,18 @@ async function main() {
         providerId: openai.id,
       },
     },
-    update: {},
+    update: {
+      inputTokenCostPer1M: 0.50,
+      outputTokenCostPer1M: 2.00,
+    },
     create: {
       modelId: gpt5Nano.id,
       providerId: openai.id,
       priority: 1,
       isEnabled: true,
       providerModelId: "gpt-5-nano",
+      inputTokenCostPer1M: 0.50,  // $0.50 per 1M input tokens
+      outputTokenCostPer1M: 2.00, // $2.00 per 1M output tokens
       config: {
         // GPT-5 specific defaults
         verbosity: "medium",

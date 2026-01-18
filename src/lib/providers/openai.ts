@@ -14,33 +14,45 @@ import {
   GenerationInput,
   ProviderSubmitResult,
   ProviderPollResult,
+  TokenUsage,
 } from "./types";
 
 // Model-specific configurations
+// Pricing is per 1 million tokens (as of Jan 2026)
 const MODEL_CONFIG: Record<string, {
   supportsVision: boolean;
   maxTokens: number;
   isGpt5: boolean;
+  inputCostPer1M: number;   // USD per 1M input tokens
+  outputCostPer1M: number;  // USD per 1M output tokens
 }> = {
   "gpt-4o-mini": {
     supportsVision: true,
     maxTokens: 16384,
     isGpt5: false,
+    inputCostPer1M: 0.15,
+    outputCostPer1M: 0.60,
   },
   "gpt-4.1-mini": {
     supportsVision: true,
     maxTokens: 32768,
     isGpt5: false,
+    inputCostPer1M: 0.40,
+    outputCostPer1M: 1.60,
   },
   "gpt-4.1-nano": {
     supportsVision: true,
     maxTokens: 32768,
     isGpt5: false,
+    inputCostPer1M: 0.10,
+    outputCostPer1M: 0.40,
   },
   "gpt-5-nano": {
     supportsVision: true,
     maxTokens: 128000,
     isGpt5: true,
+    inputCostPer1M: 0.50,
+    outputCostPer1M: 2.00,
   },
 };
 
@@ -126,7 +138,21 @@ export class OpenAIAdapter implements ProviderAdapter {
         };
       }
 
-      console.log(`[OpenAI] Generation complete - ${responseContent.length} chars`);
+      // Extract token usage
+      const usage: TokenUsage = {
+        inputTokens: completion.usage?.prompt_tokens,
+        outputTokens: completion.usage?.completion_tokens,
+        totalTokens: completion.usage?.total_tokens,
+      };
+
+      // Calculate cost from token usage
+      const costCharged = this.calculateCost(modelId, usage);
+
+      console.log(
+        `[OpenAI] Generation complete - ${responseContent.length} chars, ` +
+        `tokens: ${usage.inputTokens} in / ${usage.outputTokens} out, ` +
+        `cost: $${costCharged?.toFixed(6) || 'unknown'}`
+      );
 
       return {
         success: true,
@@ -134,6 +160,8 @@ export class OpenAIAdapter implements ProviderAdapter {
           outputs: [responseContent],
           predictionId: completion.id,
         },
+        usage,
+        costCharged,
       };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Unknown error";
@@ -151,6 +179,22 @@ export class OpenAIAdapter implements ProviderAdapter {
       status: "failed",
       error: "OpenAI adapter uses synchronous API - polling not needed",
     };
+  }
+
+  /**
+   * Calculate cost from token usage
+   */
+  private calculateCost(modelId: string, usage: TokenUsage): number | undefined {
+    const config = MODEL_CONFIG[modelId];
+    if (!config || !usage.inputTokens || !usage.outputTokens) {
+      return undefined;
+    }
+
+    // Cost = (input_tokens / 1M) * input_cost + (output_tokens / 1M) * output_cost
+    const inputCost = (usage.inputTokens / 1_000_000) * config.inputCostPer1M;
+    const outputCost = (usage.outputTokens / 1_000_000) * config.outputCostPer1M;
+    
+    return inputCost + outputCost;
   }
 
   /**
