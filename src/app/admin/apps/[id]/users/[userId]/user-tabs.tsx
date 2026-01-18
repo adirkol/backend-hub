@@ -26,6 +26,9 @@ import {
   Gift,
   CheckCircle,
   Calendar,
+  Plus,
+  X,
+  Loader2,
 } from "lucide-react";
 import { countryCodeToFlag, getCountryName } from "@/lib/countries";
 
@@ -269,6 +272,13 @@ export function UserTabs({
   const tabsAnchorRef = useRef<HTMLDivElement>(null);
   const tabsRef = useRef<HTMLDivElement>(null);
   
+  // Add tokens modal state
+  const [showAddTokensModal, setShowAddTokensModal] = useState(false);
+  const [tokenAmount, setTokenAmount] = useState("");
+  const [tokenReason, setTokenReason] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  
   // Get tab from URL or default to "overview"
   const tabParam = searchParams.get("tab");
   const activeTab: TabType = VALID_TABS.includes(tabParam as TabType) ? (tabParam as TabType) : "overview";
@@ -283,6 +293,48 @@ export function UserTabs({
       if (tabsRect.top <= 5) {
         tabsAnchorRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
       }
+    }
+  };
+
+  const handleAddTokens = async () => {
+    const amount = parseInt(tokenAmount);
+    if (isNaN(amount) || amount === 0) {
+      setSubmitError("Please enter a valid token amount");
+      return;
+    }
+    if (!tokenReason.trim()) {
+      setSubmitError("Please provide a reason");
+      return;
+    }
+
+    setIsSubmitting(true);
+    setSubmitError(null);
+
+    try {
+      const response = await fetch(`/api/admin/apps/${appId}/users/${user.id}/tokens`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          amount,
+          reason: tokenReason.trim(),
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to adjust tokens");
+      }
+
+      // Success - close modal and refresh page
+      setShowAddTokensModal(false);
+      setTokenAmount("");
+      setTokenReason("");
+      router.refresh();
+    } catch (error) {
+      setSubmitError(error instanceof Error ? error.message : "An error occurred");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -316,7 +368,7 @@ export function UserTabs({
             }}>
               <Coins style={{ width: "20px", height: "20px", color: "#fbbf24" }} />
             </div>
-            <div>
+            <div style={{ flex: 1 }}>
               <p style={{ fontSize: "24px", fontWeight: "700", color: "#fafafa" }}>
                 {effectiveBalance.effectiveBalance.toLocaleString()}
               </p>
@@ -329,6 +381,24 @@ export function UserTabs({
                 )}
               </p>
             </div>
+            <button
+              onClick={() => setShowAddTokensModal(true)}
+              style={{
+                width: "32px",
+                height: "32px",
+                borderRadius: "8px",
+                background: "rgba(251, 191, 36, 0.15)",
+                border: "1px solid rgba(251, 191, 36, 0.3)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                cursor: "pointer",
+                transition: "all 0.15s ease",
+              }}
+              title="Add/Remove Tokens"
+            >
+              <Plus style={{ width: "16px", height: "16px", color: "#fbbf24" }} />
+            </button>
           </div>
         </div>
 
@@ -1416,6 +1486,184 @@ export function UserTabs({
               )}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {/* Add Tokens Modal */}
+      {showAddTokensModal && (
+        <div 
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: "rgba(0, 0, 0, 0.7)",
+            backdropFilter: "blur(4px)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 100,
+          }}
+          onClick={() => setShowAddTokensModal(false)}
+        >
+          <div 
+            className="glass"
+            style={{
+              width: "100%",
+              maxWidth: "420px",
+              padding: "28px",
+              margin: "20px",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "24px" }}>
+              <h2 style={{ fontSize: "18px", fontWeight: "600", color: "#fafafa", display: "flex", alignItems: "center", gap: "10px" }}>
+                <Coins style={{ width: "20px", height: "20px", color: "#fbbf24" }} />
+                Adjust Tokens
+              </h2>
+              <button
+                onClick={() => setShowAddTokensModal(false)}
+                style={{
+                  background: "transparent",
+                  border: "none",
+                  cursor: "pointer",
+                  color: "#9ca3af",
+                  padding: "4px",
+                }}
+              >
+                <X style={{ width: "20px", height: "20px" }} />
+              </button>
+            </div>
+
+            <div style={{ marginBottom: "20px" }}>
+              <p style={{ fontSize: "13px", color: "#9ca3af", marginBottom: "8px" }}>
+                Current Balance: <span style={{ color: "#fbbf24", fontWeight: "600" }}>{effectiveBalance.effectiveBalance.toLocaleString()}</span> tokens
+              </p>
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+              <div>
+                <label style={{ 
+                  display: "block", 
+                  fontSize: "13px", 
+                  fontWeight: "500", 
+                  color: "#e4e4e7", 
+                  marginBottom: "8px" 
+                }}>
+                  Amount
+                </label>
+                <input
+                  type="number"
+                  value={tokenAmount}
+                  onChange={(e) => setTokenAmount(e.target.value)}
+                  placeholder="Enter amount (positive to add, negative to remove)"
+                  style={{
+                    width: "100%",
+                    padding: "12px 14px",
+                    fontSize: "14px",
+                    background: "rgba(39, 39, 42, 0.6)",
+                    border: "1px solid rgba(63, 63, 70, 0.5)",
+                    borderRadius: "8px",
+                    color: "#fafafa",
+                    outline: "none",
+                  }}
+                />
+                <p style={{ fontSize: "11px", color: "#71717a", marginTop: "6px" }}>
+                  Use positive numbers to add tokens, negative to remove
+                </p>
+              </div>
+
+              <div>
+                <label style={{ 
+                  display: "block", 
+                  fontSize: "13px", 
+                  fontWeight: "500", 
+                  color: "#e4e4e7", 
+                  marginBottom: "8px" 
+                }}>
+                  Reason
+                </label>
+                <input
+                  type="text"
+                  value={tokenReason}
+                  onChange={(e) => setTokenReason(e.target.value)}
+                  placeholder="e.g., Manual grant, Support compensation, Correction"
+                  style={{
+                    width: "100%",
+                    padding: "12px 14px",
+                    fontSize: "14px",
+                    background: "rgba(39, 39, 42, 0.6)",
+                    border: "1px solid rgba(63, 63, 70, 0.5)",
+                    borderRadius: "8px",
+                    color: "#fafafa",
+                    outline: "none",
+                  }}
+                />
+              </div>
+
+              {submitError && (
+                <div style={{
+                  padding: "12px",
+                  borderRadius: "8px",
+                  background: "rgba(239, 68, 68, 0.1)",
+                  border: "1px solid rgba(239, 68, 68, 0.3)",
+                  color: "#f87171",
+                  fontSize: "13px",
+                }}>
+                  {submitError}
+                </div>
+              )}
+
+              <div style={{ display: "flex", gap: "12px", marginTop: "8px" }}>
+                <button
+                  onClick={() => setShowAddTokensModal(false)}
+                  style={{
+                    flex: 1,
+                    padding: "12px",
+                    fontSize: "14px",
+                    fontWeight: "500",
+                    background: "rgba(39, 39, 42, 0.6)",
+                    border: "1px solid rgba(63, 63, 70, 0.5)",
+                    borderRadius: "8px",
+                    color: "#e4e4e7",
+                    cursor: "pointer",
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleAddTokens}
+                  disabled={isSubmitting}
+                  style={{
+                    flex: 1,
+                    padding: "12px",
+                    fontSize: "14px",
+                    fontWeight: "500",
+                    background: "linear-gradient(135deg, rgba(251, 191, 36, 0.2) 0%, rgba(245, 158, 11, 0.3) 100%)",
+                    border: "1px solid rgba(251, 191, 36, 0.4)",
+                    borderRadius: "8px",
+                    color: "#fbbf24",
+                    cursor: isSubmitting ? "not-allowed" : "pointer",
+                    opacity: isSubmitting ? 0.6 : 1,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "8px",
+                  }}
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 style={{ width: "16px", height: "16px", animation: "spin 1s linear infinite" }} />
+                      Saving...
+                    </>
+                  ) : (
+                    "Save Changes"
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>
