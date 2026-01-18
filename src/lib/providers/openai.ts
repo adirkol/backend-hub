@@ -82,22 +82,29 @@ export class OpenAIAdapter implements ProviderAdapter {
       const messages = this.buildMessages(input, config);
 
       // Build request parameters
+      // Note: GPT-5 models use max_completion_tokens instead of max_tokens
       const requestParams: OpenAI.Chat.ChatCompletionCreateParams = {
         model: modelId,
         messages,
-        max_tokens: config.maxTokens,
       };
 
+      // Set token limit based on model type
+      if (config.isGpt5) {
+        // GPT-5 uses max_completion_tokens
+        (requestParams as unknown as Record<string, unknown>).max_completion_tokens = config.maxTokens;
+      } else {
+        // GPT-4.x and earlier use max_tokens
+        requestParams.max_tokens = config.maxTokens;
+      }
+
       // Add GPT-5 specific parameters if applicable
-      if (config.isGpt5 && input.providerConfig) {
-        // GPT-5 supports verbosity and reasoning_effort parameters
-        const gpt5Params = input.providerConfig as {
+      if (config.isGpt5) {
+        const gpt5Params = (input.providerConfig || {}) as {
           verbosity?: "low" | "medium" | "high";
           reasoning_effort?: "minimal" | "low" | "medium" | "high";
         };
 
-        // These params would be added if the API supports them
-        // For now, we'll include them in the request if provided
+        // GPT-5 supports verbosity and reasoning_effort parameters
         if (gpt5Params.verbosity) {
           (requestParams as unknown as Record<string, unknown>).verbosity = gpt5Params.verbosity;
         }
